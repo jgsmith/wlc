@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  assignment_participation: 
+  user: 
+  subject: MyString
+  content: MyText
+
+two:
+  assignment_participation: 
+  user: 
+  subject: MyString
+  content: MyText

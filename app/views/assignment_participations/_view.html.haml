@@ -1,0 +1,68 @@
+.text= markdown @assignment_participation.view_text
+
+.info= @assignment_participation.show_info
+
+- f = @assignment_participation.view_form
+
+- if !f.empty?
+  - if @assignment_participation.new_record?
+    - f[:show_url] = assignment_assignment_participations_path(@assignment_participation.assignment)
+    - f[:method] = 'POST'
+  - else
+    - f[:show_url] = assignment_participation_path(@assignment_participation)
+    - f[:method] = 'PUT'
+
+  - if @assignment_participation.position == 1
+    - f[:id] = 'participation'
+  - else
+    - f[:id] = "participation-#{@assignment_participation.id}"
+
+  - f[:items] << { :inputType => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token, :xtype => 'field' }
+  - f[:items] << { :inputType => 'hidden', :name => '_method', :value => f[:method], :xtype => 'field' }
+
+  - if f[:items].select{ |i| i[:inputType] == 'file' }.size > 0
+    - f[:url] = f[:show_url] + '?format=ext_json_html'
+    - f[:fileUpload] = true
+  - else
+    - f[:url] = f[:show_url] + '?format=ext_json'
+    - f[:fileUpload] = false
+
+  .form{:id => "form-#{f[:id]}"}
+
+  :javascript
+    (function() {
+      WLC.setPanel('form-#{f[:id]}', new Ext.form.FormPanel({
+        renderTo: "form-#{f[:id]}",
+        items: #{f[:items].to_json},
+        fileUpload: #{f[:fileUpload].to_json},
+        url: #{f[:url].to_json},
+        buttons: [{
+          text: #{f[:submit].to_json},
+          type: 'submit',
+          handler: function() {
+            var fp = this.ownerCt.ownerCt;
+            console.log(fp);
+            var form = fp.getForm();
+            if(form.isValid()) {
+              form.submit({
+                success: function(f,a) {
+                  var panel = WLC.getPanel(#{f[:id].to_json});
+                  panel.load({
+                    url: #{f[:show_url].to_json},
+                    scripts: true
+                  });
+                }
+              });
+            }
+          }
+        }, {
+          text: 'Reset',
+          type: 'reset'
+        }],
+        buttonAlign: 'center',
+        bodyBorder: false,
+        border: false,
+        frame: true,
+        method: #{f[:method].to_json}
+      }));
+    })();

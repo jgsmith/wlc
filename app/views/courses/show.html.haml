@@ -1,0 +1,20 @@
+%h2=h @course.name  + ' (' + @course.semester.name + ')'
+
+#description= markdown @course.description
+
+%h3 Assignments
+%ul
+  - counter = 0
+  - @course.assignments.each do |assignment|
+    - counter += 1
+    %li
+      %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s
+      - if assignment.starts_at > Time.now
+        Begins at 
+        = assignment.starts_at
+      - elsif assignment.ends_at > Time.now
+        Ends at 
+        = assignment.ends_at
+  - if @course.user == @user
+    %li
+      %a{:href => new_course_assignment_path(@course)} Create New Assignment

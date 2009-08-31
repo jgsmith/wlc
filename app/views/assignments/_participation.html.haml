@@ -1,0 +1,16 @@
+- if participation.position == 1
+  - participation_id = 'participation'
+  - participation_url = new_assignment_assignment_participation_path participation.assignment
+- else
+  - participation_id = 'participation-' + participation.id.to_s
+  - participation_url = assignment_participation_path(participation)
+
+.participation{:id => participation_id}
+  :javascript
+    WLC.setPanel(#{participation_id.to_json}, new Ext.Panel({
+      renderTo: #{participation_id.to_json},
+      autoLoad: {
+        url: #{participation_url.to_json},
+        scripts: true
+      }
+    }));

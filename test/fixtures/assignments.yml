@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  course: 
+  assignment_template: 
+  starts_at: 2009-08-10 16:26:01
+
+two:
+  course: 
+  assignment_template: 
+  starts_at: 2009-08-10 16:26:01

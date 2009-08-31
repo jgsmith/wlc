@@ -1,0 +1,25 @@
+%h2=h @assignment.course.name + ' - Assignment #'  + @assignment.position.to_s
+
+%ol.timeline
+  - @assignment.configured_modules(@user).each do |m|
+    - if !m.informational?
+      - if m == @assignment.current_module(@user)
+        %li.current= m.name
+      - else
+        %li= m.name
+
+- if !@assignment.current_module(@user).nil?
+  #instructions= markdown @assignment.current_module(@user).instructions
+
+  - if @assignment.current_module(@user).has_messaging?
+    #message-container
+    :javascript
+      new Ext.Panel({
+        renderTo: 'message-container',
+        autoLoad: {
+          url: #{assignment_messages_path(@assignment).to_json},
+          scripts: true
+        }
+      });
+  - else
+    = render :partial => 'participation', :collection => @assignment.current_module(@user).assignment_participations

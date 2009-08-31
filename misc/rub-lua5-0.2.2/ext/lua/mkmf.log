@@ -1,0 +1,78 @@
+have_header: checking for lua.h... -------------------- yes
+
+"cc -E -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include <lua.h>
+/* end */
+
+--------------------
+
+have_header: checking for lualib.h... -------------------- yes
+
+"cc -E -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include <lualib.h>
+/* end */
+
+--------------------
+
+have_header: checking for lauxlib.h... -------------------- yes
+
+"cc -E -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include <lauxlib.h>
+/* end */
+
+--------------------
+
+have_library: checking for lua_open() in -llua... -------------------- yes
+
+"cc -o conftest -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC conftest.c  -L'.' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L.  -rdynamic     -lruby18-static -llua  -lcrypt -lm  -rpath=/usr/lib:/usr/local/lib -pthread  -lc"
+conftest.c: In function 't':
+conftest.c:3: error: 'lua_open' undeclared (first use in this function)
+conftest.c:3: error: (Each undeclared identifier is reported only once
+conftest.c:3: error: for each function it appears in.)
+checked program was:
+/* begin */
+1: /*top*/
+2: int main() { return 0; }
+3: int t() { void ((*volatile p)()); p = (void ((*)()))lua_open; return 0; }
+/* end */
+
+"cc -o conftest -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC conftest.c  -L'.' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L.  -rdynamic     -lruby18-static -llua  -lcrypt -lm  -rpath=/usr/lib:/usr/local/lib -pthread  -lc"
+checked program was:
+/* begin */
+1: /*top*/
+2: int main() { return 0; }
+3: int t() { lua_open(); return 0; }
+/* end */
+
+--------------------
+
+have_library: checking for lua_dostring() in -llualib... -------------------- yes
+
+"cc -o conftest -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC conftest.c  -L'.' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L.  -rdynamic    -llua  -lruby18-static -llualib -llua  -lcrypt -lm  -rpath=/usr/lib:/usr/local/lib -pthread  -lc"
+conftest.c: In function 't':
+conftest.c:3: error: 'lua_dostring' undeclared (first use in this function)
+conftest.c:3: error: (Each undeclared identifier is reported only once
+conftest.c:3: error: for each function it appears in.)
+checked program was:
+/* begin */
+1: /*top*/
+2: int main() { return 0; }
+3: int t() { void ((*volatile p)()); p = (void ((*)()))lua_dostring; return 0; }
+/* end */
+
+"cc -o conftest -I. -I/usr/local/lib/ruby/1.8/amd64-freebsd7 -I/s/home/jgsmith/svn/wlc/trunk/wlc/misc/rub-lua5-0.2.2/ext/lua -I/usr/local/include  -O2 -fno-strict-aliasing -pipe    -fPIC conftest.c  -L'.' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L'/usr/local/lib' -Wl,-R'/usr/local/lib' -L.  -rdynamic    -llua  -lruby18-static -llualib -llua  -lcrypt -lm  -rpath=/usr/lib:/usr/local/lib -pthread  -lc"
+checked program was:
+/* begin */
+1: /*top*/
+2: int main() { return 0; }
+3: int t() { lua_dostring(); return 0; }
+/* end */
+
+--------------------
+

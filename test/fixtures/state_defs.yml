@@ -1,0 +1,17 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  name: MyString
+  module_def: 
+  pre_fn: MyText
+  post_fn: MyText
+  view_text: MyText
+  view_form: MyText
+
+two:
+  name: MyString
+  module_def: 
+  pre_fn: MyText
+  post_fn: MyText
+  view_text: MyText
+  view_form: MyText

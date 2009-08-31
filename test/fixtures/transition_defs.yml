@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  from_state: 
+  to_state: 
+  process_fn: MyText
+  validate_fn: MyText
+
+two:
+  from_state: 
+  to_state: 
+  process_fn: MyText
+  validate_fn: MyText

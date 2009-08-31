@@ -1,0 +1,195 @@
+#message-panel
+#message-compose-panel
+- tabs = [ { :title => 'You', :html => @current_module.assignment_submission.show_info(@current_module.position) } ]
+- @current_module.assignment_participations.each do |p|
+  - next if p.author_name.blank?
+  - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module.position) }
+
+:javascript
+  var message_panel_tools = new Array;
+  message_panel_tools[0] = {
+    id: 'refresh',
+    qtip: 'Refresh Message List',
+    handler: function(e,toolEl,panel,tc) {
+      console.log("Refreshing message list");
+      panel.view.refresh();
+    }
+  };
+
+  if(#{@recipients.size} > 0) {
+    message_panel_tools[1] = {
+      id: 'plus',
+      qtip: 'Send Message',
+      handler: function(e,toolEl,panel,tc) {
+         console.log("Sending message");
+         var compose_form = new Ext.FormPanel({
+           title: 'New Message',
+           renderTo: 'message-compose-panel',
+           floating: true,
+           tools: [{
+             id: 'close',
+             handler: function(e,toolEl,panel,tc) {
+               panel.destroy();
+             }
+           }],
+           buttonAlign: 'center',
+           margins: {
+             left: 5,
+             top: 5
+           },
+           width: 500,
+           buttons: [{
+             text: 'Send Message',
+             type: 'submit',
+             handler: function(f) {
+               var fp = this.ownerCt.ownerCt;
+               var form = fp.getForm();
+               if(form.isValid()) {
+                 form.submit({
+                   url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
+                   success: function() {
+                     panel.reload();
+                     fp.destroy();
+                   }
+                 });
+               }
+             }
+           }, {
+             text: 'Reset',
+             type: 'reset',
+             handler: function(f) {
+               var fp = this.ownerCt.ownerCt;
+               var form = fp.getForm();
+               form.reset();
+             }
+           }, {
+             text: 'Cancel',
+             type: 'submit',
+             handler: function(f) {
+               var fp = this.ownerCt.ownerCt;
+               fp.destroy();
+             }
+           }],
+           items: [{
+             fieldLabel: 'To',
+             xtype: 'combo',
+             mode: 'local',
+             editable: true,
+             forceSelection: true,
+             emptyText: "Who will get this message?",
+             store: new Ext.data.ArrayStore({
+               id: 0,
+               fields: [
+                 'myId',
+                 'displayText'
+               ],
+               data: #{@recipients.to_json}
+             }),
+             valueField: 'myId',
+             displayField: 'displayText',
+             hiddenName: 'assignment_participation_id'
+           }, {
+             fieldLabel: 'Subject',
+             width: 350,
+             xtype: 'textfield',
+             emptyText: "What is this message about?",
+             name: 'subject',
+             inputType: 'text'
+           }, {
+             fieldLabel: 'Content',
+             xtype: 'textarea',
+             width: 350,
+             emptyText: "What do you want to tell them?",
+             height: 300,
+             name: 'content'
+           }, {
+             inputType: 'hidden',
+             xtype: 'field',
+             name: 'authenticity_token',
+             value: #{form_authenticity_token.to_json}            
+           }]
+         });
+         compose_form.setPosition(50,50);
+      }
+    };
+  }
+
+  console.log(message_panel_tools);
+
+  var dims = document.viewport.getDimensions();
+  var h = dims['height'];
+  var w = dims['width'];
+  var message_panel;
+  message_panel = new Ext.Panel({
+      renderTo: 'message-panel',
+      layout:'border',
+      height: h - 20,
+      width: w,
+      items: [{
+        region: 'north',
+        layout: 'hbox',
+        align: 'stretchmax',
+        pack: 'center',
+        flex: 1,
+        height: 150,
+        items: [{
+          title: 'Messages',
+          flex: 1,
+          xtype: 'grid',
+          anchor: '50% 150',
+          tools: message_panel_tools,
+          store: new Ext.data.JsonStore({
+            url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
+            autoLoad: true,
+            storeId: 'messageStore',
+            height: 150,
+            root: 'messages',
+            idProperty: 'id',
+            restful: true,
+            fields: ['id', 'user', {name:'created_at', type:'date'}, {name:'is_read', type:'boolean'}, 'subject' ]
+          }),
+          colModel: new Ext.grid.ColumnModel({
+            defaults: {
+              sortable: true
+            },
+            columns: [
+              {id: 'subject', header: 'Subject', dataIndex: 'subject', width: (w*.5-35)*.5 },
+              {id: 'read', header: '', dataIndex: 'is_read', width: 10},
+              {id: 'from', header: 'From', dataIndex: 'user' , width: (w*.5-35)*.3 },
+              {id: 'when', header: 'Date', dataIndex: 'created_at', xtype: 'datecolumn', format: 'M d, Y', width: (w*.5-35)*.2 }
+            ]
+          }),
+          autoFill: true,
+          forceFit: true,
+          selModel: new Ext.grid.RowSelectionModel({
+            singleSelect: true,
+          }),
+          listeners: {
+            rowclick: function(grid, index, e) {
+              console.log("We got something!");
+              console.log(grid);
+              var panel = message_panel.getComponent('message-content-panel');
+              var store = grid.getStore();
+              var rec = store.getAt(index);
+              console.log(rec);
+              panel.load({
+                url: '/messages/' + rec.get('id'),
+                scripts: true
+              });
+            }
+          },
+        }, {
+          title: 'Portfolios',
+          xtype: 'tabpanel',
+          flex: 1,
+          height: 150,
+          activeItem: 0,
+          items:#{tabs.to_json}
+      }]
+      }, {
+        anchor: '100%',
+        region: 'center',
+        itemId: 'message-content-panel',
+        html: '<p>The message content will go here.</p>'
+      }]
+  });

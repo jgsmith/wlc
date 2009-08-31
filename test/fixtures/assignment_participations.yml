@@ -1,0 +1,15 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  assignment_submission: 
+  user: 
+  context: MyText
+  author_eval: MyText
+  participant_eval: MyText
+
+two:
+  assignment_submission: 
+  user: 
+  context: MyText
+  author_eval: MyText
+  participant_eval: MyText

@@ -1,0 +1,81 @@
+Rub/Lua5
+========
+
+  Lua5.0 interpreter for Ruby
+
+Requirements
+------------
+
+  * ruby 1.6/1.8
+  * Lua5.0(http://www.lua.org/)
+
+Install
+-------
+
+  De-Compress archive and enter its top directory.
+  Then type:
+
+    $ ruby install.rb config
+    $ ruby install.rb setup
+   ($ su)
+    # ruby install.rb install
+
+  You can also install files into your favorite directory
+  by supplying install.rb some options. Try "ruby install.rb --help".
+
+Usage
+-----
+
+  require 'lua'
+  
+  lua = Lua.new
+  lua.set("a", 1)
+  lua.set("b", 2)
+  lua.eval("c=a+b")
+  print lua.get("c") # => 3.0
+
+Reference
+---------
+
+class Lua
+  def initialize(['baselib'[,'strlib'[,'iolib'[,'mathlib'[,'dblib]]]]])
+    # lua_interpreter = Lua.new('strlib')
+    # initialize a Lua instance and enable the use of strlib
+  end
+  
+  def eval(lua_str_code)
+    #evaluate the lua code and add it to the interpreter context
+  end
+  
+  def get(lua_var_name)
+    # get the value of "lua_var_name"
+  end
+  
+  def set(lua_var_name, value)
+    # set a global variable "lua_var_name" with the value "value"
+  end
+  
+  def setUserData(lua_var_name, value)
+    # set a global variable "lua_var_name" with the ruby obj_id of "value"
+  end
+  
+  def call(lua_function_name, arg1,...)
+    #call a lua function named "lua_function_name" with the passed arguments
+    #return the value returned by the lua function
+  end
+  
+  def setFunc(as_lua_name,object, 'method or function name')
+    #set a ruby function to be called by lua interpreter
+  end
+end
+
+
+License
+-------
+
+  Ruby's License
+    Japanese  http://www.ruby-lang.org/ja/LICENSE.txt
+    English   http://www.ruby-lang.org/en/LICENSE.txt
+
+Copyright(c) 2001 Domingo Alvarez Duarte <domingo@dad-it.com>
+Copyright(c) 2003 MoonWolf <moonwolf@moonwolf.com>

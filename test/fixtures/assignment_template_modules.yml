@@ -1,0 +1,23 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  assignment_template: 
+  module_def: 
+  position: 1
+  number_participants: 1
+  duration: 1
+  instructions: MyText
+  has_messaging: false
+  author_eval: MyText
+  participant_eval: MyText
+
+two:
+  assignment_template: 
+  module_def: 
+  position: 1
+  number_participants: 1
+  duration: 1
+  instructions: MyText
+  has_messaging: false
+  author_eval: MyText
+  participant_eval: MyText
