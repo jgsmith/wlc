@@ -32,6 +32,11 @@ set :deploy_via, :remote_cache
 # set :deploy_to, "/var/www/#{application}"
 set :deploy_to, "/usr/local/www/deploy/#{application}"
 set :user, "deploy"
+set :spinner_user, "www"
+set :start_port, 3200
+set :instances, 3
+
+set :use_sudo, false
 
 # If you aren't using Subversion to manage your source code, specify
 # your SCM below:
@@ -39,3 +44,17 @@ set :user, "deploy"
 # see a full list by running "gem contents capistrano | grep 'scm/'"
 
 role :web, "it-wlc.local"
+role :app, "it-wlc.local"
+role :db,  "it-wlc.local"
+
+
+namespace :deploy do
+  desc "Capfile override of the default restart task to eliminate reaper"
+  task :restart, :roles => :app do
+    run "/usr/local/bin/sudo /usr/local/etc/rc.d/lighttpd reload"
+  end
+
+  task :start, :roles => :app do
+    run "/usr/local/bin/sudo /usr/local/etc/rc.d/lighttpd restart"
+  end
+end

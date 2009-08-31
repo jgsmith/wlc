@@ -17,10 +17,13 @@
     = yield :head
   %body
     #header
-      - if !@user.nil?
+      - if @user
         .logged-in-as
           Logged in as
           = @user.login
+      - else
+        .logged-in-as
+          %a{:href=> "https://netid.tamu.edu/cas?service=http://wlc-system.tamu.edu/"} Log in
       %h1.title=h @title || 'Writing and Learning Communities'
 
     #content= yield

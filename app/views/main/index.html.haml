@@ -2,7 +2,7 @@
   The Writing and Learning Community System (WLC) helps manage the process
   of writing, editing, and reviewing papers for courses.
 
-- if !@user.nil? && defined? @user
+- if @user
   - if !@currently_teaching.nil? && !@currently_teaching.empty?
     %h2 You Are Currently Teaching
     %ul
