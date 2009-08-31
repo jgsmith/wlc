@@ -1,8 +1,12 @@
 default_run_options[:pty] = true
 
 set :application, "wlc"
-set :repository,  "git@github.com:jgsmith/wlc.git"
+set :repository,  "git://github.com/jgsmith/wlc.git"
 set :scm, "git"
+set :branch, "master"
+set :scm_verbose, true
+set :deploy_via, :remote_cache
+
 
 # If you have previously been relying upon the code to start, stop 
 # and restart your mongrel application, or if you rely on the database
@@ -27,6 +31,7 @@ set :scm, "git"
 # via the :deploy_to variable:
 # set :deploy_to, "/var/www/#{application}"
 set :deploy_to, "/usr/local/www/deploy/#{application}"
+set :user, "deploy"
 
 # If you aren't using Subversion to manage your source code, specify
 # your SCM below:
