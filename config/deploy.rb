@@ -62,12 +62,12 @@ end
 namespace :local_deploy do
   desc "Make sure current/tmp points to shared/tmp"
   task :deploy_tmp, :roles => :app do
-    run "if [ ! -L /usr/local/www/deploy/#{application}/current/tmp ]; then rmdir /usr/local/www/deploy/#{application}/current/tmp; ln -s /usr/local/www/deploy/#{application}/shared/tmp /usr/local/www/deploy/#{application}/current/tmp; fi"
+    run "if [ ! -L #{deploy_to}/current/tmp ]; then rmdir #{deploy_to}/current/tmp; ln -s #{deploy_to}/shared/tmp #{deploy_to}/current/tmp; fi"
   end
 
   desc "Make sure shared/tmp exists"
   task :setup_tmp, :roles => :app do
-    run "if [ ! -d /usr/local/www/deploy/#{application}/shared/tmp ]; then mkdir /usr/local/www/deploy/#{application}/shared/tmp; fi"
+    run "if [ ! -d #{deploy_to}/shared/tmp ]; then mkdir #{deploy_to}/shared/tmp; fi"
   end
 end
 
