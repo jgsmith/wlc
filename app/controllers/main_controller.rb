@@ -3,7 +3,7 @@ class MainController < ApplicationController
 
   def index
     @user = current_user
-    if defined? @user && !@user.nil?
+    if @user
       n = Time.now
       @current_semesters = Semester.find( :all,
          :conditions => [ 'starts_at <= ? AND ends_at >= ?', n, n ]
