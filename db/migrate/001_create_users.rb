@@ -11,10 +11,10 @@ class CreateUsers < ActiveRecord::Migration
       t.column :remember_token_expires_at, :datetime
     end
 
-    User.create :login => 'jgsmith', :email => 'email1@tamu.edu', :password => 'good4now', :password_confirmation => 'good4now'
-    User.create :login => 'user2', :email => 'email2@tamu.edu', :password => 'good4now', :password_confirmation => 'good4now'
-    User.create :login => 'user3', :email => 'email3@tamu.edu', :password => 'good4now', :password_confirmation => 'good4now'
-    User.create :login => 'user4', :email => 'email4@tamu.edu', :password => 'good4now', :password_confirmation => 'good4now'
+    User.create :login => 'jgsmith'
+    User.create :login => 'user2'
+    User.create :login => 'user3'
+    User.create :login => 'user4'
   end
 
   def self.down
