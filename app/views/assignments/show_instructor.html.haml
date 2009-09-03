@@ -1,0 +1,11 @@
+%h2=h @assignment.course.name + ' - Assignment #'  + @assignment.position.to_s
+
+%ol.timeline
+  - @assignment.configured_modules(@user).each do |m|
+    - if !m.informational?
+      - if m == @assignment.current_module(@user)
+        %li.current= m.name
+      - else
+        %li= m.name
+
+%p This is the instructor's view of the course.

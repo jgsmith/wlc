@@ -1,0 +1,38 @@
+%div{:id => info[:id]}
+:javascript
+  new Ext.FormPanel({
+    renderTo: $(#{info[:id].to_json}),
+    title: #{form_title.to_json},
+    url: #{form_url.to_json},
+    items: #{prompts_to_extjs_items(info).to_json},
+    buttons: [{
+      text: #{('Save ' + form_title).to_json},
+      type: 'submit',
+      handler: function(f) {
+        var fp = this.ownerCt.ownerCt;
+        var form = fp.getForm();
+        if(form.isValid()) {
+          form.submit({
+            url: #{form_url.to_json},
+            success: function() {
+              fp.collapse(true);
+            },
+            failure: function() {
+              /* do something to indicate failure */
+            }
+          });
+        }
+      }
+    }, {
+      text: #{('Reset ' + form_title).to_json},
+      type: 'reset',
+      handler: function(f) {
+        var fp = this.ownerCt.ownerCt;
+        var form = fp.getForm();
+        form.reset();
+      }
+    }],
+    collapsible: true,
+    collapsed: #{(!info[:values].nil? && !info[:values].empty?).to_json}
+  });
+
