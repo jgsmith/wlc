@@ -5,6 +5,10 @@ class MessagesController < ApplicationController
     if !params[:assignment_id].blank?
       @assignment = Assignment.find(params[:assignment_id])
 
+      if(!@assignment.course.is_student?(@user))
+        render :text => 'Forbidden!', :status => 403
+      end
+
       @recipients = [ ]
     # we want the list of authors we are evaluating and 
     # the list of evaluators we are working with
@@ -19,7 +23,7 @@ class MessagesController < ApplicationController
           :joins => [ :assignment_submission ],
           :conditions => [
             'assignment_submissions.assignment_id = ? AND assignment_submissions.user_id = ?', @assignment.id, @user.id ],
-          :select => 'assignment_participations.id',
+          :select => 'assignment_participations.*',
           :order => 'assignment_participations.participant_name'
         ).each do |p|
           @recipients << [ p.id, p.participant_name ]
@@ -56,17 +60,6 @@ class MessagesController < ApplicationController
             WHERE (a_s.user_id = ? OR a_p.user_id = ?) AND a_s.assignment_id = ?
             ORDER BY m.id
           ", @user.id, @user.id, @assignment.id])
-          
-    #      @messages = Message.find(:all,
-    #        :joins => 'LEFT JOIN assignment_participations ON assignment_participations.id = messages.assignment_participation_id LEFT JOIN assignment_submissions ON assignment_submissions.id = assignment_participations.assignment_submission_id',
-    ##[ :assignment_participations, :assignment_submissions ],
-    #        :select => 'messages.*',
-    #        :conditions => [
-    #          'assignment_submissions.assignment_id = ? AND (assignment_submissions.user_id = ? OR assignment_participations.user_id = ?)',
-    #          params[:assignment_id].to_i, @user.id
-    #        ],
-    #        :order => 'id'
-    #      )
         else
           @messages = [ ]
         end
@@ -79,18 +72,27 @@ class MessagesController < ApplicationController
           if @user == m.user
             h[:is_read] = true
             h[:user] = "-"
+            if m.assignment_participation.assignment_submission.user == @user
+              h[:recipient] = m.assignment_participation.participant_name
+            else
+              h[:recipient] = m.assignment_participation.author_name
+              h['recipient-portfolio'] = 'portfolio-' + m.assignment_participation.id.to_s
+            end
           else
             h[:is_read] = m.is_read
+            h[:recipient] = "-"
             if m.assignment_participation.assignment_submission.user == @user
               # evaluator sent the message (you're the author)
-              h[:user] = m.assignment_participation.name
+              h[:user] = m.assignment_participation.participant_name
+              h['recipient-portfolio'] = 'own-portfolio'
             else
               # author sent the message (you're the evaluator)
-            h[:user] = m.assignment_participation.author_name
-              end
+              h[:user] = m.assignment_participation.author_name
+              h['recipient-portfolio'] = 'portfolio-' + m.assignment_participation.id.to_s
             end
-            h
-          }.to_ext_json(:class => Message)
+          end
+          h
+        }.reverse.to_ext_json(:class => Message)
       end
     end
   end
@@ -125,14 +127,23 @@ class MessagesController < ApplicationController
   def show
     @message = Message.find(params[:id])
     @user = current_user
-    if @message.user == @user || @message.assignment_participation.user == @user || @message.assignment_participation.assignment_submission.user == @user
+    if @message.user == @user || 
+       @message.assignment_participation.user == @user || 
+       @message.assignment_participation.assignment_submission.user == @user
+
+      @message.is_read = true
+      @message.save
+
       respond_to do |format|
         format.html
       end
+
     else
+
       respond_to do |format|
         format.html :text => 'Forbidden!', :status => 403
       end
+
     end
   end
 end

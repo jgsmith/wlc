@@ -3,6 +3,7 @@ class CreateAssignmentSubmissions < ActiveRecord::Migration
     create_table :assignment_submissions do |t|
       t.references :assignment
       t.references :user
+      t.text       :author_eval
 
       t.timestamps
     end

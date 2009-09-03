@@ -5,7 +5,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
   has_many :uploads, :as => :holder
 
-  serialize :content
+  serialize :context
   serialize :author_eval
   serialize :participant_eval
 

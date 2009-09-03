@@ -9,7 +9,9 @@ module AuthenticatedSystem
     # Accesses the current user from the session.
     def current_user
       @current_user ||= (session[:user] && User.find_by_id(session[:user])) || 
-                        (session[:cas_user] && User.find_by_login(session[:cas_user])) || false
+                        (session[:cas_user] && User.find_by_login(session[:cas_user])) || 
+                        (session[:cas_extra_attributes] && session[:cas_extra_attributes]["uin"] && User.find_by_uin(session[:cas_extra_attributes]["uin"])) || 
+                        false
       session[:user] = @current_user.id if @current_user
       @current_user
     end

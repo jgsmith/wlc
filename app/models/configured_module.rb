@@ -4,6 +4,7 @@ class ConfiguredModule
   attr_accessor :user, :duration, :position, :number_participants
   attr_accessor :participant_eval, :author_eval, :has_messaging
   attr_accessor :assignment, :author_name, :participant_name
+  attr_accessor :is_evaluation
   attr_accessor :download_filename_prefix
 
   def instructions
@@ -27,11 +28,16 @@ class ConfiguredModule
   end
 
   def informational?
-    self.module_def.nil? && !self.has_messaging?
+    self.module_def.nil? && !self.has_messaging? && !self.is_evaluation
   end
 
   def has_messaging?
     !!self.has_messaging && !self.participant_name.blank? && !self.author_name.blank?
+  end
+
+  def has_evaluation?
+    !self.author_eval.nil? && !self.author_eval.empty? || 
+    !self.participant_eval.nil? && !self.participant_eval.empty?
   end
 
   def apply_module(am)
@@ -49,6 +55,7 @@ class ConfiguredModule
   end
 
   def assignment_submission
+     return nil if self.user.nil? || self.assignment.nil?
      AssignmentSubmission.find(:first, :conditions => [
        'user_id = ? AND assignment_id = ?',
        self.user.id, self.assignment.id
@@ -58,6 +65,8 @@ class ConfiguredModule
   def assignment_participations
     # this is where we assign participations if we need to
     # this is from the self.user's pov
+    return [ ] if self.assignment.nil? || self.user.nil?
+
     @assignment_participations ||= AssignmentParticipation.find(:all, 
       :joins => [ :assignment_submission ],
       :select => 'assignment_participations.*',
@@ -67,6 +76,11 @@ class ConfiguredModule
          assignment_participations.user_id     = ?',
         self.assignment.id, self.position, self.user.id
       ])
+
+    ## don't assign any participations if we aren't the current module
+    if self.starts_at > Time.now() || Time.now() > self.ends_at
+      return @assignment_participations
+    end
 
     if self.position == 1
       if @assignment_participations.size == 0
@@ -84,7 +98,8 @@ class ConfiguredModule
       if defined? s  # did the user submit anything to the assignment?
 
         if self.module_def.nil? && self.has_messaging? ||
-           self.module_def.is_evaluative?
+           !self.module_def.nil? && self.module_def.is_evaluative? ||
+           self.is_evaluation
 
           available = self.assignment.assignment_submissions.select{|a|
             a.user != self.user &&

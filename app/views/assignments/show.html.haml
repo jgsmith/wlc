@@ -21,5 +21,15 @@
           scripts: true
         }
       });
+  - elsif @assignment.current_module(@user).is_evaluation
+    = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
+    - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
+      = render :partial => 'evaluation_form', :locals => {:info => {:id => 'self-eval', :eval => @assignment.author_eval, :values => AssignmentSubmission.first(:conditions => [ 'assignment_id = ? AND user_id = ?', @assignment.id, @user.id ]).author_eval }, :form_url => assignment_author_eval_path(@assignment), :form_title => 'Self Evaluation'}
   - else
     = render :partial => 'participation', :collection => @assignment.current_module(@user).assignment_participations
+- elsif @assignment.starts_at > Time.now()
+  %p
+    This assignment is not yet available.
+- else
+  %p
+    This assignment has closed.

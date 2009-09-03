@@ -2,6 +2,9 @@ class AssignmentTemplateModule < ActiveRecord::Base
   belongs_to :assignment_template
   belongs_to :module_def
 
+  serialize :author_eval
+  serialize :participant_eval
+
   acts_as_list :scope => 'assignment_template_id'
 
   def configured_module(user)

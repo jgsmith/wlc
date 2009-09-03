@@ -1,9 +1,9 @@
 #message-panel
 #message-compose-panel
-- tabs = [ { :title => 'You', :html => @current_module.assignment_submission.show_info(@current_module.position) } ]
+- tabs = [ { :title => 'You', :html => @current_module.assignment_submission.show_info(@current_module.position), :itemId => 'own-portfolio' } ]
 - @current_module.assignment_participations.each do |p|
   - next if p.author_name.blank?
-  - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module.position) }
+  - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module.position), :itemId => 'portfolio-' + p.id.to_s }
 
 :javascript
   var message_panel_tools = new Array;
@@ -11,8 +11,7 @@
     id: 'refresh',
     qtip: 'Refresh Message List',
     handler: function(e,toolEl,panel,tc) {
-      console.log("Refreshing message list");
-      panel.view.refresh();
+      panel.getStore().reload();
     }
   };
 
@@ -48,7 +47,7 @@
                  form.submit({
                    url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
                    success: function() {
-                     panel.reload();
+                     panel.getStore().reload();
                      fp.destroy();
                    }
                  });
@@ -75,7 +74,10 @@
              xtype: 'combo',
              mode: 'local',
              editable: true,
+             triggerAction: 'all',
              forceSelection: true,
+             typeAhead: true,
+             lazyRender: true,
              emptyText: "Who will get this message?",
              store: new Ext.data.ArrayStore({
                id: 0,
@@ -123,7 +125,7 @@
   message_panel = new Ext.Panel({
       renderTo: 'message-panel',
       layout:'border',
-      height: h - 20,
+      height: h - 165,
       width: w,
       items: [{
         region: 'north',
@@ -136,17 +138,16 @@
           title: 'Messages',
           flex: 1,
           xtype: 'grid',
-          anchor: '50% 150',
           tools: message_panel_tools,
+          height: 150,
           store: new Ext.data.JsonStore({
             url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
             autoLoad: true,
             storeId: 'messageStore',
-            height: 150,
             root: 'messages',
             idProperty: 'id',
             restful: true,
-            fields: ['id', 'user', {name:'created_at', type:'date'}, {name:'is_read', type:'boolean'}, 'subject' ]
+            fields: ['id', 'user', {name:'created_at', type:'date'}, {name:'is_read', type:'boolean'}, 'subject', 'recipient', 'recipient-portfolio' ]
           }),
           colModel: new Ext.grid.ColumnModel({
             defaults: {
@@ -154,8 +155,8 @@
             },
             columns: [
               {id: 'subject', header: 'Subject', dataIndex: 'subject', width: (w*.5-35)*.5 },
-              {id: 'read', header: '', dataIndex: 'is_read', width: 10},
-              {id: 'from', header: 'From', dataIndex: 'user' , width: (w*.5-35)*.3 },
+              {id: 'sent_from', header: 'From', dataIndex: 'user' , width: (w*.5-35)*.2 },
+              {id: 'sent_to', header: 'To', dataIndex: 'recipient' , width: (w*.5-35)*.2 },
               {id: 'when', header: 'Date', dataIndex: 'created_at', xtype: 'datecolumn', format: 'M d, Y', width: (w*.5-35)*.2 }
             ]
           }),
@@ -164,30 +165,52 @@
           selModel: new Ext.grid.RowSelectionModel({
             singleSelect: true,
           }),
+          viewConfig: {
+            getRowClass: function(record, index) {
+                var c = record.get('is_read');
+                if(c) { return 'message-read'; } else { return 'message-unread'; }
+            },
+            forceFit: true
+          },
           listeners: {
+            beforerefresh: function(v) {
+               v.scrollTop = v.scroller.dom.scrollTop;
+               v.scrollHeight = v.scroller.dom.scrollHeight;
+            },
+            refresh: function(v) {
+               v.scroller.dom.scrollTop = v.scrollTop + 
+                (v.scrollTop == 0 ? 0 : v.scroller.dom.scrollHeight - v.scrollHeight);
+            },
             rowclick: function(grid, index, e) {
-              console.log("We got something!");
-              console.log(grid);
               var panel = message_panel.getComponent('message-content-panel');
               var store = grid.getStore();
               var rec = store.getAt(index);
-              console.log(rec);
               panel.load({
                 url: '/messages/' + rec.get('id'),
                 scripts: true
               });
+              /* mark record as read, and select appropriate portfolio tab */
+              if(! rec.get('is_read')) {
+                rec.set('is_read', true);
+                grid.getView().refreshRow(rec);
+              }
+
+              console.log(rec);
+              console.log("Setting active tab to: " + rec.get('recipient-portfolio'));
+              message_panel.layout.north.panel.getComponent('message-portfolios').setActiveTab(rec.get('recipient-portfolio'));
             }
           },
+          onLoad: Ext.emptyFn
         }, {
           title: 'Portfolios',
           xtype: 'tabpanel',
           flex: 1,
+          itemId: 'message-portfolios',
           height: 150,
           activeItem: 0,
           items:#{tabs.to_json}
       }]
       }, {
-        anchor: '100%',
         region: 'center',
         itemId: 'message-content-panel',
         html: '<p>The message content will go here.</p>'

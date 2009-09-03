@@ -3,6 +3,9 @@ class AssignmentTemplate < ActiveRecord::Base
 
   has_many :assignment_template_modules
 
+  serialize :participant_eval
+  serialize :author_eval
+
   def configured_modules(user)
     self.assignment_template_modules.map { |atm|
       atm.configured_module(user)

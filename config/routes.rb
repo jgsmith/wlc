@@ -5,9 +5,12 @@ ActionController::Routing::Routes.draw do |map|
     semester.resources :courses do |course|
       course.resources :assignments do |assignment|
         assignment.resources :messages
+        assignment.resource  :author_eval
         assignment.resources :assignment_participations do |participation|
           participation.resources :messages
           participation.resources :uploads
+          participation.resource  :author_eval
+          participation.resource  :participant_eval
         end
       end
     end

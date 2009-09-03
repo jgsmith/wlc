@@ -2,6 +2,8 @@ class AssignmentSubmission < ActiveRecord::Base
   belongs_to :assignment
   belongs_to :user
 
+  serialize :author_eval
+
   has_many :assignment_participations
 
   def show_info(position)

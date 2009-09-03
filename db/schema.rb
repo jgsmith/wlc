@@ -46,6 +46,7 @@ ActiveRecord::Schema.define(:version => 15) do
   create_table "assignment_submissions", :force => true do |t|
     t.integer  "assignment_id"
     t.integer  "user_id"
+    t.text     "author_eval"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -72,6 +73,12 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "user_id"
     t.string   "name"
     t.text     "description"
+    t.integer  "eval_duration"
+    t.integer  "number_evaluations"
+    t.string   "eval_name"
+    t.string   "author_name"
+    t.text     "author_eval"
+    t.text     "participant_eval"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -80,6 +87,12 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "course_id"
     t.integer  "assignment_template_id"
     t.integer  "position"
+    t.integer  "eval_duration"
+    t.integer  "number_evaluations"
+    t.string   "eval_name"
+    t.string   "author_name"
+    t.text     "author_eval"
+    t.text     "participant_eval"
     t.datetime "starts_at"
     t.datetime "created_at"
     t.datetime "updated_at"

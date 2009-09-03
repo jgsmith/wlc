@@ -24,29 +24,38 @@
       - else
         .logged-in-as
           %a{:href=> "https://netid.tamu.edu/cas?service=https://wlc-system.tamu.edu/"} Log in
-      %h1.title=h @title || 'Writing and Learning Communities'
+      %h1.title
+        %a{:href=>'/'}=h @title || 'Writing and Learning Communities'
 
     #content= yield
 
     #footer
-      %img{:src=>'/images/primaryMark.gif', :width => '280', :height => '67', :vspace => '0', :hspace => '0', :border => '0', :style => 'float: left; margin-right: 5px'}
-      %p{:style => 'height: 67px; padding-top: 10px;'}
+      %p{:style => 'height: 20px; padding-top: 5px; font-size: 15px;'}
         This courseware is being developed by Dr. Stephen Balfour and 
-        James Smith at Texas A&M University.  For all questions, please 
+        James Smith at Texas A&amp;M University.  For all questions, please 
         contact Dr. Balfour.
-      /#copyright
-      /  &copy; Texas A&amp;M University
-    /:javascript
-    /  new Ext.Viewport({
-    /    layout: 'anchor',
-    /    items: [{
-    /      anchor: 'top',
-    /      title:#{(@title || 'Writing and Learning Communities').to_json},
-    /      tbar: [
-    /        {xtype: 'tbtext', text: #{"Logged in as #{@user.login}".to_json}}
-    /      ]
-    /    }, {
-    /      contentEl: $('content')
-    /    }]
-    /  });
-          
+    :javascript
+      new Ext.Viewport({
+        layout: 'border',
+        hideMode: "offsets",
+        forceFit: true,
+        defaults: {autoScroll: true, border: false },
+        renderTo: document.body,
+        items: [{
+          region: 'north',
+          height: 40,
+          border: false,
+          contentEl: $('header')
+        }, {
+          region: 'center',
+          layout: 'fit',
+          border: false,
+          autoScroll: true,
+          contentEl: $('content')
+        }, {
+          region: 'south',
+          border: false,
+          contentEl: $('footer'),
+          height: 35
+        }]
+      });
