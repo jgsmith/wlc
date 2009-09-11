@@ -18,6 +18,7 @@ test:
 production:
   adapter: postgresql
   database: wlc
+  username: www
   host: it-db.local
   pool: 5
   timeout: 5000
