@@ -4,17 +4,17 @@ class MainController < ApplicationController
   def index
     @user = current_user
     if @user
-      n = Time.now
+      n = Time.now.utc
       @current_semesters = Semester.find( :all,
-         :conditions => [ 'starts_at <= ? AND ends_at >= ?', n, n ]
+         :conditions => [ 'utc_starts_at <= ? AND utc_ends_at >= ?', n, n ]
       )
 
       @past_semesters = Semester.find( :all,
-         :conditions => [ 'ends_at < ?', n ]
+         :conditions => [ 'utc_ends_at < ?', n ]
       )
 
       @future_semesters = Semester.find( :all,
-         :conditions => [ 'starts_at > ?', n ]
+         :conditions => [ 'utc_starts_at > ?', n ]
       )
 
       @currently_teaching = @user.courses.select { |c| @current_semesters.include?(c.semester) }
