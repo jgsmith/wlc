@@ -3,10 +3,21 @@ module AssignmentsHelper
     form_items = [ ]
 
     if !info[:eval][:instructions].blank?
-      form_items << {
-        :xtype => 'panel',
-        :html => markdown(info[:eval][:instructions])
-      }
+      if !info[:portfolio].blank?
+        form_items << {
+          :xtype => 'panel',
+          :html =>  "<table border='0' width='100%'><tr><td width='50%' valign='top'>" + 
+                    markdown(info[:eval][:instructions]) + 
+                    "</td><td width='50%' valign='top'>" +
+                    info[:portfolio] +
+                    "</td></tr></table>"
+        }
+      else
+        form_items << {
+          :xtype => 'panel',
+          :html =>  markdown(info[:eval][:instructions])
+        }
+      end
     end
 
     form_items << {

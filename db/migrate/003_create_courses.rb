@@ -5,11 +5,10 @@ class CreateCourses < ActiveRecord::Migration
       t.references :user
       t.references :semester
       t.text :description
+      t.string :timezone, :default => 'America/Chicago'
 
       t.timestamps
     end
-
-    Course.create :name => 'Intro to Psyc', :user_id => 2, :semester_id => 1, :description => 'description goes here'
   end
 
   def self.down

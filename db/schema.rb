@@ -9,13 +9,14 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 15) do
+ActiveRecord::Schema.define(:version => 16) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
     t.integer  "module_def_id"
     t.string   "name"
     t.integer  "position"
+    t.string   "tag"
     t.integer  "number_participants"
     t.integer  "duration"
     t.text     "instructions"
@@ -33,7 +34,7 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "assignment_submission_id"
     t.integer  "user_id"
     t.integer  "state_def_id"
-    t.integer  "position"
+    t.string   "tag"
     t.text     "context"
     t.text     "author_eval"
     t.text     "participant_eval"
@@ -47,6 +48,7 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "assignment_id"
     t.integer  "user_id"
     t.text     "author_eval"
+    t.text     "scores"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -91,9 +93,12 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "number_evaluations"
     t.string   "eval_name"
     t.string   "author_name"
+    t.string   "eval_tag"
     t.text     "author_eval"
     t.text     "participant_eval"
-    t.datetime "starts_at"
+    t.text     "calculate_score_fn"
+    t.text     "score_view"
+    t.datetime "utc_starts_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -111,6 +116,7 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "user_id"
     t.integer  "semester_id"
     t.text     "description"
+    t.string   "timezone",    :default => "America/Chicago"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -139,8 +145,9 @@ ActiveRecord::Schema.define(:version => 15) do
 
   create_table "semesters", :force => true do |t|
     t.string   "name"
-    t.datetime "starts_at"
-    t.datetime "ends_at"
+    t.datetime "utc_starts_at"
+    t.datetime "utc_ends_at"
+    t.string   "timezone",      :default => "America/Chicago"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -180,6 +187,7 @@ ActiveRecord::Schema.define(:version => 15) do
   create_table "users", :force => true do |t|
     t.string   "login"
     t.string   "email"
+    t.string   "name"
     t.string   "crypted_password",          :limit => 40
     t.string   "salt",                      :limit => 40
     t.datetime "created_at"

@@ -61,6 +61,10 @@ class UploadDrop < Liquid::Drop
     "/uploads/" + upload.id.to_s
   end
 
+  def filename
+    upload.filename
+  end
+
   def size
     upload.size
   end

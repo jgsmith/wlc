@@ -11,35 +11,6 @@ class CreateModuleDefs < ActiveRecord::Migration
 
       t.timestamps
     end
-
-    ModuleDef.create :name => 'Simple Submission',
-                     :instructions => 'Instructions go here.',
-                     :description => 'Description for instructors.',
-                     :download_filename_prefix => 'original',
-                     :show_info => '
-       {% if participation.uploads.size > 0 %}
-          <div class="participation-uploads">
-          {% for upload in participation.uploads %}
-            <div class="participation-upload">
-              {% if upload.user == user %}
-                Filename: {{ upload.filename }}
-              {% else %}
-                <a href="{{ upload.url }}">{{ upload.download_name }}</a>
-              {% endif %}
-              ({{ upload.size }} bytes)
-            </div>
-          {% endfor %}
-          </div>
-        {% endif %}
-                     ',
-                     :init_fn => '
-                       if has_attached_upload("upload") then
-                         goto("submitted")
-                       else
-                         goto("start")
-                       end
-                     ',
-                     :is_evaluative => false
   end
 
   def self.down

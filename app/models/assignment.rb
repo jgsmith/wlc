@@ -10,6 +10,38 @@ class Assignment < ActiveRecord::Base
   serialize :participant_eval
   serialize :author_eval
 
+  def starts_at
+    self.course.tz.utc_to_local(self.utc_starts_at)
+  end
+
+  def starts_at=(t)
+    self.utc_starts_at = self.course.tz.local_to_utc(t)
+  end
+
+  def ends_at
+    self.course.tz.utc_to_local(self.utc_ends_at)
+  end
+
+  def assignment_submission(user)
+    AssignmentSubmission.first(:conditions => [
+      'assignment_id = ? AND user_id = ?',
+      self.id, user.id
+    ]);
+  end
+
+  def is_participant?(user)
+    !self.assignment_submission(user).nil?
+  end
+
+  def has_messaging?(user)
+    return false if self.current_module(user).nil?
+    self.configured_modules(user).each do |m|
+      break if m.position >= self.current_module(user).position
+      return true if m.has_messaging?
+    end
+    return false
+  end
+
   def configured_modules(user)
     if !defined? @configured_modules
       m_list = [ ]
@@ -24,15 +56,16 @@ class Assignment < ActiveRecord::Base
         end
       end
 
-      cur_time = self.starts_at
+      cur_time = self.utc_starts_at
       m_list.each do |m|
-        m.starts_at = cur_time
+        next if m.nil?
+        m.utc_starts_at = cur_time
         cur_time += m.duration.to_i
         m.assignment = self
         m.is_evaluation = false
       end
 
-      @configured_modules = m_list
+      @configured_modules = m_list.select{ |m| !m.nil? }
 
       if @configured_modules.select{ |cm| cm.has_evaluation? }.size > 0 ||
          !self.participant_eval.nil? && !self.participant_eval.empty?   ||
@@ -44,7 +77,8 @@ class Assignment < ActiveRecord::Base
            !self.assignment_template.author_eval.empty? 
          )
         m = ConfiguredModule.new
-        m.starts_at = @configured_modules.last.ends_at
+        m.utc_starts_at = @configured_modules.last.utc_ends_at
+        m.tag = self.eval_tag
         m.position = @configured_modules.last.position + 1
         m.is_evaluation = true
         m.user = user
@@ -80,18 +114,28 @@ class Assignment < ActiveRecord::Base
 
   def current_module(user)
     if !defined? @current_module
-      n = Time.now
+      n = self.course.now
       @current_module = configured_modules(user).select{|c| c.starts_at <= n}.sort_by(&:starts_at).last
     end
 
-    return nil if @current_module.ends_at < Time.now()
+    return nil if @current_module.ends_at < self.course.now
 
     return @current_module
   end
 
-  def ends_at
-    @ends_at ||= self.configured_modules(nil).last.ends_at
-    @ends_at
+  def utc_ends_at
+    @utc_ends_at ||= self.configured_modules(nil).last.utc_ends_at
+    @utc_ends_at
+  end
+
+  def view_scores(u)
+    return '' if self.score_view.blank?
+    as = AssignmentSubmission.first(:conditions => [
+      'user_id = ? AND assignment_id = ?',
+      u.id, self.id
+    ])
+
+    return as.view_scores
   end
 
   def to_liquid
@@ -99,6 +143,43 @@ class Assignment < ActiveRecord::Base
     d.assignment = self
     d
   end
+
+  def calculate_scores(raw_data)
+    return { } if self.calculate_score_fn.blank?
+    self.lua_call('calculate_score', self.calculate_score_fn, 'scores', raw_data)
+  end   
+        
+protected
+        
+ def lua_call(fname, fbody, data_name, data)
+    lua = self.lua_context
+          
+    lua.eval("temp159 = type(#{fname})")
+    if lua.get("temp159") != 'function'
+              
+      lua.eval("function #{fname}(#{data_name})\n#{fbody}\nend")
+      lua.eval("temp159 = type(#{fname})")
+      if lua.get("temp159") != 'function'
+        raise "Unable to define the function '#{fname}' in Lua"
+      end
+    end
+
+    lua.call(fname, data)
+  end
+
+  def lua_debug(x)
+    Rails.logger.info(">>>>>>>>>>>>>>> From LUA: \n" + YAML::dump(x) + "\n^^^^^^^^^^^^^^")
+  end
+
+  def lua_context
+    if !defined? @lua_context
+      @lua_context = Lua.new('baselib', 'mathlib', 'stringlib')
+      @lua_context.setFunc('debug', self, 'lua_debug')
+    end
+
+    @lua_context
+  end
+
 end
 
 class AssignmentDrop < Liquid::Drop

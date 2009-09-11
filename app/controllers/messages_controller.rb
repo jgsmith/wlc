@@ -15,25 +15,25 @@ class MessagesController < ApplicationController
     # for the current assignment module
 
       @current_module = @assignment.current_module(@user)
-      if @current_module
-        @current_module.assignment_participations.sort_by(&:author_name).each do |p|
-          @recipients << [ p.id, p.author_name ]
-        end
-        AssignmentParticipation.find(:all,
-          :joins => [ :assignment_submission ],
-          :conditions => [
-            'assignment_submissions.assignment_id = ? AND assignment_submissions.user_id = ?', @assignment.id, @user.id ],
-          :select => 'assignment_participations.*',
-          :order => 'assignment_participations.participant_name'
-        ).each do |p|
-          @recipients << [ p.id, p.participant_name ]
-        end
-        @recipients = @recipients.delete_if{ |e| e[0].nil? || e[1].nil? }
+      @we_allow_new_messages = false
+      if @current_module && @current_module.has_messaging?
+        @we_allow_new_messages = true
+        r = get_recipients(@current_module)
+        @assignment_participations = r[0]
+        @recipients = r[1]
+      end
+    else
+      @assignment_participations = [ ]
+      @recipients = [ ]
+      @assignment.configured_modules(@user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
+        r = get_recipients(m)
+        @assignment_participations = @assignment_participations + r[0]
+        @recipients = @recipients + r[1]
       end
     end
 
     respond_to do |format|
-      format.html
+      format.html { render :layout => params[:embedded] ? false : 'application' }
       format.ext_json do
         if !params[:assignment_participation_id].blank?
           @messages = Message.find(:all,
@@ -145,5 +145,26 @@ class MessagesController < ApplicationController
       end
 
     end
+  end
+
+protected
+
+  def get_recipients(m)
+    recipients = [ ]
+    ap = m.assignment_participations
+    ap.sort_by(&:author_name).each do |p|
+      recipients << [ p.id, p.author_name ]
+    end
+    AssignmentParticipation.find(:all,
+      :joins => [ :assignment_submission ],
+      :conditions => [
+        'assignment_submissions.assignment_id = ? AND assignment_submissions.user_id = ? AND assignment_participations.tag = ?', @assignment.id, @user.id, m.tag ],
+      :select => 'assignment_participations.*',
+      :order => 'assignment_participations.participant_name'
+    ).each do |p|
+      recipients << [ p.id, p.participant_name ]
+    end
+    recipients = recipients.delete_if{ |e| e[0].nil? || e[1].nil? }
+    return [ ap, recipients ]
   end
 end

@@ -7,29 +7,58 @@
         %li.current= m.name
       - else
         %li= m.name
+  - if @assignment.has_messaging?(@user)
+    %li{:style => 'float: right; border-left: none' }
+      %a{:href => assignment_messages_path(@assignment), :target => "_new"} Messages
 
 - if !@assignment.current_module(@user).nil?
-  #instructions= markdown @assignment.current_module(@user).instructions
-
-  - if @assignment.current_module(@user).has_messaging?
-    #message-container
-    :javascript
-      new Ext.Panel({
-        renderTo: 'message-container',
-        autoLoad: {
-          url: #{assignment_messages_path(@assignment).to_json},
-          scripts: true
-        }
-      });
-  - elsif @assignment.current_module(@user).is_evaluation
-    = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
-    - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
-      = render :partial => 'evaluation_form', :locals => {:info => {:id => 'self-eval', :eval => @assignment.author_eval, :values => AssignmentSubmission.first(:conditions => [ 'assignment_id = ? AND user_id = ?', @assignment.id, @user.id ]).author_eval }, :form_url => assignment_author_eval_path(@assignment), :form_title => 'Self Evaluation'}
+  - if @assignment.current_module(@user).position != 1 && !@assignment.is_participant?(@user)
+    %p
+      You missed the initial module that establishes your participation
+      in this assignment.  Please contact your professor.
   - else
-    = render :partial => 'participation', :collection => @assignment.current_module(@user).assignment_participations
-- elsif @assignment.starts_at > Time.now()
+    #instructions
+      = markdown @assignment.current_module(@user).instructions
+
+    - if @assignment.current_module(@user).has_messaging?
+      %p
+        This module ends in
+        = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now) + "."
+      #message-container
+      :javascript
+        new Ext.TabPanel({
+          renderTo: 'message-container',
+          activeTab: 0,
+          autoHeight: true,
+          xtype: 'tabpanel',
+          items: [{
+            title: 'Instructions',
+            autoScroll: true,
+            contentEl: 'instructions'
+          }, {
+            title: 'Messages',
+            autoLoad: {
+              url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
+              scripts: true
+            }
+          }]
+        });
+    - elsif @assignment.current_module(@user).is_evaluation
+      #instructions
+        You have 
+        = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now)
+        to complete this evaluation.
+
+      = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
+      - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
+        = render :partial => 'evaluation_form', :locals => {:info => {:id => 'self-eval', :eval => @assignment.author_eval, :values => @assignment.assignment_submission(@user).author_eval, :portfolio => @assignment.assignment_submission(@user).show_info(@assignment.configured_modules(@user).last.position) }, :form_url => assignment_author_eval_path(@assignment), :form_title => 'Self Evaluation' }
+    - else
+      = render :partial => 'participation', :collection => @assignment.current_module(@user).assignment_participations
+- elsif @assignment.starts_at > @assignment.course.now
   %p
     This assignment is not yet available.
+- elsif !@assignment.score_view.blank?
+  #score= markdown @assignment.view_scores(@user)
 - else
   %p
     This assignment has closed.

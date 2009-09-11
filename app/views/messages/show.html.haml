@@ -1,2 +1,21 @@
 / We probably want to include the subject line as well as who it's from/to
-=markdown @message.content
+%table{:border => 0}
+  %tr
+    %td{:align => 'right'} Subject:
+    %td=h @message.subject
+  %tr
+    %td{:align => 'right'} Date:
+    %td=h @message.created_at.to_s
+  %tr
+    %td{:align => 'right'}
+      - if @message.user == @user
+        To
+      - else
+        From
+    %td
+      - if @message.user == @message.assignment_participation.user
+        =h @message.assignment_participation.participant_name
+      - else
+        =h @message.assignment_participation.author_name
+
+#message-body= markdown @message.content

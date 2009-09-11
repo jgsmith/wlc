@@ -5,6 +5,7 @@ class CreateAssignmentModules < ActiveRecord::Migration
       t.references :module_def
       t.string  :name
       t.integer :position
+      t.string  :tag
       t.integer :number_participants
       t.integer :duration
       t.text :instructions

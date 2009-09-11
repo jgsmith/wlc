@@ -2,14 +2,12 @@
 / evaluate the authors (participant_eval is the form)
 - if !evaluation.participant_eval.nil? && !evaluation.participant_eval.empty?
   - evaluation.assignment_participations.each do |ap|
-    %p= ap.author_name rescue 'no author name'
-    = render :partial => 'evaluation_form', :locals => {:info => {:id => 'participant-eval-' + ap.id.to_s, :eval => evaluation.participant_eval}, :form_url => assignment_participation_participant_eval_path(ap)}
+    = render :partial => 'evaluation_form', :locals => {:info => {:id => 'participant-eval-' + ap.id.to_s, :eval => evaluation.participant_eval, :values => ap.participant_eval, :portfolio => ap.assignment_submission.show_info(evaluation.position) }, :form_url => assignment_participation_participant_eval_path(ap), :form_title => ap.author_name + ' Evaluation'}
 
 / evaluate the participants
 - if !evaluation.author_eval.nil? && !evaluation.author_eval.empty?
   - evaluation.assignment_submission.assignment_participations.select{|ap| ap.position == evaluation.position }.each do |ap|
-    %p= ap.participant_name rescue 'no participant name'
-    = render :partial => 'evaluation_form', :locals => {:info => {:id => 'author-eval-' + ap.id.to_s, :eval => evaluation.author_eval}, :form_url => assignment_participation_author_eval_path(ap)}
+    = render :partial => 'evaluation_form', :locals => {:info => {:id => 'author-eval-' + ap.id.to_s, :eval => evaluation.author_eval, :values => ap.author_eval}, :form_url => assignment_participation_author_eval_path(ap), :form_title => ap.participant_name + ' Evaluation'}
 
 / each evaluation is a series of questions with multiple choice answers
 / #[

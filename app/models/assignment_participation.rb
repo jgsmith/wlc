@@ -1,8 +1,9 @@
 class AssignmentParticipation < ActiveRecord::Base
+  include ActionView::Helpers::DateHelper
+
   belongs_to :assignment_submission
   belongs_to :user
   belongs_to :state_def
-
   has_many :uploads, :as => :holder
 
   serialize :context
@@ -11,6 +12,22 @@ class AssignmentParticipation < ActiveRecord::Base
 
   attr_accessor :data
   attr_accessor :params
+
+  def assignment_module
+    AssignmentModule.first :conditions => [
+      'assignment_id = ? AND tag = ?',
+      self.assignment.id,
+      self.tag
+    ]
+  end
+
+  def position
+    if self.assignment_module.nil?
+      self.assignment.assignment_modules.last.position + 1
+    else
+      self.assignment_module.position
+    end
+  end
 
   # you have to be a participant in this submission's thread and not be
   # earlier than the module during which this upload was done
@@ -42,7 +59,7 @@ class AssignmentParticipation < ActiveRecord::Base
   end
 
   def configured_module
-    @configured_module ||= self.assignment.configured_modules(self.user)[self.position-1]
+    @configured_module ||= self.assignment.configured_modules(self.user)[self.position - 1]
     @configured_module
   end
 
@@ -55,7 +72,7 @@ class AssignmentParticipation < ActiveRecord::Base
   end
 
   def view_text
-    if defined? self.state_def
+    if !self.state_def.nil?
       self.render self.state_def.view_text
     else
       ''
@@ -133,10 +150,15 @@ class AssignmentParticipation < ActiveRecord::Base
     Liquid::Template.parse(template).render({
       'data' => self.data,
       'participation' => self.to_liquid,
+      'user' => self.user.to_liquid,
       'dates' => {
         'assignment' => {
+          'starts_at' => distance_of_time_in_words(self.assignment.starts_at, self.assignment.course.now),
+          'ends_at' => distance_of_time_in_words(self.assignment.ends_at, self.assignment.course.now)
         },
         'module' => {
+          'starts_at' => distance_of_time_in_words(self.configured_module.starts_at, self.assignment.course.now),
+          'ends_at' => distance_of_time_in_words(self.configured_module.ends_at, self.assignment.course.now)
         }
       }
     })
@@ -215,7 +237,7 @@ class AssignmentParticipation < ActiveRecord::Base
 protected
 
   def ensure_submission
-    return unless self.position == 1
+    return unless self.assignment_module && self.assignment_module.position == 1
 
     if self.assignment_submission.nil?
       as = AssignmentSubmission.create(

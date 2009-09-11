@@ -4,12 +4,10 @@ class CreateAssignmentSubmissions < ActiveRecord::Migration
       t.references :assignment
       t.references :user
       t.text       :author_eval
+      t.text       :scores
 
       t.timestamps
     end
-
-    AssignmentSubmission.create :user_id => 3, :assignment_id => 1
-    AssignmentSubmission.create :user_id => 4, :assignment_id => 1
   end
 
   def self.down

@@ -1,10 +1,10 @@
 class ConfiguredModule
-  attr_accessor :module_def, :starts_at
+  attr_accessor :module_def, :utc_starts_at
   attr_writer   :instructions, :name
   attr_accessor :user, :duration, :position, :number_participants
   attr_accessor :participant_eval, :author_eval, :has_messaging
   attr_accessor :assignment, :author_name, :participant_name
-  attr_accessor :is_evaluation
+  attr_accessor :is_evaluation, :tag
   attr_accessor :download_filename_prefix
 
   def instructions
@@ -23,8 +23,16 @@ class ConfiguredModule
     @name
   end
 
-  def ends_at
+  def utc_ends_at
     self.starts_at + self.duration.to_i
+  end
+
+  def ends_at
+    self.assignment.course.tz.utc_to_local(self.utc_ends_at)
+  end
+
+  def starts_at
+    self.assignment.course.tz.utc_to_local(self.utc_starts_at)
   end
 
   def informational?
@@ -52,6 +60,7 @@ class ConfiguredModule
     self.duration     = am.duration     unless am.duration.nil?
     self.position     = am.position     unless self.position
     self.download_filename_prefix = am.download_filename_prefix unless am.download_filename_prefix.blank?
+    self.tag          = am.tag          unless am.tag.blank?
   end
 
   def assignment_submission
@@ -72,13 +81,13 @@ class ConfiguredModule
       :select => 'assignment_participations.*',
       :conditions => [
         'assignment_submissions.assignment_id = ? AND 
-         assignment_participations.position    = ? AND
+         assignment_participations.tag    = ? AND
          assignment_participations.user_id     = ?',
-        self.assignment.id, self.position, self.user.id
+        self.assignment.id, self.tag, self.user.id
       ])
 
     ## don't assign any participations if we aren't the current module
-    if self.starts_at > Time.now() || Time.now() > self.ends_at
+    if self.starts_at > assignment.course.now || assignment.course.now > self.ends_at
       return @assignment_participations
     end
 
@@ -86,7 +95,7 @@ class ConfiguredModule
       if @assignment_participations.size == 0
         p = AssignmentParticipation.new
         p.configured_module = self
-        p.position = self.position
+        p.tag = self.tag
         p.initialize_participation
         @assignment_participations = [ p ]
       end
@@ -103,20 +112,24 @@ class ConfiguredModule
 
           available = self.assignment.assignment_submissions.select{|a|
             a.user != self.user &&
-            a.assignment_participations.select{|p| p.user==self.user}.size == 0
+            AssignmentParticipation.count(:conditions => [
+               'assignment_submission_id = ? AND user_id = ?',
+               a.id, self.user.id
+            ]) == 0
+            #a.assignment_participations.select{|p| p.user==self.user}.size == 0
           }.group_by{|a|
             a.assignment_participations.count
           }
-          available.each_pair do |n,a|
-            a = a.sort_by { rand }
-          end
           submissions = [ ]
           available.keys.sort.each do |k|
-            submissions << available[k]
+            submissions << available[k].sort_by { rand }
           end
           submissions.flatten!
+          submissions.uniq!
+
           while submissions.size > 0 && 
                 @assignment_participations.size < self.number_participants
+            
             c = submissions.shift
             if defined? c
               p = nil
@@ -124,7 +137,7 @@ class ConfiguredModule
                 p = AssignmentParticipation.create(
                   :assignment_submission => c,
                   :user => self.user,
-                  :position => self.position
+                  :tag => self.tag
                 )
                 if self.has_messaging?
                   p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s
@@ -140,9 +153,10 @@ class ConfiguredModule
           p = AssignmentParticipation.create(
             :user => self.user,
             :assignment_submission => s,
-            :position => self.position
+            :tag => self.tag
           )
           p.initialize_participation
+          p.save
           @assignment_participations << p
         end
       end

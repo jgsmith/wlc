@@ -1,4 +1,4 @@
-class AuthorEvalsController < ApplicationController
+class ParticipantEvalsController < ApplicationController
   def create
     @user = current_user
     @assignment_participation = AssignmentParticipation.find(params[:assignment_participation_id])
@@ -12,7 +12,7 @@ class AuthorEvalsController < ApplicationController
       @assignment_participation.save!
 
       respond_to do |format|
-        format.ext_json { render :json => { :success => false } }
+        format.ext_json { render :json => { :success => true } }
       end
     end
   end

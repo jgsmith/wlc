@@ -5,6 +5,7 @@ ActionController::Routing::Routes.draw do |map|
     semester.resources :courses do |course|
       course.resources :assignments do |assignment|
         assignment.resources :messages
+        assignment.resources :assignment_modules, :as => 'modules'
         assignment.resource  :author_eval
         assignment.resources :assignment_participations do |participation|
           participation.resources :messages

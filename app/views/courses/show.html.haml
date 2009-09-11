@@ -9,12 +9,23 @@
     - counter += 1
     %li
       %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s
-      - if assignment.starts_at > Time.now
-        Begins at 
-        = assignment.starts_at
-      - elsif assignment.ends_at > Time.now
-        Ends at 
-        = assignment.ends_at
+      - if assignment.starts_at > @course.now
+        Begins in 
+        = distance_of_time_in_words(assignment.starts_at, @course.now) + "."
+      - elsif assignment.ends_at > @course.now
+        - if assignment.current_module(@user).position == 1 || assignment.is_participant?(@user)
+          The
+          = '"' + assignment.current_module(@user).name + '"'
+          module ends in
+          = distance_of_time_in_words(assignment.current_module(@user).ends_at, @course.now) + "."
+        - elsif !assignment.is_participant?(@user)
+          The submission module has closed. 
+        The assignment ends in
+        = distance_of_time_in_words(assignment.ends_at, @course.now) + "."
+      - else
+        Ended
+        = distance_of_time_in_words(assignment.ends_at, @course.now)
+        ago.
   - if @course.user == @user
     %li
       %a{:href => new_course_assignment_path(@course)} Create New Assignment

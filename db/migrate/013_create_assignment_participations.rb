@@ -4,7 +4,7 @@ class CreateAssignmentParticipations < ActiveRecord::Migration
       t.references :assignment_submission
       t.references :user
       t.references :state_def
-      t.integer    :position
+      t.string     :tag
       t.text :context
       t.text :author_eval
       t.text :participant_eval

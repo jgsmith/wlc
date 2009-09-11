@@ -7,8 +7,6 @@ class CreateCourseParticipants < ActiveRecord::Migration
 
       t.timestamps
     end
-
-    CourseParticipant.create :course_id => 1, :user_id => 1, :level => 0
   end
 
   def self.down

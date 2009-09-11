@@ -14,9 +14,6 @@ class CreateAssignmentTemplates < ActiveRecord::Migration
 
       t.timestamps
     end
-
-    AssignmentTemplate.create :user_id => 1, :name => 'Simple',
-      :description => "Dan's Assignment"
   end
 
   def self.down

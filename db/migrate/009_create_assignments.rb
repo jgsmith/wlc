@@ -8,30 +8,15 @@ class CreateAssignments < ActiveRecord::Migration
       t.integer    :number_evaluations
       t.string     :eval_name
       t.string     :author_name
+      t.string     :eval_tag
       t.text       :author_eval
       t.text       :participant_eval
-      t.datetime   :starts_at
+      t.text       :calculate_score_fn
+      t.text       :score_view
+      t.datetime   :utc_starts_at
 
       t.timestamps
     end
-
-    Assignment.create :course_id => 1, :starts_at => Time.now - 6*24*60*60,
-      :assignment_template_id => 1, :position => 1, :eval_duration => 3*24*60*60, :eval_name => 'Evaluation',
-      :author_name => 'Author', :number_evaluations => 1, 
-      :author_eval => {
-        :instructions => 'Know thyself!',
-        :prompts => [ 
-          { :prompt => 'What is your favorite color?',
-            :responses => [
-              { :response => 'Blue', :score => 0 },
-              { :response => 'Red',  :score => 1 },
-              { :response => 'Green', :score => 3 }
-            ]
-          }
-        ]
-      }
-
-    Assignment.create :course_id => 1, :starts_at => '2009-09-21 00:00:00', :position => 2
   end
 
   def self.down

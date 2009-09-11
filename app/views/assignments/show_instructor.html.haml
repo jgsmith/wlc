@@ -1,11 +1,317 @@
-%h2=h @assignment.course.name + ' - Assignment #'  + @assignment.position.to_s
+#assignment-panel
+:javascript
+  Ext.onReady(function(){
+  var author_eval_prompts = new Ext.data.ArrayStore({
+    fields: [
+      'prompt',
+      'responses'
+    ],
+    data: #{@assignment.author_eval[:prompts].map{|p| [ p[:prompt], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+  });
 
-%ol.timeline
-  - @assignment.configured_modules(@user).each do |m|
-    - if !m.informational?
-      - if m == @assignment.current_module(@user)
-        %li.current= m.name
-      - else
-        %li= m.name
+  var participant_eval_prompts = new Ext.data.ArrayStore({
+    fields: [
+      'prompt',
+      'responses'
+    ],
+    data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+  });
 
-%p This is the instructor's view of the course.
+  var assignment_modules = new Ext.data.ArrayStore({
+    fields: [
+      'name',
+      'module_def',
+      'has_messaging',
+      'starts_at',
+      'ends_at',
+      'has_evaluation',
+      'is_informational',
+      'locked'
+    ],
+    data: #{@assignment.configured_modules(nil).map{|m| [ m.name, m.module_def.nil? ? 'nil' : m.module_def.name, m.has_messaging?, m.starts_at, m.ends_at, m.has_evaluation?, m.informational?, m.starts_at < Time.now() || !m.has_messaging? && !m.informational? && m.has_evaluation? ] }.to_json}
+  });
+
+  var load_form_with_rubric = function(fpanel,store,prefix) {
+    var rec_no = 0;
+    store.each(function(rec) {
+      var fbase = prefix + "[prompts][" + rec_no + "]";
+
+      console.log("Setting " + fbase+"[prompt] to " + rec.get("prompt"));
+      var form = fpanel.getForm();
+      if(!form.findField(fbase+"[prompt]")) {
+        fpanel.add({xtype: 'hidden',
+          name: fbase+"[prompt]",
+          value: rec.get("prompt")
+        });
+      }
+
+      var rsp_no = 0;
+      rec.get("responses").each(function(r) {
+        var rbase = fbase + "[responses][" + rsp_no + "]";
+        fpanel.add({xtype: 'hidden',
+          name: rbase+"[response]",
+          value: r[0]
+        });
+        fpanel.add({xtype: 'hidden',
+          name: rbase+"[score]",
+          value: r[1]
+        });
+        rsp_no = rsp_no + 1;
+      });
+      rec_no = rec_no + 1;
+    });
+  };
+
+  var load_values_from_rubric = function(values, store, prefix) {
+    var rec_no = 0;
+    store.each(function(rec) {
+      var fbase = prefix + "[prompts][" + rec_no + "]";
+        
+      values[fbase+"[prompt]"] = rec.get("prompt");
+
+      var rsp_no = 0;
+      rec.get("responses").each(function(r) {
+        var rbase = fbase + "[responses][" + rsp_no + "]";
+        values[rbase + "[response]"] = r[0];
+        values[rbase + "[score]"] = r[1];
+        rsp_no = rsp_no + 1;
+      });
+      rec_no = rec_no + 1;
+    });
+  };
+
+  new Ext.Panel({
+    title: #{(@assignment.course.name + ' - Assignment #' + @assignment.position.to_s).to_json},
+    renderTo: $('assignment-panel'),
+    autoHeight: true,
+    items: [{
+      xtype: 'tabpanel',
+      activeItem: 0,
+      border: false,
+      items: [{
+        title: 'Basics',
+        xtype: 'form',
+        flex: 1,
+        buttonAlign: 'center',
+        buttons: [{
+          text: 'Save Base Configuration',
+          type: 'submit',
+          handler: function(f) {
+            var fp = this.ownerCt.ownerCt;
+            var form = fp.getForm();
+            var values = form.getValues();
+            console.log(values);
+            values['_method'] = 'PUT';
+            Ext.Ajax.request({
+              url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
+              params: values,
+              method: "PUT",
+              success: function(response, opts) {
+                Ext.Msg.alert('Status', 'Base configuration saved successfully.');
+              },
+              failure: function(response, opts) {
+                Ext.Msg.alert('Status', 'Unable to save changes to the base configuration.');
+              }
+            });
+          }
+        }],
+        items: [{
+          xtype: 'numberfield',
+          name: 'assignment[position]',
+          fieldLabel: 'Position',
+          value: #{@assignment.position.to_json},
+          allowNegative: false,
+          allowDecimals: false,
+          decimalPrecision: 0
+        }, {
+          inputType: 'hidden', 
+          xtype: 'field',
+          name: 'authenticity_token',
+          value: #{form_authenticity_token.to_json}
+        }, {
+          xtype: 'textfield',
+          name: 'assignment[starts_at]',
+          fieldLabel: 'Starts At',
+          value: #{@assignment.starts_at.to_json}
+        }]
+      }, {
+        xtype: 'form',
+        title: 'Evaluation',
+        flex: 1,
+        buttonAlign: 'center',
+        buttons: [{
+          text: 'Save Evaluation Configuration',
+          type: 'submit',
+          handler: function(f) {
+            var fp = this.ownerCt.ownerCt;
+            var form = fp.getForm();
+            var values = form.getValues();
+            load_values_from_rubric(values, author_eval_prompts, "assignment[author_eval]");
+            load_values_from_rubric(values, participant_eval_prompts, "assignment[participant_eval]");
+            console.log(values);
+            values['_method'] = 'PUT';
+            Ext.Ajax.request({
+              url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
+              params: values,
+              method: "PUT",
+              success: function(response, opts) {
+                Ext.Msg.alert('Status', 'Evaluation configuration saved successfully.');
+              },
+              failure: function(response, opts) {
+                Ext.Msg.alert('Status', 'Unable to save changes to the evaluation configuration.');
+              }
+            });
+          }
+        }],
+        items: [{
+          xtype: 'numberfield',
+          name: 'assignment[eval_duration]',
+          fieldLabel: 'Duration',
+          value: #{(@assignment.eval_duration / 60).to_json},
+          allowNegative: false,
+          allowDecimals: false,
+          decimalPrecision: 0
+        }, {
+          inputType: 'hidden', 
+          xtype: 'field',
+          name: 'authenticity_token',
+          value: #{form_authenticity_token.to_json}
+        }, {
+          xtype: 'numberfield',
+          name: 'assignment[number_evaluations]',
+          fieldLabel: 'Number Evaluations',
+          value: #{@assignment.number_evaluations.to_json},
+          allowNegative: false,
+          allowDecimals: false,
+          decimalPrecision: 0
+        }, {
+          xtype: 'textfield',
+          name: 'assignment[eval_name]',
+          fieldLabel: 'Evaluation Step Name',
+          width: 500,
+          value: #{@assignment.eval_name.to_json}
+        }, {
+          xtype: 'textfield',
+          name: 'assignment[author_name]',
+          fieldLabel: "Author's Name",
+          value: #{@assignment.author_name.to_json}
+        }, {
+          xtype: 'fieldset',
+          title: "Author's Evaluation",
+          items: [{
+            xtype: 'textarea',
+            name: 'assignment[author_eval][instructions]',
+            fieldLabel: "Instructions",
+            value: #{@assignment.author_eval[:instructions].to_json},
+            width: 500,
+            grow: true
+          }, {
+            xtype: 'rubricgrid',
+            store: author_eval_prompts
+          }]
+        }, {
+          xtype: 'fieldset',
+          title: "Reviewer's Evaluation",
+          items: [{
+            xtype: 'textarea',
+            name: 'assignment[participant_eval][instructions]',
+            fieldLabel: "Instructions",
+            value: #{@assignment.participant_eval[:instructions].to_json},
+            width: 500,
+            grow: true
+          }, {
+            xtype: 'rubricgrid',
+            store: participant_eval_prompts
+          }]
+        }]
+      }, {
+        xtype: 'form',
+        title: 'Scoring',
+        flex: 1,
+        buttonAlign: 'center',
+        buttons: [{
+          text: 'Save Scoring Configuration',
+          type: 'submit',
+          handler: function(f) {
+            var fp = this.ownerCt.ownerCt;
+            var form = fp.getForm();
+            var values = form.getValues();
+            console.log(values);
+            values['_method'] = 'PUT';
+            Ext.Ajax.request({
+              url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
+              params: values,
+              method: "PUT",
+              success: function(response, opts) {
+                Ext.Msg.alert('Status', 'Scoring configuration saved successfully.');
+              },
+              failure: function(response, opts) {
+                Ext.Msg.alert('Status', 'Unable to save changes to the scoring configuration.');
+              }
+            });
+          }
+        }],
+        items: [{
+          xtype: 'textarea',
+          name: 'assignment[calculate_score_fn]',
+          fieldLabel: 'Score Calculation Function',
+          value: #{@assignment.calculate_score_fn.to_json},
+          width: 500,
+          grow: true
+        }, {
+          inputType: 'hidden', 
+          xtype: 'field',
+          name: 'authenticity_token',
+          value: #{form_authenticity_token.to_json}
+        }, {
+          xtype: 'htmleditor',
+          name: 'assignment[score_view]',
+          fieldLabel: 'Score Display Template',
+          value: #{@assignment.score_view.to_json}
+        }]
+      }, {
+        xtype: 'grid',
+        title: 'Modules',
+        height: 800,
+        flex: 1,
+        store: assignment_modules,
+        plugins: [new Ext.ux.dd.GridDragDropRowOrder({
+          scrollable: true,
+          lockedField: 'locked'
+        })],
+        viewConfig: { forceFit: true },
+        width: 500,
+        columns: [
+          { id: 'name', header: 'Name', width: 100, dataIndex: 'name', sortable: false },
+          { id: 'module_def', header: 'Type', width: 100, dataIndex: 'module_def', sortable: false },
+          { id: 'has_messaging', header: 'Messaging?', width: 30, dataIndex: 'has_messaging', sortable: false },
+          { id: 'has_evaluation', header: 'Evaluation?', width: 30, dataIndex: 'has_evaluation', sortable: false },
+          { id: 'is_informational', header: 'Informational?', width: 30, dataIndex: 'is_informational', sortable: false },
+          { id: 'locked', header: 'Locked?', width: 30, dataIndex: 'locked', sortable: false },
+          { id: 'starts_at', header: 'Starts At', width: 30, dataIndex: 'starts_at', sortable: false },
+          { id: 'ends_at', header: 'Ends At', width: 30, dataIndex: 'ends_at', sortable: false }
+        ],
+        sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
+        height: 500,
+        tools: [{
+          id: 'plus'
+        }, {
+          id: 'minus',
+          handler: function(event, toolEl, panel, tx) {
+          }
+        }],
+        listeners: {
+          rowdblclick: function(grid, index, e) {
+            var rec = grid.getStore().getAt(index);
+            console.log(rec);
+          }
+        }
+      }, {
+        title: 'Performance',
+        flex: 1,
+        html: 'Grades and such are here'
+      }]
+    }]
+  })
+  });
+

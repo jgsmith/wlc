@@ -10,36 +10,6 @@ class CreateStateDefs < ActiveRecord::Migration
 
       t.timestamps
     end
-
-    StateDef.create :name => 'start', :module_def_id => 1,
-      :pre_fn => '',
-      :post_fn => '',
-      :view_text => 'Upload your submission to establish your participation in this assignment.',
-      :view_form => {
-        :items => [
-          { :inputType => 'file',
-            :xtype => 'field',
-            :name => 'upload',
-            :fieldLabel => 'Submission',
-          }
-        ],
-        :submit => 'Upload Submission',
-      }
-
-    StateDef.create :name => 'submitted', :module_def_id => 1,
-      :pre_fn => '',
-      :post_fn => '',
-      :view_text => 'You have uploaded your submission.  You may replace it by uploading another file now.',
-      :view_form => {
-        :items => [
-          { :inputType => 'file',
-            :xtype => 'field',
-            :name => 'upload',
-            :fieldLabel => 'Submission',
-          }
-        ],
-        :submit => 'Replace Submission',
-      }
   end
 
   def self.down
