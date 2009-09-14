@@ -34,7 +34,7 @@
       WLC.setPanel('form-#{f[:id]}', new Ext.form.FormPanel({
         renderTo: "form-#{f[:id]}",
         items: #{f[:items].to_json},
-        method: #{f[:method]},
+        method: #{f[:method].to_json},
         fileUpload: #{f[:fileUpload].to_json},
         url: #{f[:url].to_json},
         buttons: [{
@@ -45,7 +45,7 @@
             var form = fp.getForm();
             if(form.isValid()) {
               form.submit({
-                method: #{f[:method]},
+                method: #{f[:method].to_json},
                 url: #{f[:url].to_json},
                 success: function(f,a) {
                   var panel = WLC.getPanel(#{f[:id].to_json});
