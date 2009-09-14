@@ -1,6 +1,6 @@
 #message-panel
 - tabs = [ { :title => 'You', :html => @current_module.assignment_submission.show_info(@current_module.position), :itemId => 'own-portfolio' } ]
-- @current_module.assignment_participations.each do |p|
+- @assignment_participations.each do |p|
   - next if p.author_name.blank?
   - p.viewing_user = @user
   - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module.position), :itemId => 'portfolio-' + p.id.to_s }
