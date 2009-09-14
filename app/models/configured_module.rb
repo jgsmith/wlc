@@ -139,7 +139,7 @@ class ConfiguredModule
                   :user => self.user,
                   :tag => self.tag
                 )
-                if self.has_messaging?
+                if self.has_messaging? || self.has_evaluation?
                   p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s
                   p.participant_name = self.participant_name + ' #' + (c.assignment_participations.count).to_s
                 end
