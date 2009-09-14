@@ -186,6 +186,7 @@ ActiveRecord::Schema.define(:version => 16) do
 
   create_table "users", :force => true do |t|
     t.string   "login"
+    t.string   "uin",                       :limit => 9
     t.string   "email"
     t.string   "name"
     t.string   "crypted_password",          :limit => 40

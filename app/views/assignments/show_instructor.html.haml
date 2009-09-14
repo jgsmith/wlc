@@ -17,6 +17,13 @@
     data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
   });
 
+  var performance_store = new Ext.data.JsonStore({
+    url: #{(assignment_grades_path(@assignment) + "?format=ext_json").to_json},
+    root: 'items',
+    idProperty: 'id',
+    fields: #{@performance_store_fields.to_json}
+  });
+
   var assignment_modules = new Ext.data.ArrayStore({
     fields: [
       'name',
@@ -36,7 +43,7 @@
     store.each(function(rec) {
       var fbase = prefix + "[prompts][" + rec_no + "]";
 
-      console.log("Setting " + fbase+"[prompt] to " + rec.get("prompt"));
+      WLC.debug("Setting " + fbase+"[prompt] to " + rec.get("prompt"));
       var form = fpanel.getForm();
       if(!form.findField(fbase+"[prompt]")) {
         fpanel.add({xtype: 'hidden',
@@ -100,7 +107,7 @@
             var fp = this.ownerCt.ownerCt;
             var form = fp.getForm();
             var values = form.getValues();
-            console.log(values);
+            WLC.debug(values);
             values['_method'] = 'PUT';
             Ext.Ajax.request({
               url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
@@ -148,7 +155,7 @@
             var values = form.getValues();
             load_values_from_rubric(values, author_eval_prompts, "assignment[author_eval]");
             load_values_from_rubric(values, participant_eval_prompts, "assignment[participant_eval]");
-            console.log(values);
+            WLC.debug(values);
             values['_method'] = 'PUT';
             Ext.Ajax.request({
               url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
@@ -236,7 +243,7 @@
             var fp = this.ownerCt.ownerCt;
             var form = fp.getForm();
             var values = form.getValues();
-            console.log(values);
+            WLC.debug(values);
             values['_method'] = 'PUT';
             Ext.Ajax.request({
               url: #{(assignment_path(@assignment)+"?format=ext_json").to_json},
@@ -292,7 +299,6 @@
           { id: 'ends_at', header: 'Ends At', width: 30, dataIndex: 'ends_at', sortable: false }
         ],
         sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
-        height: 500,
         tools: [{
           id: 'plus'
         }, {
@@ -303,13 +309,32 @@
         listeners: {
           rowdblclick: function(grid, index, e) {
             var rec = grid.getStore().getAt(index);
-            console.log(rec);
+            WLC.debug(rec);
           }
         }
       }, {
         title: 'Performance',
         flex: 1,
-        html: 'Grades and such are here'
+        xtype: 'grid',
+        height: 800,
+        autoScroll: true,
+        viewConfig: { forceFit: true },
+        width: 500,
+        store: performance_store,
+        colModel: new Ext.grid.ColumnModel({
+          defaults: {
+            width: 120,
+            sortable: true
+          },
+          columns: #{@performance_grid_columns.to_json},
+        }),
+        sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
+        listeners: {
+          rowdblclick: function(grid, index, e) {
+            var rec = grid.getStore().getAt(index);
+            WLC.debug(rec)
+          }
+        }
       }]
     }]
   })

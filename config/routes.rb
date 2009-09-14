@@ -7,6 +7,7 @@ ActionController::Routing::Routes.draw do |map|
         assignment.resources :messages
         assignment.resources :assignment_modules, :as => 'modules'
         assignment.resource  :author_eval
+        assignment.resource  :grades
         assignment.resources :assignment_participations do |participation|
           participation.resources :messages
           participation.resources :uploads

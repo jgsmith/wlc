@@ -15,6 +15,35 @@ class AssignmentsController < ApplicationController
     @user = current_user
     if @assignment.course.user == @user
       # we want to show instructor view of assignment
+      @performance_store_fields = [ 'id', 'name' ]
+      @performance_grid_columns = [
+        { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name' },
+      ]
+
+      @assignment.configured_modules(nil).each do |m|
+        if m.has_evaluation?
+          if !m.author_name.blank?
+            m.number_participants.times do |i|
+              nm = 'author_' + m.position.to_s + '_' + i.to_s
+              @performance_store_fields << nm
+              @performance_grid_columns << {
+               :id => nm, :header => m.author_name + ' #' + (i+1).to_s,
+               :sortable => true, :dataIndex => nm
+              }
+            end
+          end
+          if !m.participant_name.blank?
+            m.number_participants.times do |i|
+              nm = 'participant_' + m.position.to_s + '_' + i.to_s
+              @performance_store_fields << nm
+              @performance_grid_columns << {
+               :id => nm, :header => m.participant_name + ' #' + (i+1).to_s,
+               :sortable => true, :dataIndex => nm
+              }
+            end
+          end
+        end
+      end
       render :action => 'show_instructor'
     elsif @assignment.course.is_student?(@user)
       # we show student view of assignment (default)
@@ -54,6 +83,11 @@ class AssignmentsController < ApplicationController
       end
 
       params[:assignment][:eval_duration] = params[:assignment][:eval_duration].to_i * 60 unless params[:assignment][:eval_duration].blank?;
+
+      if(!params[:assignment][:starts_at].blank?)
+          params[:assignment][:utc_starts_at] = @assignment.course.tz.local_to_utc(DateTime.parse(params[:assignment][:starts_at]))
+          params[:assignment][:starts_at] = DateTime.parse(params[:assignment][:starts_at])
+      end
 
       respond_to do |format|
         format.ext_json { render :json => @assignment.to_ext_json(:success => @assignment.update_attributes(params[:assignment])) }

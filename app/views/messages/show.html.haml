@@ -13,6 +13,7 @@
       - else
         From
     %td
+      / swapped around possible -- to author shows to editor in content
       - if @message.user == @message.assignment_participation.user
         =h @message.assignment_participation.participant_name
       - else

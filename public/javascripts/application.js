@@ -11,6 +11,12 @@ Ext.namespace('WLC');
   WLC.setPanel = function(n,p) {
     panels[n] = p;
   };
+
+  WLC.debug = function(x) {
+    if(!(window.console === undefined || window.console.log === undefined)) {
+      console.log(x);
+    }
+  }
 })();
 
 Ext.namespace('Ext.ux.dd');
@@ -248,7 +254,7 @@ Ext.ux.dd.GridDragDropRowOrder = Ext.extend(Ext.util.Observable,
                 }
                 catch (err)
                 {
-                    console.warn(err);
+                    WLC.debug(err);
                     rindex = false;
                 }
                 return (rindex === false)? this.dropNotAllowed : this.dropAllowed;

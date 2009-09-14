@@ -26,6 +26,6 @@
         Ended
         = distance_of_time_in_words(assignment.ends_at, @course.now)
         ago.
-  - if @course.user == @user
+  - if ENV["RAILS_ENV"] == "development" && @course.user == @user
     %li
       %a{:href => new_course_assignment_path(@course)} Create New Assignment

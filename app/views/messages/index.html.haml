@@ -21,7 +21,7 @@
         id: 'plus',
         qtip: 'Send Message',
         handler: function(e,toolEl,panel,tc) {
-           console.log("Sending message");
+           WLC.debug("Sending message");
            var compose_form = new Ext.Window({
              title: 'New Message',
              renderTo: document.body,
@@ -45,9 +45,9 @@
                  type: 'submit',
                  handler: function(f) {
                    var fp = this.ownerCt.ownerCt;
-                   console.log(this);
-                   console.log(this.ownerCt);
-                   console.log(fp);
+                   WLC.debug(this);
+                   WLC.debug(this.ownerCt);
+                   WLC.debug(fp);
                    var form = fp.getForm();
                    if(form.isValid()) {
                      form.submit({
@@ -210,8 +210,8 @@
                 grid.getView().refreshRow(rec);
               }
 
-              console.log(rec);
-              console.log("Setting active tab to: " + rec.get('recipient-portfolio'));
+              WLC.debug(rec);
+              WLC.debug("Setting active tab to: " + rec.get('recipient-portfolio'));
               message_panel.layout.north.panel.getComponent('message-portfolios').setActiveTab(rec.get('recipient-portfolio'));
             }
           },
