@@ -58,7 +58,7 @@
   %p
     This assignment is not yet available.
 - elsif !@assignment.score_view.blank?
-  #score= markdown @assignment.view_scores(@user)
+  #score= (markdown @assignment.view_scores(@user) rescue '')
 - else
   %p
     This assignment has closed.

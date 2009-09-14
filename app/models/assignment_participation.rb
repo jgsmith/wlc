@@ -12,6 +12,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
   attr_accessor :data
   attr_accessor :params
+  attr_accessor :viewing_user
 
   def assignment_module
     AssignmentModule.first :conditions => [
@@ -150,7 +151,7 @@ class AssignmentParticipation < ActiveRecord::Base
     Liquid::Template.parse(template).render({
       'data' => self.data,
       'participation' => self.to_liquid,
-      'user' => self.user.to_liquid,
+      'user' => self.viewing_user.to_liquid,
       'dates' => {
         'assignment' => {
           'starts_at' => distance_of_time_in_words(self.assignment.starts_at, self.assignment.course.now),

@@ -115,7 +115,11 @@ class Assignment < ActiveRecord::Base
   def current_module(user)
     if !defined? @current_module
       n = self.course.now
-      @current_module = configured_modules(user).select{|c| c.starts_at <= n}.sort_by(&:starts_at).last
+      configured_modules(user).reverse.each do |c|
+        return c if c.starts_at <= n && c.ends_at >= n
+      end
+      #@current_module = configured_modules(user).select{|c| c.starts_at <= n}.sort_by(&:starts_at).last
+      return nil
     end
 
     return nil if @current_module.ends_at < self.course.now

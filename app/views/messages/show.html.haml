@@ -1,20 +1,20 @@
 / We probably want to include the subject line as well as who it's from/to
 %table{:border => 0}
   %tr
-    %td{:align => 'right'} Subject:
+    %td{:align => 'right', :style => 'font-weight: bold'} Subject:
     %td=h @message.subject
   %tr
-    %td{:align => 'right'} Date:
+    %td{:align => 'right', :style => 'font-weight: bold'} Date:
     %td=h @message.created_at.to_s
   %tr
-    %td{:align => 'right'}
+    %td{:align => 'right', :style => 'font-weight: bold'}
       - if @message.user == @user
-        To
+        To:
       - else
-        From
+        From:
     %td
-      / swapped around possible -- to author shows to editor in content
-      - if @message.user == @message.assignment_participation.user
+      - if( (@message.user == @user) ^
+            (@user == @message.assignment_participation.user) )
         =h @message.assignment_participation.participant_name
       - else
         =h @message.assignment_participation.author_name

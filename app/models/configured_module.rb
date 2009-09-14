@@ -24,7 +24,7 @@ class ConfiguredModule
   end
 
   def utc_ends_at
-    self.starts_at + self.duration.to_i
+    self.utc_starts_at + self.duration.to_i
   end
 
   def ends_at
