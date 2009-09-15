@@ -67,7 +67,7 @@ class MessagesController < ApplicationController
         render :json => @messages.map { |m|
           h = { :id => m.id, 
                 :subject => m.subject,
-                :created_at => m.created_at,
+                :created_at => m.created_at.to_s,
               }
           if @user == m.user
             h[:is_read] = true
