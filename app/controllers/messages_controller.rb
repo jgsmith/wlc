@@ -2,6 +2,9 @@ class MessagesController < ApplicationController
   def index
     @user = current_user
 
+    @assignment_participations = [ ]
+    @recipients = [ ]
+
     if !params[:assignment_id].blank?
       @assignment = Assignment.find(params[:assignment_id])
 
@@ -9,7 +12,6 @@ class MessagesController < ApplicationController
         render :text => 'Forbidden!', :status => 403
       end
 
-      @recipients = [ ]
     # we want the list of authors we are evaluating and 
     # the list of evaluators we are working with
     # for the current assignment module
@@ -23,8 +25,6 @@ class MessagesController < ApplicationController
         @recipients = r[1]
       end
     else
-      @assignment_participations = [ ]
-      @recipients = [ ]
       @assignment.configured_modules(@user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
         r = get_recipients(m)
         @assignment_participations = @assignment_participations + r[0]
