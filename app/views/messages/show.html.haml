@@ -5,7 +5,9 @@
     %td=h @message.subject
   %tr
     %td{:align => 'right', :style => 'font-weight: bold'} Sent:
-    %td= distance_of_time_in_words(@message.assignment_participation.assignment_submission.assignment.course.tz.utc_to_local(@message.created_at), @message.assignment_participation.assignment_submission.assignment.course.now)
+    %td
+      = distance_of_time_in_words(@message.assignment_participation.assignment_submission.assignment.course.tz.utc_to_local(@message.created_at), @message.assignment_participation.assignment_submission.assignment.course.now)
+      ago
   %tr
     %td{:align => 'right', :style => 'font-weight: bold'}
       - if @message.user == @user
