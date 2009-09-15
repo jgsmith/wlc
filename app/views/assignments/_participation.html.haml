@@ -5,12 +5,15 @@
   - participation_id = 'participation-' + participation.id.to_s
   - participation_url = assignment_participation_path(participation)
 
-.participation{:id => participation_id}
+.participation{:id => participation_id + '-container'}
   :javascript
-    WLC.setPanel(#{participation_id.to_json}, new Ext.Panel({
-      renderTo: #{participation_id.to_json},
-      autoLoad: {
-        url: #{participation_url.to_json},
-        scripts: true
-      }
-    }));
+    Ext.onReady(function(){
+      new Ext.Panel({
+        renderTo: #{(participation_id+'-container').to_json},
+        id: #{participation_id.to_json},
+        autoLoad: {
+          url: #{participation_url.to_json},
+          scripts: true
+        }
+      })
+    });

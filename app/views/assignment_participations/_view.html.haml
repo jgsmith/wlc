@@ -30,8 +30,8 @@
   .form{:id => "form-#{f[:id]}"}
 
   :javascript
-    (function() {
-      WLC.setPanel('form-#{f[:id]}', new Ext.form.FormPanel({
+    Ext.onReady(function(){
+      new Ext.form.FormPanel({
         renderTo: "form-#{f[:id]}",
         items: #{f[:items].to_json},
         method: #{f[:method].to_json},
@@ -48,7 +48,7 @@
                 method: #{f[:method].to_json},
                 url: #{f[:url].to_json},
                 success: function(f,a) {
-                  var panel = WLC.getPanel(#{f[:id].to_json});
+                  var panel = Ext.ComponentMgr.get(#{f[:id].to_json});
                   panel.load({
                     url: #{f[:show_url].to_json},
                     scripts: true
@@ -66,5 +66,5 @@
         border: false,
         frame: true,
         method: #{f[:method].to_json}
-      }));
-    })();
+      });
+    });
