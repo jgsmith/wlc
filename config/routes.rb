@@ -3,6 +3,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.resources :semester, :shallow => true do |semester|
     semester.resources :courses do |course|
+      course.resource  :course_participants, :as => 'roster'
       course.resources :assignments do |assignment|
         assignment.resources :messages
         assignment.resources :assignment_modules, :as => 'modules'

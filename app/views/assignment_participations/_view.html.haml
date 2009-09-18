@@ -1,56 +1,32 @@
 .text= markdown @assignment_participation.view_text
 
-.info= @assignment_participation.show_info
+.info= @assignment_participation.show_info(@user)
 
-- f = @assignment_participation.view_form
-
-- if !f.empty?
-  - if @assignment_participation.new_record?
-    - f[:show_url] = assignment_assignment_participations_path(@assignment_participation.assignment)
-    - f[:method] = 'POST'
-  - else
-    - f[:show_url] = assignment_participation_path(@assignment_participation)
-    - f[:method] = 'PUT'
-
-  - if @assignment_participation.position == 1
-    - f[:id] = 'participation'
-  - else
-    - f[:id] = "participation-#{@assignment_participation.id}"
-
-  - f[:items] << { :inputType => 'hidden', :name => 'authenticity_token', :value => form_authenticity_token, :xtype => 'field' }
-  - f[:items] << { :inputType => 'hidden', :name => '_method', :value => f[:method], :xtype => 'field' }
-
-  - if f[:items].select{ |i| i[:inputType] == 'file' }.size > 0
-    - f[:url] = f[:show_url] + '?format=ext_json_html'
-    - f[:fileUpload] = true
-  - else
-    - f[:url] = f[:show_url] + '?format=ext_json'
-    - f[:fileUpload] = false
-
-  .form{:id => "form-#{f[:id]}"}
+- if !@form.empty?
+  .form{:id => "form-#{@form[:id]}"}
 
   :javascript
     Ext.onReady(function(){
       new Ext.form.FormPanel({
-        renderTo: "form-#{f[:id]}",
-        items: #{f[:items].to_json},
-        method: #{f[:method].to_json},
-        fileUpload: #{f[:fileUpload].to_json},
-        url: #{f[:url].to_json},
+        renderTo: "form-#{@form[:id]}",
+        items: #{@form[:items].to_json},
+        method: #{@form[:method].to_json},
+        fileUpload: #{@form[:fileUpload].to_json},
+        url: #{@form[:url].to_json},
         buttons: [{
-          text: #{f[:submit].to_json},
+          text: #{@form[:submit].to_json},
           type: 'submit',
           handler: function() {
             var fp = this.ownerCt.ownerCt;
             var form = fp.getForm();
             if(form.isValid()) {
               form.submit({
-                method: #{f[:method].to_json},
-                url: #{f[:url].to_json},
+                method: #{@form[:method].to_json},
+                url: #{@form[:url].to_json},
                 success: function(f,a) {
-                  var panel = Ext.ComponentMgr.get(#{f[:id].to_json});
+                  var panel = Ext.ComponentMgr.get(#{@form[:id].to_json});
                   panel.load({
-                    url: #{f[:show_url].to_json},
+                    url: #{@form[:show_url].to_json},
                     scripts: true
                   });
                 }
@@ -65,6 +41,6 @@
         bodyBorder: false,
         border: false,
         frame: true,
-        method: #{f[:method].to_json}
+        method: #{@form[:method].to_json}
       });
     });

@@ -1,17 +1,10 @@
 // Place your application-specific JavaScript functions and classes here
 // This file is automatically included by javascript_include_tag :defaults
+Ext.QuickTips.init();
+
 Ext.namespace('WLC');
 
 (function() {
-  var panels = [ ];
-  WLC.getPanel = function(n) {
-    return panels[n];
-  };
-
-  WLC.setPanel = function(n,p) {
-    panels[n] = p;
-  };
-
   WLC.debug = function(x) {
     if(!(window.console === undefined || window.console.log === undefined)) {
       console.log(x);
@@ -317,72 +310,73 @@ Ext.ux.dd.GridDragDropRowOrder = Ext.extend(Ext.util.Observable,
 
 Ext.namespace('WLC.grid');
 
-WLC.grid.ResponseGrid = function(config) {
-    config.xtype = 'editorgrid';
-    config.title = config.title || 'Responses';
-    config.plugins = config.plugins || [ ];
-    config.plugins.push(new Ext.ux.dd.GridDragDropRowOrder({
-        scrollable: true
-    }));
-    config.viewConfig = config.viewConfig || { };
-    config.viewConfig.forceFit = true;
-    config.width = 430;
-    config.clicksToEdit = 1;
-    config.store = config.store || new Ext.data.ArrayStore({
-        fields: [
-            'response',
-            'score'
-        ],
-        data: config.rubricRecord.get('responses')
-    });
-
-    config.columns = [
-    {
-        id: 'response', header: 'Response', width: 300, dataIndex: 'response', sortable: false, editor:new Ext.form.TextField({ allowBlank: false })
-    },
-    {
-        id: 'score', header: 'Score', width: 50, dataIndex: 'score', sortable: false, editor: new Ext.form.NumberField({ allowBlank: true }) 
+WLC.grid.ResponseGrid = Ext.extend(Ext.grid.EditorGridPanel, {
+    xtype: 'editorgrid',
+    title: 'Responses',
+    width: 430,
+    height: 200,
+    clicksToEdit: 1,
+    constructor: function(config) {
+        config.plugins = config.plugins || [ ];
+        config.plugins.push(new Ext.ux.dd.GridDragDropRowOrder({
+            scrollable: true
+        }));
+        config.viewConfig = config.viewConfig || { };
+        config.viewConfig.forceFit = true;
+        config.store = config.store || new Ext.data.ArrayStore({
+            fields: [
+                'response',
+                'score'
+            ],
+            data: config.rubricRecord.get('responses')
+        });
+    
+        config.columns = [
+        {
+            id: 'response', header: 'Response', width: 300, dataIndex: 'response', sortable: false, editor:new Ext.form.TextField({ allowBlank: false })
+        },
+        {
+            id: 'score', header: 'Score', width: 50, dataIndex: 'score', sortable: false, editor: new Ext.form.NumberField({ allowBlank: true }) 
+        }
+        ];
+        config.sm = new Ext.grid.RowSelectionModel({singleSelect: true});
+    
+        config.tools = [{
+            id: 'plus',
+            handler: function(event, toolEl, panel, tc) {
+                var Response = panel.getStore().recordType;
+                var r = new Response({
+                    response: '',
+                    score: ''
+                });
+                var n = panel.getStore().getTotalCount();
+                panel.stopEditing(true);
+                panel.store.insert(n, r);
+                panel.startEditing(n,0);
+            }
+        }, {
+            id: 'minus',
+            handler: function(event, toolEl, panel, tc) {
+                var row = panel.selModel.getSelected();
+                row.store.remove(row);
+            }
+        }];
+    
+        WLC.grid.ResponseGrid.superclass.constructor.call(this, config);
     }
-    ];
-    config.sm = new Ext.grid.RowSelectionModel({singleSelect: true});
-    config.height = 200;
-
-    config.tools = [{
-        id: 'plus',
-        handler: function(event, toolEl, panel, tc) {
-            var Response = panel.getStore().recordType;
-            var r = new Response({
-                response: '',
-                score: ''
-            });
-            var n = panel.getStore().getTotalCount();
-            panel.stopEditing(true);
-            panel.store.insert(n, r);
-            panel.startEditing(n,0);
-        }
-    }, {
-        id: 'minus',
-        handler: function(event, toolEl, panel, tc) {
-            var row = panel.selModel.getSelected();
-            row.store.remove(row);
-        }
-    }];
-
-    WLC.grid.ResponseGrid.superclass.constructor.call(this, config);
-};
-
-Ext.extend(WLC.grid.ResponseGrid, Ext.grid.EditorGridPanel, {
 });
 
-WLC.grid.RubricGrid = function(config) {
-
-    config.type = 'grid';
-    config.title = config.title || 'Rubric';
+WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
+  type: 'grid',
+  title: 'Rubric',
+  clicksToEdit: 1,
+  width: 500,
+  height: 200,
+  constructor: function(config) {
     config.plugins = config.plugins || [ ];
     config.plugins.push( new Ext.ux.dd.GridDragDropRowOrder({
         scrollable: true
     }));
-    config.clicksToEdit = 1;
     config.colModel = config.colModel || new Ext.grid.ColumnModel({
               defaults: {
                 width: 500,
@@ -401,8 +395,6 @@ WLC.grid.RubricGrid = function(config) {
         forceFit: true
     };
     config.sm = new Ext.grid.RowSelectionModel({singleSelect: true});
-    config.width = 500;
-    config.height = 200;
     config.tools = [{
         id: 'plus',
         handler: function(event, toolEl, panel, tc) {
@@ -546,10 +538,34 @@ WLC.grid.RubricGrid = function(config) {
             };
           
     WLC.grid.RubricGrid.superclass.constructor.call(this, config);
-};
+  }
+});
 
-Ext.extend(WLC.grid.RubricGrid, Ext.grid.GridPanel, {
+Ext.namespace('WLC.ux');
+
+WLC.ux.AuthorTimelinePanel = Ext.extend(Ext.Panel, {
+    baseCls: 'x-author-timeline-panel',
+    frame: true
+});
+
+WLC.ux.ParticipantTimelinePanel = Ext.extend(Ext.Panel, {
+    baseCls: 'x-participant-timeline-panel',
+    frame: true
+});
+
+WLC.ux.InfoTimelinePanel = Ext.extend(Ext.Panel, {
+    baseCls: 'x-info-timeline-panel',
+    frame: true
+});
+
+WLC.ux.EvalTimelinePanel = Ext.extend(Ext.Panel, {
+    baseCls: 'x-eval-timeline-panel',
+    frame: true
 });
 
 Ext.ComponentMgr.registerType('rubricgrid', WLC.grid.RubricGrid);
 Ext.ComponentMgr.registerType('responsegrid', WLC.grid.ResponseGrid);
+Ext.ComponentMgr.registerType('author-timeline-panel', WLC.ux.AuthorTimelinePanel);
+Ext.ComponentMgr.registerType('participant-timeline-panel', WLC.ux.ParticipantTimelinePanel);
+Ext.ComponentMgr.registerType('info-timeline-panel', WLC.ux.InfoTimelinePanel);
+Ext.ComponentMgr.registerType('eval-timeline-panel', WLC.ux.EvalTimelinePanel);

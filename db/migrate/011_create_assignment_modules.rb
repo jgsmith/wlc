@@ -14,6 +14,7 @@ class CreateAssignmentModules < ActiveRecord::Migration
       t.string :author_name
       t.text :author_eval
       t.text :participant_eval
+      t.text :params
       t.string :download_filename_prefix
 
       t.timestamps

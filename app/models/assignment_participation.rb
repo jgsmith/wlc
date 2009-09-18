@@ -88,10 +88,11 @@ class AssignmentParticipation < ActiveRecord::Base
     end
   end
 
-  def show_info
+  def show_info(u = nil)
     if configured_module.nil? || configured_module.module_def.nil?
       ''
     else
+      self.viewing_user = u
       self.render self.configured_module.module_def.show_info
     end
   end
@@ -150,6 +151,7 @@ class AssignmentParticipation < ActiveRecord::Base
   def render(template)
     Liquid::Template.parse(template).render({
       'data' => self.data,
+      'params' => self.configured_module.params[:views],
       'participation' => self.to_liquid,
       'user' => self.viewing_user.to_liquid,
       'dates' => {

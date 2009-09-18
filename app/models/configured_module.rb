@@ -6,6 +6,7 @@ class ConfiguredModule
   attr_accessor :assignment, :author_name, :participant_name
   attr_accessor :is_evaluation, :tag
   attr_accessor :download_filename_prefix
+  attr_accessor :params
 
   def instructions
     @instructions = module_def.instructions unless defined? @instructions
@@ -61,6 +62,7 @@ class ConfiguredModule
     self.position     = am.position     unless self.position
     self.download_filename_prefix = am.download_filename_prefix unless am.download_filename_prefix.blank?
     self.tag          = am.tag          unless am.tag.blank?
+    self.params       = am.params       unless am.params.nil?
   end
 
   def assignment_submission
@@ -110,22 +112,7 @@ class ConfiguredModule
            !self.module_def.nil? && self.module_def.is_evaluative? ||
            self.is_evaluation
 
-          available = self.assignment.assignment_submissions.select{|a|
-            a.user != self.user &&
-            AssignmentParticipation.count(:conditions => [
-               'assignment_submission_id = ? AND user_id = ?',
-               a.id, self.user.id
-            ]) == 0
-            #a.assignment_participations.select{|p| p.user==self.user}.size == 0
-          }.group_by{|a|
-            a.assignment_participations.count
-          }
-          submissions = [ ]
-          available.keys.sort.each do |k|
-            submissions << available[k].sort_by { rand }
-          end
-          submissions.flatten!
-          submissions.uniq!
+          submissions = available_participants(self.user)
 
           while submissions.size > 0 && 
                 @assignment_participations.size < self.number_participants
@@ -145,11 +132,15 @@ class ConfiguredModule
                 end
                 p.initialize_participation
                 p.save
+                # make sure we don't have too many participations for the submission
+                if p.assignment_submission.assignment_participations.select{ |ap| ap.tag == self.tag }.size > self.number_participations
+                  raise ActiveRecord::Rollback
+                end
+                @assignment_participations << p
               end 
-              @assignment_participations << p unless p.nil?
             end
           end
-        else
+        elsif @assignment_participations.empty? 
           p = AssignmentParticipation.create(
             :user => self.user,
             :assignment_submission => s,
@@ -163,5 +154,24 @@ class ConfiguredModule
     end
 
     return @assignment_participations
+  end
+
+  def available_participants(u)
+    available = self.assignment.assignment_submissions.select{|a|
+      u.nil? ||
+      a.user != self.user &&
+      AssignmentParticipation.count(:conditions => [  
+        'assignment_submission_id = ? AND user_id = ?',
+        a.id, self.user.id
+      ]) == 0
+    }.group_by{|a|
+      a.assignment_participations.count
+    }
+    submissions = [ ]
+    available.keys.sort.each do |k|
+      submissions = submissions + available[k].sort_by { rand }
+    end
+    submissions.uniq!
+    submissions.select{ |s| s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participations }
   end
 end

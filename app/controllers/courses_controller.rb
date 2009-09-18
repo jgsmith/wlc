@@ -4,5 +4,8 @@ class CoursesController < ApplicationController
   def show
     @user = current_user
     @course = Course.find(params[:id])
+    if @course.user == @user && ENV['RAILS_ENV'] == 'development'
+      render :action => 'show_instructor'
+    end
   end
 end

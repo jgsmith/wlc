@@ -6,6 +6,7 @@ class CreateModuleDefs < ActiveRecord::Migration
       t.text :instructions
       t.text :description
       t.text :show_info
+      t.text :params
       t.boolean :is_evaluative
       t.string :download_filename_prefix
 

@@ -4,6 +4,7 @@ class AssignmentTemplateModule < ActiveRecord::Base
 
   serialize :author_eval
   serialize :participant_eval
+  serialize :params
 
   acts_as_list :scope => 'assignment_template_id'
 

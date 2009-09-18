@@ -7,10 +7,10 @@ class AssignmentSubmission < ActiveRecord::Base
 
   has_many :assignment_participations
 
-  def show_info(position)
+  def show_info(position, u = nil)
     # we want to show all of the information up to the specified position
 
-    assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info }.join("")
+    assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info(u) }.join("")
   end
 
   def view_scores

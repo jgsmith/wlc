@@ -2,10 +2,10 @@ class CreateAssignments < ActiveRecord::Migration
   def self.up
     create_table :assignments do |t|
       t.references :course
-      t.references :assignment_template
       t.integer    :position
       t.integer    :eval_duration
       t.integer    :number_evaluations
+      t.boolean    :late_work_acceptable, :null => false, :default => false
       t.string     :eval_name
       t.string     :author_name
       t.string     :eval_tag

@@ -26,22 +26,24 @@
         = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now) + "."
       #message-container
       :javascript
-        new Ext.TabPanel({
-          renderTo: 'message-container',
-          activeTab: 0,
-          autoHeight: true,
-          xtype: 'tabpanel',
-          items: [{
-            title: 'Instructions',
-            autoScroll: true,
-            contentEl: 'instructions'
-          }, {
-            title: 'Messages',
-            autoLoad: {
-              url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
-              scripts: true
-            }
-          }]
+        Ext.onReady(function(){
+          new Ext.TabPanel({
+            renderTo: 'message-container',
+            activeTab: 0,
+            autoHeight: true,
+            xtype: 'tabpanel',
+            items: [{
+              title: 'Instructions',
+              autoScroll: true,
+              contentEl: 'instructions'
+            }, {
+              title: 'Messages',
+              autoLoad: {
+                url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
+                scripts: true
+              }
+            }]
+          });
         });
     - elsif @assignment.current_module(@user).is_evaluation
       #instructions
@@ -51,12 +53,14 @@
 
       = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
       - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
-        = render :partial => 'evaluation_form', :locals => {:info => {:id => 'self-eval', :eval => @assignment.author_eval, :values => @assignment.assignment_submission(@user).author_eval, :portfolio => @assignment.assignment_submission(@user).show_info(@assignment.configured_modules(@user).last.position) }, :form_url => assignment_author_eval_path(@assignment), :form_title => 'Self Evaluation' }
+        = render :partial => 'evaluation_form', :locals => {:info => {:id => 'self-eval', :eval => @assignment.author_eval, :values => @assignment.assignment_submission(@user).author_eval, :portfolio => @assignment.assignment_submission(@user).show_info(@assignment.configured_modules(@user).last.position, @user) }, :form_url => assignment_author_eval_path(@assignment), :form_title => 'Self Evaluation' }
     - else
       = render :partial => 'participation', :collection => @assignment.current_module(@user).assignment_participations
 - elsif @assignment.starts_at > @assignment.course.now
   %p
     This assignment is not yet available.
+    The first module will become available in
+    = distance_of_time_in_words(@assignment.starts_at, @assignment.course.now) + '.'
 - elsif !@assignment.score_view.blank?
   #score= (markdown @assignment.view_scores(@user) rescue '')
 - else

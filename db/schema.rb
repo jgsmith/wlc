@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 16) do
+ActiveRecord::Schema.define(:version => 15) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(:version => 16) do
     t.string   "author_name"
     t.text     "author_eval"
     t.text     "participant_eval"
+    t.text     "params"
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -66,6 +67,7 @@ ActiveRecord::Schema.define(:version => 16) do
     t.string   "author_name"
     t.text     "author_eval"
     t.text     "participant_eval"
+    t.text     "params"
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -87,10 +89,10 @@ ActiveRecord::Schema.define(:version => 16) do
 
   create_table "assignments", :force => true do |t|
     t.integer  "course_id"
-    t.integer  "assignment_template_id"
     t.integer  "position"
     t.integer  "eval_duration"
     t.integer  "number_evaluations"
+    t.boolean  "late_work_acceptable", :default => false, :null => false
     t.string   "eval_name"
     t.string   "author_name"
     t.string   "eval_tag"
@@ -137,6 +139,7 @@ ActiveRecord::Schema.define(:version => 16) do
     t.text     "instructions"
     t.text     "description"
     t.text     "show_info"
+    t.text     "params"
     t.boolean  "is_evaluative"
     t.string   "download_filename_prefix"
     t.datetime "created_at"

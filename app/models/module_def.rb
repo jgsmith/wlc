@@ -1,6 +1,8 @@
 class ModuleDef < ActiveRecord::Base
   has_many :state_defs
 
+  serialize :params
+
   def initialize_participation(participation)
     participation.state_def = state_defs.select{ |s| s.name == 'start' }.first
     if !self.init_fn.blank?

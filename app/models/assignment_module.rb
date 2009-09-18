@@ -4,6 +4,7 @@ class AssignmentModule < ActiveRecord::Base
 
   serialize :author_eval
   serialize :participant_eval
+  serialize :params
 
   validates_uniqueness_of :tag, :scope => :assignment_id
   validates_presence_of   :tag

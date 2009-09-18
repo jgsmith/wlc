@@ -1,6 +1,5 @@
 class Assignment < ActiveRecord::Base
   belongs_to :course
-  belongs_to :assignment_template
 
   has_many :assignment_modules
   has_many :assignment_submissions
@@ -33,6 +32,27 @@ class Assignment < ActiveRecord::Base
     !self.assignment_submission(user).nil?
   end
 
+  def can_accept_late_work?
+    return false unless self.late_work_acceptable?
+
+    ## if we're past the second module, too late
+    return false if self.current_module(nil).nil?
+
+    # if we're past the second non-informational module, then it's too late
+    # the initial submission module counts in this
+    cur_pos = self.current_module(nil).position
+    modules = self.configured_modules(nil).select { |m| !m.informational? && m.position <= cur_pos }
+
+    return false if modules.size > 2
+
+    ## if we have enough people left who haven't been assigned participations
+    ## in the second module, then we can accept late work
+    pool = self.current_module(nil).available_participants
+    return false unless pool.size > self.current_module(nil).number_participants + 1
+
+    return true
+  end
+
   def has_messaging?(user)
     return false if self.current_module(user).nil?
     self.configured_modules(user).each do |m|
@@ -45,37 +65,23 @@ class Assignment < ActiveRecord::Base
   def configured_modules(user)
     if !defined? @configured_modules
       m_list = [ ]
-      if !self.assignment_template.nil?
-        m_list = self.assignment_template.configured_modules(user)
-        self.assignment_modules.each do |am|
-          m_list[am.position].apply_module(am)
-        end
-      else
-        self.assignment_modules.each do |am|
+      self.assignment_modules.each do |am|
           m_list[am.position] = am.configured_module(user)
-        end
       end
 
+      @configured_modules = m_list.select{ |m| !m.nil? }
+
       cur_time = self.utc_starts_at
-      m_list.each do |m|
-        next if m.nil?
+      @configured_modules.each do |m|
         m.utc_starts_at = cur_time
         cur_time += m.duration.to_i
         m.assignment = self
         m.is_evaluation = false
       end
 
-      @configured_modules = m_list.select{ |m| !m.nil? }
-
       if @configured_modules.select{ |cm| cm.has_evaluation? }.size > 0 ||
          !self.participant_eval.nil? && !self.participant_eval.empty?   ||
-         !self.author_eval.nil? && !self.author_eval.empty? ||
-         !self.assignment_template.nil? && (
-           !self.assignment_template.participant_eval.nil? &&
-           !self.assignment_template.participant_eval.empty? ||
-           !self.assignment_template.author_eval.nil? &&
-           !self.assignment_template.author_eval.empty? 
-         )
+         !self.author_eval.nil? && !self.author_eval.empty? 
         m = ConfiguredModule.new
         m.utc_starts_at = @configured_modules.last.utc_ends_at
         m.tag = self.eval_tag
@@ -84,16 +90,8 @@ class Assignment < ActiveRecord::Base
         m.user = user
         m.assignment = self
         m.instructions = ''
-        if !self.assignment_template.nil?
-          m.name = self.assignment_template.eval_name
-          m.duration = self.assignment_template.eval_duration
-          m.author_name = self.assignment_template.author_name
-          m.participant_eval = self.assignment_template.participant_eval
-          m.author_eval = self.assignment_template.author_eval
-          m.number_participants = self.assignment_template.number_evaluations
-        end
-        m.name = self.eval_name unless self.eval_name.blank?
-        m.duration = self.eval_duration unless self.eval_duration < 1
+        m.name = self.eval_name || 'Evaluation'
+        m.duration = self.eval_duration  || 0
         m.author_name = self.author_name unless self.author_name.blank?
         m.participant_eval = self.participant_eval unless self.participant_eval.nil?
         m.author_eval = self.author_eval unless self.author_eval.nil?
@@ -191,10 +189,6 @@ class AssignmentDrop < Liquid::Drop
 
   def course
     d.course.to_liquid
-  end
-
-  def assignment_template
-    d.assignment_template.to_liquid
   end
 
   def assignment_modules

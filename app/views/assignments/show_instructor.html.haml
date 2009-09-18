@@ -96,6 +96,23 @@
       activeItem: 0,
       border: false,
       items: [{
+        title: 'Design',
+        /*
+        layout: 'vbox',
+        align: 'stretch',
+        items: [{
+        */
+          layout: 'hbox',
+          align: 'stretch',
+          height: 100,
+          flex: 1,
+          items: #{@configured_modules_info.to_json}
+        /*} , {
+          layout: 'container',
+          xtype: 'panel',
+          html: 'palette goes here'
+        }]*/
+      }, {
         title: 'Basics',
         xtype: 'form',
         flex: 1,

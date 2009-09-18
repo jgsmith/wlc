@@ -14,6 +14,8 @@ class AssignmentsController < ApplicationController
   def show
     @user = current_user
     if @assignment.course.user == @user
+      @configured_modules_info = [ ]
+
       # we want to show instructor view of assignment
       @performance_store_fields = [ 'id', 'name' ]
       @performance_grid_columns = [
@@ -21,6 +23,12 @@ class AssignmentsController < ApplicationController
       ]
 
       @assignment.configured_modules(nil).each do |m|
+        @configured_modules_info << {
+          :flex => m.duration,
+          :html => 'Name: ' + m.name,
+          :xtype => 'panel'
+        }
+
         if m.has_evaluation?
           if !m.author_name.blank?
             m.number_participants.times do |i|
