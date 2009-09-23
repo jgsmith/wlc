@@ -133,7 +133,7 @@ class ConfiguredModule
                 p.initialize_participation
                 p.save
                 # make sure we don't have too many participations for the submission
-                if p.assignment_submission.assignment_participations.select{ |ap| ap.tag == self.tag }.size > self.number_participations
+                if p.assignment_submission.assignment_participations.select{ |ap| ap.tag == self.tag }.size > self.number_participants
                   raise ActiveRecord::Rollback
                 end
                 @assignment_participations << p
@@ -172,6 +172,6 @@ class ConfiguredModule
       submissions = submissions + available[k].sort_by { rand }
     end
     submissions.uniq!
-    submissions.select{ |s| s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participations }
+    submissions.select{ |s| s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participants }
   end
 end
