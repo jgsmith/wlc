@@ -106,20 +106,32 @@ class MessagesController < ApplicationController
       @message = Message.create(
         :user => @user,
         :assignment_participation => @assignment_participation,
-        :subject => params[:subject],
-        :content => params[:content]
+        :subject => params[:message][:subject],
+        :content => params[:message][:content]
       );
+
+      # now handle attachments
+      if params[:message][:attachment] && !params[:message][:attachment].empty?
+        params[:message][:attachment].each do |tag, file|
+          u = Upload.new
+          u.user = @user
+          u.holder = @message
+          u.tag = tag
+          u.upload = file
+          u.save
+        end
+      end
 
       respond_to do |format|
         format.html
         format.ext_json { render :json => { :success => true } }
-        format.ext_json_html { render :json => ERB::Utils::html_escape( { :success => true }.to_json) }
+        format.ext_json_html { render :json => ERB::Util::html_escape( { :success => true }.to_json) }
       end
     else
       respond_to do |format|
         format.html
         format.ext_json { render :json => { :success => false } }
-        format.ext_json_html { render :json => ERB::Utils::html_escape( { :success => false }.to_json) }
+        format.ext_json_html { render :json => ERB::Util::html_escape( { :success => false }.to_json) }
       end
     end
   end
@@ -133,6 +145,18 @@ class MessagesController < ApplicationController
 
       @message.is_read = true
       @message.save
+
+      @recipients = [ ]
+      @assignment_participations = [ ]
+
+      @assignment = @message.assignment_participation.assignment_submission.assignment
+      @current_module = @assignment.current_module(@user)
+      if @current_module && @current_module.has_messaging?
+        @we_allow_new_messages = true
+        r = get_recipients(@current_module)
+        @assignment_participations = r[0]
+        @recipients = r[1]
+      end
 
       respond_to do |format|
         format.html

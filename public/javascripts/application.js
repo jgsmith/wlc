@@ -543,6 +543,153 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
 
 Ext.namespace('WLC.ux');
 
+WLC.ux.ComposeMessageWindow = Ext.extend(Ext.Window, {
+  floating: true,
+  tools: [{
+    id: 'close',
+    handler: function(e,toolEl,panel,tc) {
+      panel.destroy();
+    }
+  }],
+
+  constructor: function(config) {
+    var compose_form = this;
+    config.items = [{
+      xtype: 'form',
+      buttonAlign: 'center',
+      fileUpload: true,
+      url: config.url,
+      margins: {
+        left: 5,
+        top: 5
+      },
+      width: 500,
+      buttons: [{
+        text: 'Send Message',
+        type: 'submit',
+        handler: function(f) {
+          var fp = this.ownerCt.ownerCt;
+          var form = fp.getForm();
+          if(form.isValid()) {
+            form.submit({
+              url: config.url,
+              fileUpload: true,
+              success: function() {
+                config.store.reload();
+                compose_form.destroy();
+              }
+            });
+          }
+        }
+      }, {
+        text: 'Reset',
+        type: 'reset',
+        handler: function(f) {
+          var fp = this.ownerCt.ownerCt;
+          var form = fp.getForm();
+          form.reset();
+        }
+      }, {
+        text: 'Cancel',
+        type: 'submit',
+        handler: function(f) {
+          compose_form.destroy();
+        }
+      }],
+      items: [{
+        fieldLabel: 'To',
+        xtype: 'combo',
+        mode: 'local',
+        editable: true,
+        triggerAction: 'all',
+        forceSelection: true,
+        typeAhead: true,
+        lazyRender: true,
+        emptyText: "Who will get this message?",
+        store: config.recipientStore,
+        valueField: 'myId',
+        displayField: 'displayText',
+        value: config.messageRecipient,
+        hiddenName: 'assignment_participation_id'
+      }, {
+        fieldLabel: 'Subject',
+        width: 350,
+        xtype: 'textfield',
+        emptyText: "What is this message about?",
+        name: 'message[subject]',
+        value: config.messageSubject,
+        inputType: 'text'
+      }, {
+        fieldLabel: 'Content',
+        xtype: 'textarea',
+        width: 350,
+        emptyText: "What do you want to tell them?",
+        height: 300,
+        name: 'message[content]',
+        value: config.messageContent
+      }, {
+        xtype: 'fieldset',
+        title: 'Attachments',
+        autoHeight: true,
+        items: [{
+          xtype: 'button',
+          autoHeight: true,
+          handler: function(b,e) {
+            /* we want to add a form field/button pair */
+            var fields = b.ownerCt.items;
+            var table = fields.itemAt(fields.indexOfKey(b.id)+1);
+            table.add({
+              fieldLabel: 'File #' + (table.items.length/2+1),
+              name: 'message[attachment][' + (table.items.length/2) + ']',
+              size: 30,
+              xtype: 'textfield',
+              inputType: 'file'
+            });
+            table.add({
+              xtype: 'button',
+              handler: function(b,e) {
+                var fields = b.ownerCt.items;
+                var filefield = fields.itemAt(fields.indexOfKey(b.id)-1);
+                filefield.reset();
+              },
+              text: 'Reset field'
+            });
+            table.doLayout();
+          },
+          text: 'Add another file'
+        }, {
+          layout: 'table',
+          border: false,
+          layoutConfig: {
+            columns: 2
+          },
+          items: [{
+            fieldLabel: 'File #1',
+            name: 'message[attachment][0]',
+            size: 30,
+            xtype: 'textfield',
+            inputType: 'file'
+          }, {
+            xtype: 'button',
+            handler: function(b,e) {
+              var fields = b.ownerCt.items;
+              var filefield = fields.itemAt(fields.indexOfKey(b.id)-1);
+              filefield.reset();
+            },
+            text: 'Reset field'
+          }]
+        }] 
+      }, {
+        inputType: 'hidden',
+        xtype: 'field',
+        name: 'authenticity_token',
+        value: config.form_authenticity_token,
+      }]
+    }];
+    WLC.ux.ComposeMessageWindow.superclass.constructor.call(this, config);
+  }
+});
+
 WLC.ux.AuthorTimelinePanel = Ext.extend(Ext.Panel, {
     baseCls: 'x-author-timeline-panel',
     frame: true
@@ -565,7 +712,10 @@ WLC.ux.EvalTimelinePanel = Ext.extend(Ext.Panel, {
 
 Ext.ComponentMgr.registerType('rubricgrid', WLC.grid.RubricGrid);
 Ext.ComponentMgr.registerType('responsegrid', WLC.grid.ResponseGrid);
+Ext.ComponentMgr.registerType('composemessagewindow', WLC.ux.ComposeMessageWindow);
 Ext.ComponentMgr.registerType('author-timeline-panel', WLC.ux.AuthorTimelinePanel);
 Ext.ComponentMgr.registerType('participant-timeline-panel', WLC.ux.ParticipantTimelinePanel);
 Ext.ComponentMgr.registerType('info-timeline-panel', WLC.ux.InfoTimelinePanel);
 Ext.ComponentMgr.registerType('eval-timeline-panel', WLC.ux.EvalTimelinePanel);
+
+

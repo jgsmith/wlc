@@ -38,6 +38,10 @@ class Upload < ActiveRecord::Base
     FileUtils::mkpath self.dir_path
     FileUtils::cp @upload.path, self.path
   end
+
+  def url
+    "/uploads/" + self.id.to_s
+  end
  
   def to_liquid
     d = UploadDrop.new
@@ -58,7 +62,7 @@ class UploadDrop < Liquid::Drop
   end
 
   def url
-    "/uploads/" + upload.id.to_s
+    upload.url
   end
 
   def filename

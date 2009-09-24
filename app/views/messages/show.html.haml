@@ -1,23 +1,69 @@
 / We probably want to include the subject line as well as who it's from/to
-%table{:border => 0}
-  %tr
-    %td{:align => 'right', :style => 'font-weight: bold'} Subject:
-    %td=h @message.subject
-  %tr
-    %td{:align => 'right', :style => 'font-weight: bold'} Sent:
-    %td
-      = distance_of_time_in_words(@message.assignment_participation.assignment_submission.assignment.course.tz.utc_to_local(@message.created_at), @message.assignment_participation.assignment_submission.assignment.course.now)
-      ago
-  %tr
-    %td{:align => 'right', :style => 'font-weight: bold'}
-      - if @message.user == @user
-        To:
-      - else
-        From:
-    %td
-      - if( (@message.user == @user) ^ (@user == @message.assignment_participation.user) )
-        =h @message.assignment_participation.participant_name
-      - else
-        =h @message.assignment_participation.author_name
+#message-headers
+  %table{:border => 0}
+    %tr
+      %td{:align => 'right', :style => 'font-weight: bold'} Subject:
+      %td=h @message.subject
+    %tr
+      %td{:align => 'right', :style => 'font-weight: bold'} Sent:
+      %td
+        = distance_of_time_in_words(@message.assignment_participation.assignment_submission.assignment.course.tz.utc_to_local(@message.created_at), @message.assignment_participation.assignment_submission.assignment.course.now)
+        ago
+    %tr
+      %td{:align => 'right', :style => 'font-weight: bold'}
+        - if @message.user == @user
+          To:
+        - else
+          From:
+      %td
+        - if( (@message.user == @user) ^ (@user == @message.assignment_participation.user) )
+          =h @message.assignment_participation.participant_name
+        - else
+          =h @message.assignment_participation.author_name
+
+    - if @recipients.size > 0
+      %tr
+        %td
+        %td
+          %div{:id => 'reply-to-' + @message.id.to_s}
+          :javascript
+            new Ext.Button({
+              renderTo: #{('reply-to-' + @message.id.to_s).to_json},
+              text: 'Reply',
+              handler: function(b,e) {
+                var panel = Ext.ComponentMgr.get('message-list');
+                var compose_form = new WLC.ux.ComposeMessageWindow({
+                  title: 'New Message',
+                  renderTo: document.body,
+                  url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
+                  store: panel.getStore(),
+                  messageContent: #{("> " + @message.content.split(/(\r\n|\n\r|\n|\r)/).join("\n> ")).to_json},
+                  messageRecipient: #{@message.assignment_participation.id.to_s.to_json},
+                  messageSubject: #{("Re: " + @message.subject).to_json},
+                  recipientStore: new Ext.data.ArrayStore({
+                    id: 0,
+                    fields: [
+                      'myId',
+                      'displayText'
+                    ],
+                    data: #{@recipients.to_json}
+                  }),
+                  form_authenticity_token: #{form_authenticity_token.to_json}
+                });
+                compose_form.setPosition(50,50);
+                compose_form.show();
+              }
+            });
 
 #message-body= markdown @message.content
+- if !@message.uploads.empty?
+  #message-attachments
+    %h3 Attachments
+    %ol
+      - @message.uploads.sort_by {|a| a.tag.to_i}.each do |u|
+        %li
+          - if u.user == @user
+            Your file, 
+            = '"' + u.filename + '," is available as'
+          %a{:href => u.url}=h u.download_name
+          = '(' + u.size.to_s + ' bytes)'

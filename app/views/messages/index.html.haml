@@ -21,104 +21,23 @@
         id: 'plus',
         qtip: 'Send Message',
         handler: function(e,toolEl,panel,tc) {
-           WLC.debug("Sending message");
-           var compose_form = new Ext.Window({
-             title: 'New Message',
-             renderTo: document.body,
-             floating: true,
-             tools: [{
-               id: 'close',
-               handler: function(e,toolEl,panel,tc) {
-                 panel.destroy();
-               }
-             }],
-             items: [{
-               xtype: 'form',
-               buttonAlign: 'center',
-               margins: {
-                 left: 5,
-                 top: 5
-               },
-               width: 500,
-               buttons: [{
-                 text: 'Send Message',
-                 type: 'submit',
-                 handler: function(f) {
-                   var fp = this.ownerCt.ownerCt;
-                   WLC.debug(this);
-                   WLC.debug(this.ownerCt);
-                   WLC.debug(fp);
-                   var form = fp.getForm();
-                   if(form.isValid()) {
-                     form.submit({
-                       url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
-                       success: function() {
-                         panel.getStore().reload();
-                         compose_form.destroy();
-                       }
-                     });
-                   }
-                 }
-               }, {
-                 text: 'Reset',
-                 type: 'reset',
-                 handler: function(f) {
-                   var fp = this.ownerCt.ownerCt;
-                   var form = fp.getForm();
-                   form.reset();
-                 }
-               }, {
-                 text: 'Cancel',
-                 type: 'submit',
-                 handler: function(f) {
-                   compose_form.destroy();
-                 }
-               }],
-               items: [{
-                 fieldLabel: 'To',
-                 xtype: 'combo',
-                 mode: 'local',
-                 editable: true,
-                 triggerAction: 'all',
-                 forceSelection: true,
-                 typeAhead: true,
-                 lazyRender: true,
-                 emptyText: "Who will get this message?",
-                 store: new Ext.data.ArrayStore({
-                   id: 0,
-                   fields: [
-                     'myId',
-                     'displayText'
-                   ],
-                   data: #{@recipients.to_json}
-                 }),
-                 valueField: 'myId',
-                 displayField: 'displayText',
-                 hiddenName: 'assignment_participation_id'
-               }, {
-                 fieldLabel: 'Subject',
-                 width: 350,
-                 xtype: 'textfield',
-                 emptyText: "What is this message about?",
-                 name: 'subject',
-                 inputType: 'text'
-               }, {
-                 fieldLabel: 'Content',
-                 xtype: 'textarea',
-                 width: 350,
-                 emptyText: "What do you want to tell them?",
-                 height: 300,
-                 name: 'content'
-               }, {
-                 inputType: 'hidden',
-                 xtype: 'field',
-                 name: 'authenticity_token',
-                 value: #{form_authenticity_token.to_json}            
-               }]
-             }]
-           });
-           compose_form.setPosition(50,50);
-           compose_form.show();
+          var compose_form = new WLC.ux.ComposeMessageWindow({
+            title: 'New Message',
+            renderTo: document.body,
+            url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
+            store: panel.getStore(),
+            recipientStore: new Ext.data.ArrayStore({
+              id: 0,
+              fields: [
+                'myId',
+                'displayText'
+              ],
+              data: #{@recipients.to_json}
+            }),
+            form_authenticity_token: #{form_authenticity_token.to_json}
+          });
+          compose_form.setPosition(50,50);
+          compose_form.show();
         }
       };
     }
@@ -161,6 +80,7 @@
           title: 'Messages',
           flex: 1,
           xtype: 'grid',
+          id: 'message-list',
           tools: message_panel_tools,
           height: 150,
           store: message_store,
@@ -210,8 +130,6 @@
                 grid.getView().refreshRow(rec);
               }
 
-              WLC.debug(rec);
-              WLC.debug("Setting active tab to: " + rec.get('recipient-portfolio'));
               message_panel.layout.north.panel.getComponent('message-portfolios').setActiveTab(rec.get('recipient-portfolio'));
             }
           },
