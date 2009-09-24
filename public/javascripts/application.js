@@ -9,7 +9,7 @@ Ext.namespace('WLC');
     if(!(window.console === undefined || window.console.log === undefined)) {
       console.log(x);
     }
-  }
+  };
 })();
 
 Ext.namespace('Ext.ux.dd');
@@ -24,8 +24,9 @@ Ext.ux.dd.GridDragDropRowOrder = Ext.extend(Ext.util.Observable,
 
     constructor : function(config)
     {
-        if (config)
+        if (config) {
             Ext.apply(this, config);
+        }
 
         this.addEvents(
         {
@@ -431,8 +432,7 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                         
                         rec.set('prompt', fp.getComponent('prompt').getValue());
                         var rs = new Array;
-                        fp.getComponent('responses').getStore().each(function(r)
- {
+                        fp.getComponent('responses').getStore().each(function(r) {
                             rs.push([ r.get('response'), r.get('score') ]);
                         });
                         rec.set('responses', rs);
@@ -478,7 +478,8 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                }
             );
         }
-    }],
+    }];
+
     config.listeners = {
         rowdblclick: function(grid, index, e) {
             var rec = grid.getStore().getAt(index);
@@ -534,7 +535,7 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                  }]});
                  edit_form.show();
 
-               },
+               }
             };
           
     WLC.grid.RubricGrid.superclass.constructor.call(this, config);
@@ -683,7 +684,7 @@ WLC.ux.ComposeMessageWindow = Ext.extend(Ext.Window, {
         inputType: 'hidden',
         xtype: 'field',
         name: 'authenticity_token',
-        value: config.form_authenticity_token,
+        value: config.form_authenticity_token
       }]
     }];
     WLC.ux.ComposeMessageWindow.superclass.constructor.call(this, config);

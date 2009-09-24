@@ -73,6 +73,19 @@ class ConfiguredModule
      ])
   end
 
+  def has_messages?
+    # if the user has sent any or received any, then we return true
+    0 < Message.count_by_sql(%{
+        SELECT COUNT(*)
+        FROM messages m
+        LEFT JOIN assignment_participations a_p
+                  ON a_p.id = m.assignment_participation_id
+        LEFT JOIN assignment_submissions a_s
+                  ON a_s.id = a_p.assignment_submission_id
+        WHERE (a_s.user_id = #{@user.id} OR a_p.user_id = #{@user.id}) AND a_s.assignment_id = #{@assignment.id}
+        ORDER BY m.id}) #, @user.id, @user.id, @assignment.id])
+  end
+
   def assignment_participations
     # this is where we assign participations if we need to
     # this is from the self.user's pov

@@ -1,4 +1,6 @@
-%h2=h @assignment.course.name + ' - Assignment #'  + @assignment.position.to_s
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name 
+  = ' &gt; Assignment #'  + @assignment.position.to_s
 
 %ol.timeline
   - @assignment.configured_modules(@user).each do |m|
@@ -17,8 +19,9 @@
       You missed the initial module that establishes your participation
       in this assignment.  Please contact your professor.
   - else
-    #instructions
-      = markdown @assignment.current_module(@user).instructions
+    - if !@assignment.current_module(@user).has_messaging?
+      #instructions
+        = markdown @assignment.current_module(@user).instructions
 
     - if @assignment.current_module(@user).has_messaging?
       %p
@@ -27,7 +30,7 @@
       #message-container
       :javascript
         Ext.onReady(function(){
-          new Ext.TabPanel({
+          var p = new Ext.TabPanel({
             renderTo: 'message-container',
             activeTab: 0,
             autoHeight: true,
@@ -35,15 +38,17 @@
             items: [{
               title: 'Instructions',
               autoScroll: true,
-              contentEl: 'instructions'
+              html: #{('<div id="instructions">' + markdown(@assignment.current_module(@user).instructions) + '</div>').to_json}
             }, {
-              title: 'Messages',
+              title: #{(@assignment.current_module(@user).name + ' Messages').to_json},
+              autoHeight: true,
               autoLoad: {
                 url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
                 scripts: true
               }
             }]
           });
+          p.setActiveTab(#{(@assignment.current_module(@user).has_messages? ? 1 : 0).to_json});
         });
     - elsif @assignment.current_module(@user).is_evaluation
       #instructions

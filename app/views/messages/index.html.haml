@@ -6,42 +6,42 @@
 
 :javascript
   Ext.onReady(function(){
-  var message_panel_tools = new Array;
-  if(#{ @we_allow_new_messages.to_json }) {
-    message_panel_tools[0] = {
-      id: 'refresh',
-      qtip: 'Refresh Message List',
-      handler: function(e,toolEl,panel,tc) {
-        panel.getStore().reload();
-      }
-    };
-
-    if(#{@recipients.size} > 0) {
-      message_panel_tools[1] = {
-        id: 'plus',
-        qtip: 'Send Message',
+    var message_panel_tools = new Array;
+    if(#{ @we_allow_new_messages.to_json }) {
+      message_panel_tools[0] = {
+        id: 'refresh',
+        qtip: 'Refresh Message List',
         handler: function(e,toolEl,panel,tc) {
-          var compose_form = new WLC.ux.ComposeMessageWindow({
-            title: 'New Message',
-            renderTo: document.body,
-            url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
-            store: panel.getStore(),
-            recipientStore: new Ext.data.ArrayStore({
-              id: 0,
-              fields: [
-                'myId',
-                'displayText'
-              ],
-              data: #{@recipients.to_json}
-            }),
-            form_authenticity_token: #{form_authenticity_token.to_json}
-          });
-          compose_form.setPosition(50,50);
-          compose_form.show();
+          panel.getStore().reload();
         }
       };
+      
+      if(#{@recipients.size} > 0) {
+        message_panel_tools[1] = {
+          id: 'plus',
+          qtip: 'Send Message',
+          handler: function(e,toolEl,panel,tc) {
+            var compose_form = new WLC.ux.ComposeMessageWindow({
+              title: 'New Message',
+              renderTo: document.body,
+              url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
+              store: panel.getStore(),
+              recipientStore: new Ext.data.ArrayStore({
+                id: 0,
+                fields: [
+                  'myId',
+                  'displayText'
+                ],
+                data: #{@recipients.to_json}
+              }),
+              form_authenticity_token: #{form_authenticity_token.to_json}
+            });
+            compose_form.setPosition(50,50);
+            compose_form.show();
+          }
+        };
+      }
     }
-  }
 
   var dims = document.viewport.getDimensions();
   var h = dims['height'];
@@ -59,7 +59,7 @@
 
   if( #{@we_allow_new_messages.to_json} ) {
     Ext.TaskMgr.start({
-      run: function(){ message_store.reload() },
+      run: function(){ message_store.reload(); },
       interval: 10*60*1000 /* every 10 minutes */
     });
   }
@@ -89,16 +89,16 @@
               sortable: true
             },
             columns: [
-              {id: 'subject', header: 'Subject', dataIndex: 'subject', width: (w*.5-35)*.5 },
-              {id: 'sent_from', header: 'From', dataIndex: 'user' , width: (w*.5-35)*.2 },
-              {id: 'sent_to', header: 'To', dataIndex: 'recipient' , width: (w*.5-35)*.2 },
-              {id: 'when', header: 'Date', dataIndex: 'created_at', width: (w*.5-35)*.2 }
+              {id: 'subject', header: 'Subject', dataIndex: 'subject', width: (w*0.5-35)*0.5 },
+              {id: 'sent_from', header: 'From', dataIndex: 'user' , width: (w*0.5-35)*0.2 },
+              {id: 'sent_to', header: 'To', dataIndex: 'recipient' , width: (w*0.5-35)*0.2 },
+              {id: 'when', header: 'Date', dataIndex: 'created_at', width: (w*0.5-35)*0.2 }
             ]
           }),
           autoFill: true,
           forceFit: true,
           selModel: new Ext.grid.RowSelectionModel({
-            singleSelect: true,
+            singleSelect: true
           }),
           viewConfig: {
             getRowClass: function(record, index) {
@@ -114,7 +114,7 @@
             },
             refresh: function(v) {
                v.scroller.dom.scrollTop = v.scrollTop + 
-                (v.scrollTop == 0 ? 0 : v.scroller.dom.scrollHeight - v.scrollHeight);
+                (!v.scrollTop ? 0 : v.scroller.dom.scrollHeight - v.scrollHeight);
             },
             rowclick: function(grid, index, e) {
               var panel = message_panel.getComponent('message-content-panel');
@@ -149,5 +149,5 @@
         autoScroll: true,
         html: '<p>The message content will go here.</p>'
       }]
-  });
+    });
   });
