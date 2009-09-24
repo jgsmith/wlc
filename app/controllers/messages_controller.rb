@@ -1,4 +1,12 @@
 class MessagesController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound do |exception|
+    respond_to do |format|
+      format.json { render :json => { :success => false }, :status => :not_found }
+      format.ext_json { render :json => { :success => false }, :status => :not_found }
+      format.ext_json_html { render :json => ERB::Util::html_escape({ :success => false }.to_json), :status => :not_found }
+    end
+  end
+
   def index
     @user = current_user
 
