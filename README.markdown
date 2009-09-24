@@ -15,5 +15,5 @@ an updated styles.css file.
 
 ### Database Installation
 
-To create the schema, run `rake db:schema:load`.  To install the default
-module definitions, run `rake db:schema:load_data`.
+To create the schema, run `rake db:schema:load`.  This will also install
+initial assignment module definitions.
