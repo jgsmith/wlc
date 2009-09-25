@@ -83,7 +83,7 @@ class ConfiguredModule
         LEFT JOIN assignment_submissions a_s
                   ON a_s.id = a_p.assignment_submission_id
         WHERE (a_s.user_id = #{@user.id} OR a_p.user_id = #{@user.id}) AND a_s.assignment_id = #{@assignment.id}
-        ORDER BY m.id}) #, @user.id, @user.id, @assignment.id])
+    }) #, @user.id, @user.id, @assignment.id])
   end
 
   def assignment_participations
