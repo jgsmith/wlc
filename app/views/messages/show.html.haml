@@ -16,10 +16,7 @@
         - else
           From:
       %td
-        - if( (@message.user == @user) ^ (@user == @message.assignment_participation.user) )
-          =h @message.assignment_participation.participant_name
-        - else
-          =h @message.assignment_participation.author_name
+        =h @recipient
 
     - if @recipients.size > 0
       %tr

@@ -147,6 +147,23 @@ class MessagesController < ApplicationController
   def show
     @message = Message.find(params[:id])
     @user = current_user
+
+    if @user == @message.user
+      if @message.assignment_participation.assignment_submission.user == @user
+        @recipient = @message.assignment_participation.participant_name
+      else
+        @recipient = @message.assignment_participation.author_name
+      end
+    else
+      if @message.assignment_participation.assignment_submission.user == @user
+              # evaluator sent the message (you're the author)
+        @recipient = @message.assignment_participation.participant_name
+      else
+              # author sent the message (you're the evaluator)
+        @recipient = @message.assignment_participation.author_name
+      end
+    end
+
     if @message.user == @user || 
        @message.assignment_participation.user == @user || 
        @message.assignment_participation.assignment_submission.user == @user
