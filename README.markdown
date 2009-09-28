@@ -15,5 +15,4 @@ an updated styles.css file.
 
 ### Database Installation
 
-To create the schema, run `rake db:schema:load`.  This will also install
-initial assignment module definitions.
+To create the schema, run `rake db:setup`.  This will also install seed data.
