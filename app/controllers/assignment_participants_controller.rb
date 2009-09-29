@@ -15,6 +15,7 @@ class AssignmentParticipantsController < ApplicationController
       # dump all grades for all participants
       @grades = [ ]
       @assignment.course.course_participants.each do |student|
+        next if student.level > 0
         submission = AssignmentSubmission.find(:first, :conditions => [
           'assignment_id = ? AND user_id = ?',
           @assignment.id, student.user.id ]) rescue nil
@@ -22,6 +23,7 @@ class AssignmentParticipantsController < ApplicationController
         grade = { :id => student.user.id, :name => student.user.name }
         
         if submission
+          grade[:is_participant] = true
           @assignment.configured_modules(nil).each do |m|
             if m.has_evaluation?
               if !m.author_name.blank?
@@ -54,6 +56,8 @@ class AssignmentParticipantsController < ApplicationController
               end
             end
           end
+        else
+          grade[:is_participant] = false
         end
         @grades << grade
       end

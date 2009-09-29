@@ -2,15 +2,14 @@
 // This file is automatically included by javascript_include_tag :defaults
 Ext.QuickTips.init();
 
+Ext.onReady(function(){
 Ext.namespace('WLC');
 
-(function() {
-  WLC.debug = function(x) {
+WLC.debug = function(x) {
     if(!(window.console === undefined || window.console.log === undefined)) {
       console.log(x);
     }
-  };
-})();
+};
 
 Ext.namespace('Ext.ux.dd');
 
@@ -171,7 +170,6 @@ Ext.ux.dd.GridDragDropRowOrder = Ext.extend(Ext.util.Observable,
 
                 var rec = ds.getAt(rindex);
 
-                /* if(this.lockedField && rec.get(this.lockedField)) { */
                 if(rec && rec.get('locked')) {
                     if (this.currentRowEl)
                     {
@@ -546,6 +544,7 @@ Ext.namespace('WLC.ux');
 
 WLC.ux.ComposeMessageWindow = Ext.extend(Ext.Window, {
   floating: true,
+  autoWidth: true,
   tools: [{
     id: 'close',
     handler: function(e,toolEl,panel,tc) {
@@ -691,6 +690,22 @@ WLC.ux.ComposeMessageWindow = Ext.extend(Ext.Window, {
   }
 });
 
+WLC.grid.ParticipantNameColumn = Ext.extend(Ext.grid.Column, {
+    constructor: function(cfg){
+        WLC.grid.ParticipantNameColumn.superclass.constructor.call(this, cfg);
+        this.renderer = function(value, metaData, record) {
+            metaData.css = record.get('is_participant') ?
+              'silk-tick' : 'silk-cross';
+            if(value.length < 1) { 
+              return '';
+            }
+            else {
+              return "<div style='padding-left: 12px'>" + value + "</div>";
+            }
+        };
+    }
+});
+
 WLC.ux.AuthorTimelinePanel = Ext.extend(Ext.Panel, {
     baseCls: 'x-author-timeline-panel',
     frame: true
@@ -713,10 +728,12 @@ WLC.ux.EvalTimelinePanel = Ext.extend(Ext.Panel, {
 
 Ext.ComponentMgr.registerType('rubricgrid', WLC.grid.RubricGrid);
 Ext.ComponentMgr.registerType('responsegrid', WLC.grid.ResponseGrid);
+
 Ext.ComponentMgr.registerType('composemessagewindow', WLC.ux.ComposeMessageWindow);
 Ext.ComponentMgr.registerType('author-timeline-panel', WLC.ux.AuthorTimelinePanel);
 Ext.ComponentMgr.registerType('participant-timeline-panel', WLC.ux.ParticipantTimelinePanel);
 Ext.ComponentMgr.registerType('info-timeline-panel', WLC.ux.InfoTimelinePanel);
 Ext.ComponentMgr.registerType('eval-timeline-panel', WLC.ux.EvalTimelinePanel);
 
-
+Ext.grid.Column.types['participantnamecolumn'] = WLC.grid.ParticipantNameColumn;
+});

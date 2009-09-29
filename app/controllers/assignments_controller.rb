@@ -17,9 +17,9 @@ class AssignmentsController < ApplicationController
       @configured_modules_info = [ ]
 
       # we want to show instructor view of assignment
-      @performance_store_fields = [ 'id', 'name' ]
+      @performance_store_fields = [ 'id', 'name', 'is_participant' ]
       @performance_grid_columns = [
-        { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name' },
+        { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name', :xtype => 'participantnamecolumn' },
       ]
 
       @assignment.configured_modules(nil).each do |m|
