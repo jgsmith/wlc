@@ -338,7 +338,7 @@
         xtype: 'grid',
         height: 800,
         autoScroll: true,
-        viewConfig: { forceFit: true },
+        viewConfig: { forceFit: true, autoFill: true },
         width: 500,
         store: performance_store,
         colModel: new Ext.grid.ColumnModel({
@@ -358,6 +358,6 @@
         }
       }]
     }]
-  })
+  });
   });
 
