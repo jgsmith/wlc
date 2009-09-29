@@ -9,18 +9,20 @@
     var message_panel_tools = new Array;
     if(#{ @we_allow_new_messages.to_json }) {
       message_panel_tools[0] = {
-        id: 'refresh',
-        qtip: 'Refresh Message List',
-        handler: function(e,toolEl,panel,tc) {
+        text: 'Refresh',
+        iconCls: 'silk-arrow-refresh',
+        handler: function(b,e) {
+          var panel = Ext.ComponentMgr.get('message-list');
           panel.getStore().reload();
         }
       };
       
       if(#{@recipients.size} > 0) {
         message_panel_tools[1] = {
-          id: 'plus',
-          qtip: 'Send Message',
-          handler: function(e,toolEl,panel,tc) {
+          text: 'New Message',
+          iconCls: 'silk-add',
+          handler: function(b,e) {
+            var panel = Ext.ComponentMgr.get('message-list');
             var compose_form = new WLC.ux.ComposeMessageWindow({
               title: 'New Message',
               renderTo: document.body,
@@ -38,6 +40,46 @@
             });
             compose_form.setPosition(50,50);
             compose_form.show();
+          }
+        };
+
+        message_panel_tools[2] = {
+          text: 'Reply',
+          iconCls: 'silk-arrow-turn-left',
+          handler: function(b,e) {
+            var panel = Ext.ComponentMgr.get('message-list');
+            /* get the selected message for the reply */
+            var rec = panel.selModel.getSelected();
+            WLC.debug(rec);
+
+            Ext.Ajax.request({
+              url: '/messages/' + rec.get('id') + '?format=ext_json',
+              success: function(response, opts) {
+                var obj = Ext.decode(response.responseText);
+                WLC.debug(obj);
+
+                var compose_form = new WLC.ux.ComposeMessageWindow({
+                  title: 'Reply to Message',
+                  renderTo: document.body,
+                  url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
+                  store: panel.getStore(),
+                  messageContent: '> ' + obj.data["message[content]"].replace(/(\r\n)|(\n\r)/g, "\n> "),
+                  messageRecipient: obj.data["message[assignment_participation_id]"],
+                  messageSubject: ('Re: ' + obj.data["message[subject]"]).replace(/^(Re: )+/, 'Re: '),
+                  recipientStore: new Ext.data.ArrayStore({
+                    id: 0,
+                    fields: [
+                      'myId',
+                      'displayText'
+                    ],
+                    data: #{@recipients.to_json}
+                  }),
+                  form_authenticity_token: #{form_authenticity_token.to_json}
+                });
+                compose_form.setPosition(50,50);
+                compose_form.show();
+              }
+            });
           }
         };
       }
@@ -77,11 +119,11 @@
         flex: 1,
         height: 150,
         items: [{
-          title: 'Messages',
+          /* title: 'Messages', */
           flex: 1,
           xtype: 'grid',
           id: 'message-list',
-          tools: message_panel_tools,
+          tbar: message_panel_tools,
           height: 150,
           store: message_store,
           colModel: new Ext.grid.ColumnModel({

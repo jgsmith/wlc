@@ -185,6 +185,7 @@ class MessagesController < ApplicationController
 
       respond_to do |format|
         format.html
+        format.ext_json { render :json => @message.to_ext_json }
       end
 
     else

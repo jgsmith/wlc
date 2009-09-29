@@ -18,40 +18,6 @@
       %td
         =h @recipient
 
-    - if @recipients.size > 0
-      %tr
-        %td
-        %td
-          %div{:id => 'reply-to-' + @message.id.to_s}
-          :javascript
-            new Ext.Button({
-              renderTo: #{('reply-to-' + @message.id.to_s).to_json},
-              text: 'Reply',
-              handler: function(b,e) {
-                var panel = Ext.ComponentMgr.get('message-list');
-                var compose_form = new WLC.ux.ComposeMessageWindow({
-                  title: 'New Message',
-                  renderTo: document.body,
-                  url: #{(assignment_messages_path(@assignment)+"?format=ext_json_html").to_json},
-                  store: panel.getStore(),
-                  messageContent: #{("> " + @message.content.split(/(\r\n|\n\r|\n|\r)/).join("\n> ")).to_json},
-                  messageRecipient: #{@message.assignment_participation.id.to_s.to_json},
-                  messageSubject: #{("Re: " + @message.subject).to_json},
-                  recipientStore: new Ext.data.ArrayStore({
-                    id: 0,
-                    fields: [
-                      'myId',
-                      'displayText'
-                    ],
-                    data: #{@recipients.to_json}
-                  }),
-                  form_authenticity_token: #{form_authenticity_token.to_json}
-                });
-                compose_form.setPosition(50,50);
-                compose_form.show();
-              }
-            });
-
 #message-body= markdown @message.content
 - if !@message.uploads.empty?
   #message-attachments
