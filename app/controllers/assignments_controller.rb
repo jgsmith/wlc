@@ -13,7 +13,7 @@ class AssignmentsController < ApplicationController
 
   def show
     @user = current_user
-    if @assignment.course.user == @user
+    if @assignment.course.is_assistant?(@user)
       @configured_modules_info = [ ]
 
       # we want to show instructor view of assignment
