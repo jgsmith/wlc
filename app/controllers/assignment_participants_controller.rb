@@ -11,7 +11,7 @@ class AssignmentParticipantsController < ApplicationController
 
   def show
     @user = current_user
-    if @user == @assignment.course.user
+    if @assignment.course.is_assistant?(@user)
       # dump all grades for all participants
       @grades = [ ]
       @assignment.course.course_participants.each do |student|
@@ -60,11 +60,11 @@ class AssignmentParticipantsController < ApplicationController
       respond_to do |format|
         format.ext_json { render :json => { :results => @grades.length, :items => @grades } }
       end
-    elsif @assignment.is_student?(@user)
+    elsif @assignment.course.is_student?(@user)
       # dump grades for the student
     else
       # nada
-      respond_to do |foramt|
+      respond_to do |format|
         format.html { render :text => 'Forbidden!', :status => :forbidden }
         format.json { render :json => { :success => false }, :status => :forbidden }
         format.ext_json { render :json => { :success => false }, :status => :forbidden }
