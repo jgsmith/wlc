@@ -18,11 +18,14 @@
   });
 
   var performance_store = new Ext.data.JsonStore({
-    url: #{(assignment_grades_path(@assignment) + "?format=ext_json").to_json},
+    url: #{(assignment_assignment_participants_path(@assignment) + "?format=ext_json").to_json},
     root: 'items',
-    idProperty: 'id',
+    /* idProperty: 'id', */
+    autoLoad: true,
     fields: #{@performance_store_fields.to_json}
   });
+
+  WLC.debug(performance_store);
 
   var assignment_modules = new Ext.data.ArrayStore({
     fields: [
@@ -343,13 +346,14 @@
             width: 120,
             sortable: true
           },
-          columns: #{@performance_grid_columns.to_json},
+          columns: #{@performance_grid_columns.to_json}
         }),
         sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
         listeners: {
           rowdblclick: function(grid, index, e) {
             var rec = grid.getStore().getAt(index);
-            WLC.debug(rec)
+            WLC.debug(rec);
+            WLC.debug(rec.get("name"));
           }
         }
       }]

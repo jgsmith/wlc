@@ -19,53 +19,37 @@ class AssignmentParticipantsController < ApplicationController
           'assignment_id = ? AND user_id = ?',
           @assignment.id, student.user.id ]) rescue nil
 
-        grade = [ student.user.id, student.user.name ]
+        grade = { :id => student.user.id, :name => student.user.name }
         
         if submission
           @assignment.configured_modules(nil).each do |m|
             if m.has_evaluation?
               if !m.author_name.blank?
-                g = [ ]
-                AssignmentParticipations.find(:all,
-                  :joins => [ :assignment_submissions ],
+                i = 0
+                AssignmentParticipation.find(:all,
+                  :joins => [ :assignment_submission ],
                   :conditions => [
                     'assignment_submissions.assignment_id = ? AND
                      assignment_participations.tag = ? AND
                      assignment_participations.user_id = ?',
                     @assignment.id, m.tag, student.user.id
                   ]).each do |ap|
-                    g << ap.assignment_submission.user.name
-                  end
-                g << '' while g.length < m.number_participants
-                grade = grade + g
+                     grade[('author_' + m.position.to_s + '_' + i.to_s)] =
+                       ap.assignment_submission.user.name
+                     i = i + 1
+                end
               end
               if !m.participant_name.blank?
-                g = [ ]
-                AssignmentParticipations.find(:all,
+                i = 0
+                AssignmentParticipation.find(:all,
                   :conditions => [
                     'assignment_submission_id = ? AND
                      tag = ?',
                     submission.id, m.tag
                   ]).each do |ap|
-                    g << ap.user.name
-                  end
-                g << '' while g.length < m.number_participants
-                grade = grade + g
-              end
-            end
-          end
-        else
-          @assignment.configured_modules(@user).each do |m|
-        
-            if m.has_evaluation?
-              if !m.author_name.blank?
-                m.number_participants.times do |i|
-                  grade << ''
-                end
-              end
-              if !m.participant_name.blank?
-                m.number_participants.times do |i|
-                  grade << ''
+                    grade[('participant_' + m.position.to_s + '_' + i.to_s)] =
+                      ap.user.name
+                    i = i + 1
                 end
               end
             end
