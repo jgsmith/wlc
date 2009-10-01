@@ -6,10 +6,16 @@ class ApplicationController < ActionController::Base
   include ExtScaffold
 
   before_filter CASClient::Frameworks::Rails::Filter
+  before_filter :set_users
 
   helper :all # include all helpers, all the time
   protect_from_forgery # See ActionController::RequestForgeryProtection for details
 
   # Scrub sensitive parameters from your log
   filter_parameter_logging :password, :password_confirmation
+
+  def set_users
+    @actual_user = actual_user
+    @user = current_user
+  end
 end

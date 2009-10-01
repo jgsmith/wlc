@@ -14,6 +14,7 @@
     - else
       = javascript_include_tag 'ext-prototype-adapter.js'
       = javascript_include_tag 'ext-all.js'
+    = javascript_include_tag '/javascripts/ext3/examples/ux/RowExpander.js'
     = javascript_include_tag 'application'
     = yield :head
   %body
@@ -22,6 +23,10 @@
         .logged-in-as
           Logged in as
           = @user.login
+          - if @actual_user
+            %a{:href => '/user/revert'}
+              Revert to
+              = @actual_user.login
       - else
         .logged-in-as
           %a{:href=> "https://netid.tamu.edu/cas?service=https://wlc-system.tamu.edu/"} Log in

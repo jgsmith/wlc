@@ -28,6 +28,18 @@ module AuthenticatedSystem
       session[:user] = (new_user.nil? || new_user.is_a?(Symbol)) ? nil : new_user.id
       @current_user = new_user
     end
+
+    def actual_user
+      if !@actual_user
+        @actual_user = (session[:actual_user] && User.find_by_id(session[:actual_user])) || false
+      end
+      @actual_user
+    end
+
+    def actual_user=(new_user)
+      session[:actual_user] = (new_user.nil? || new_user.is_a?(Symbol)) ? nil : new_user.id
+      @actual_user = new_user
+    end
     
     # Check if the user is authorized.
     #
