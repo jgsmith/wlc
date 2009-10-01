@@ -90,6 +90,10 @@
     });
   };
 
+  var expander = new Ext.ux.grid.RowExpander({
+    tpl: new Ext.Template(#{@expander_template.to_json})
+  });
+
   new Ext.Panel({
     title: #{(@assignment.course.name + ' - Assignment #' + @assignment.position.to_s).to_json},
     renderTo: $('assignment-panel'),
@@ -341,19 +345,19 @@
         viewConfig: { forceFit: true, autoFill: true },
         width: 500,
         store: performance_store,
+        plugins: [ expander ],
         colModel: new Ext.grid.ColumnModel({
           defaults: {
             width: 120,
             sortable: true
           },
-          columns: #{@performance_grid_columns.to_json}
+          columns: [ expander, #{@performance_grid_columns.map { |c| c.to_json }.join(", ") } ]
         }),
+        sortInfo: {field: 'name', direction: 'ASC'},
         sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
         listeners: {
           rowdblclick: function(grid, index, e) {
             var rec = grid.getStore().getAt(index);
-            WLC.debug(rec);
-            WLC.debug(rec.get("name"));
           }
         }
       }]

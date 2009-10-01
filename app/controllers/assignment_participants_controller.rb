@@ -24,6 +24,8 @@ class AssignmentParticipantsController < ApplicationController
         
         if submission
           grade[:is_participant] = true
+          grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position : @assignment.configured_modules(nil).last.position)
+
           @assignment.configured_modules(nil).each do |m|
             if m.has_evaluation?
               if !m.author_name.blank?
@@ -58,6 +60,7 @@ class AssignmentParticipantsController < ApplicationController
           end
         else
           grade[:is_participant] = false
+          grade[:progress_info] = '<p>No submission for this assignment.</p>'
         end
         @grades << grade
       end

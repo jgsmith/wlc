@@ -1,5 +1,7 @@
 class AssignmentsController < ApplicationController
 
+  include ExtScaffold
+
   before_filter CASClient::Frameworks::Rails::Filter
 
   rescue_from ActiveRecord::RecordNotFound do |exception|
@@ -10,6 +12,14 @@ class AssignmentsController < ApplicationController
   end
 
   before_filter :find_assignment, :only => [ :show, :update ]
+  before_filter :find_course,     :only => [ :index ]
+
+  def index
+    @assignments = @course.assignments
+    respond_to do |format|
+      format.ext_json { render :json => @assignments.to_ext_json(:class => Assignment) }
+    end
+  end
 
   def show
     @user = current_user
@@ -17,10 +27,12 @@ class AssignmentsController < ApplicationController
       @configured_modules_info = [ ]
 
       # we want to show instructor view of assignment
-      @performance_store_fields = [ 'id', 'name', 'is_participant' ]
+      @performance_store_fields = [ 'id', 'name', 'is_participant', 'progress_info', 'grading' ]
       @performance_grid_columns = [
         { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name', :xtype => 'participantnamecolumn' },
       ]
+
+      @expander_template = '<table width="100%" border="0"><tr><th width="50%" align="center">Portfolio</th><th width="50%" align="center">Grading</th></tr><tr><td width="50%">{progress_info}</td><td width="50%">{grading}</td></tr></table>'
 
       @assignment.configured_modules(nil).each do |m|
         @configured_modules_info << {
@@ -119,5 +131,9 @@ protected
 
   def find_assignment
     @assignment = Assignment.find(params[:id])
+  end
+
+  def find_course
+    @course = Course.find(params[:course_id])
   end
 end
