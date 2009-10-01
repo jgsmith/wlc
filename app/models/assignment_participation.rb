@@ -34,7 +34,7 @@ class AssignmentParticipation < ActiveRecord::Base
   # earlier than the module during which this upload was done
   # OR you can be the course instructor
   def can_user_view_upload?(u)
-    self.assignment_submission.assignment.course.user == u ||
+    self.assignment_submission.assignment.course.is_assistant?(u) ||
     self.assignment_submission.assignment_participations.select{|p|
       p.position >= self.position &&
       p.user == u
