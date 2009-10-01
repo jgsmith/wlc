@@ -119,7 +119,7 @@ class ConfiguredModule
         'assignment_id = ? AND user_id = ?',
         self.assignment.id, self.user.id
       ]
-      if defined? s  # did the user submit anything to the assignment?
+      if self.assignment.is_participant?(self.user)
 
         if self.module_def.nil? && self.has_messaging? ||
            !self.module_def.nil? && self.module_def.is_evaluative? ||
