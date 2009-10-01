@@ -4,17 +4,19 @@
   var author_eval_prompts = new Ext.data.ArrayStore({
     fields: [
       'prompt',
+      'tag',
       'responses'
     ],
-    data: #{@assignment.author_eval[:prompts].map{|p| [ p[:prompt], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+    data: #{@assignment.author_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
   });
 
   var participant_eval_prompts = new Ext.data.ArrayStore({
     fields: [
       'prompt',
+      'tag',
       'responses'
     ],
-    data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+    data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
   });
 
   var performance_store = new Ext.data.JsonStore({
@@ -78,6 +80,7 @@
       var fbase = prefix + "[prompts][" + rec_no + "]";
         
       values[fbase+"[prompt]"] = rec.get("prompt");
+      values[fbase+"[tag]"] = rec.get("tag");
 
       var rsp_no = 0;
       rec.get("responses").each(function(r) {

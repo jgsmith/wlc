@@ -384,11 +384,17 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                 sortable: false
               },
               columns: [
+                { id : 'tag',
+                  header: 'Tag',
+                  width: 100,
+                  dataIndex: 'tag',
+                  sortable: false
+                },
                 { id: 'prompt', 
+                  header: 'Prompt',
                   width: 400, 
                   dataIndex: 'prompt', 
-                  sortable: false , 
-                  editor:new Ext.form.TextField({ allowBlank: false })
+                  sortable: false 
                 }
               ]
             });
@@ -398,6 +404,7 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
     config.sm = new Ext.grid.RowSelectionModel({singleSelect: true});
     config.tools = [{
         id: 'plus',
+        qtip: 'New Prompt',
         handler: function(event, toolEl, panel, tc) {
             /* we want to pop up a window to add a new prompt */
             /* only add the new item if the window saves */
@@ -431,6 +438,7 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                         var fp = this.ownerCt.ownerCt;
                         
                         rec.set('prompt', fp.getComponent('prompt').getValue());
+                        rec.set('tag', fp.getComponent('tag').getValue());
                         var rs = new Array;
                         fp.getComponent('responses').getStore().each(function(r) {
                             rs.push([ r.get('response'), r.get('score') ]);
@@ -454,7 +462,16 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                     fieldLabel: 'Prompt',
                     width: 330,
                     itemId: 'prompt',
+                    emptyText: 'What is the question?',
                     value: rec.get('prompt')
+                }, {
+                    xtype: 'textfield',
+                    name: 'tag',
+                    fieldLabel: 'Tag',
+                    width: 165,
+                    itemId: 'tag',
+                    emptyText: 'Mnemonic tag',
+                    value: rec.get('tag')
                 }, {
                     xtype: 'responsegrid',   
                     itemId: 'responses',
@@ -506,6 +523,7 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                     handler: function(f) {
                         var fp = this.ownerCt.ownerCt;
                         rec.set('prompt', fp.getComponent('prompt').getValue());
+                        rec.set('tag', fp.getComponent('tag').getValue());
                         var rs = new Array;
                         fp.getComponent('responses').getStore().each(function(r) {
                             rs.push([ r.get('response'), r.get('score') ]);
@@ -527,7 +545,16 @@ WLC.grid.RubricGrid = Ext.extend(Ext.grid.GridPanel, {
                     fieldLabel: 'Prompt',
                     width: 330,
                     itemId: 'prompt',
+                    emptyText: 'What is the question?',
                     value: rec.get('prompt')
+                }, {
+                    xtype: 'textfield',
+                    name: 'tag',
+                    fieldLabel: 'Tag',
+                    width: 165,
+                    itemId: 'tag',
+                    emptyText: 'Mnemonic tag',
+                    value: rec.get('tag')
                 }, {
                     xtype: 'responsegrid',
                     itemId: 'responses',
