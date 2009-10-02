@@ -9,6 +9,7 @@ class MessagesController < ApplicationController
 
   def index
     @user = current_user
+    @reader = @user
 
     @assignment_participations = [ ]
     @recipients = [ ]
@@ -39,6 +40,7 @@ class MessagesController < ApplicationController
       @assignment = @assignment_submission.assignment
       @current_module = @assignment.current_module(@assignment_submission.user)
       if @user == @assignment_submission.user || @assignment.course.is_assistant?(@user)
+        @reader = @assignment_submission.user
         @we_allow_new_messages = false
         @assignment.configured_modules(@assignment_submission.user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
           r = get_recipients(m,@assignment, @assignment_submission.user)
