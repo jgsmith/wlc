@@ -108,10 +108,10 @@ class MessagesController < ApplicationController
           else
             h[:url] = message_path(m)
           end
-          if @user == m.user
+          if @reader == m.user
             h[:is_read] = true
             h[:user] = "-"
-            if m.assignment_participation.assignment_submission.user == @user
+            if m.assignment_participation.assignment_submission.user == @reader
               h[:recipient] = m.assignment_participation.participant_name
             else
               h[:recipient] = m.assignment_participation.author_name
@@ -120,7 +120,7 @@ class MessagesController < ApplicationController
           else
             h[:is_read] = m.is_read
             h[:recipient] = "-"
-            if m.assignment_participation.assignment_submission.user == @user
+            if m.assignment_participation.assignment_submission.user == @reader
               # evaluator sent the message (you're the author)
               h[:user] = m.assignment_participation.participant_name
               h['recipient-portfolio'] = 'own-portfolio'
