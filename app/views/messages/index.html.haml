@@ -1,3 +1,14 @@
+- if !params[:embedded]
+  %h2.title
+    %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+    &gt;
+    %a{:href => assignment_path(@assignment)}= 'Assignment #'  + @assignment.position.to_s
+    &gt;
+    Messages
+    - if @current_module.assignment.course.is_assistant?(@user)
+      for
+      =h @current_module.assignment_submission.user.name rescue 'unknown'
+    
 #message-panel
 - tabs = [ { :title => 'You', :html => @current_module.assignment_submission.show_info(@current_module.position, @user), :itemId => 'own-portfolio' } ]
 - @assignment_participations.each do |p|
@@ -8,7 +19,7 @@
   Ext.onReady(function(){
     var message_panel_tools = new Array;
     if(#{ @we_allow_new_messages.to_json }) {
-      message_panel_tools[0] = {
+      message_panel_tools[message_panel_tools.length] = {
         text: 'Refresh',
         iconCls: 'silk-arrow-refresh',
         handler: function(b,e) {
@@ -18,7 +29,7 @@
       };
       
       if(#{@recipients.size} > 0) {
-        message_panel_tools[1] = {
+        message_panel_tools[message_panel_tools.length] = {
           text: 'New Message',
           iconCls: 'silk-add',
           handler: function(b,e) {
@@ -43,7 +54,7 @@
           }
         };
 
-        message_panel_tools[2] = {
+        message_panel_tools[message_panel_tools.length] = {
           text: 'Reply',
           iconCls: 'silk-arrow-turn-left',
           disabled: true,
@@ -56,7 +67,7 @@
 
             if(rec) {
               Ext.Ajax.request({
-                url: '/messages/' + rec.get('id') + '?format=ext_json',
+                url: rec.get('url') + '?format=ext_json', /* '/messages/' + rec.get('id') + '?format=ext_json', */
                 success: function(response, opts) {
                   var obj = Ext.decode(response.responseText);
                   WLC.debug(obj);
@@ -89,18 +100,20 @@
       }
     }
 
+  WLC.debug(message_panel_tools);
+
   var dims = document.viewport.getDimensions();
   var h = dims['height'];
   var w = dims['width'];
   var message_panel;
   var message_store = new Ext.data.JsonStore({
-    url: #{(assignment_messages_path(@assignment)+"?format=ext_json").to_json},
+    url: #{(@store_url + "?format=ext_json").to_json},
     autoLoad: true,
     storeId: 'messageStore',
     root: 'messages',
     idProperty: 'id',
     restful: true,
-    fields: ['id', 'user', 'created_at', {name:'is_read', type:'boolean'}, 'subject', 'recipient', 'recipient-portfolio' ]
+    fields: ['id', 'user', 'created_at', {name:'is_read', type:'boolean'}, 'subject', 'recipient', 'recipient-portfolio', 'url' ]
   });
 
   if( #{@we_allow_new_messages.to_json} ) {
@@ -169,7 +182,7 @@
               var btn = Ext.ComponentMgr.get('message-reply-button');
               if(btn) { btn.setDisabled(false); }
               panel.load({
-                url: '/messages/' + rec.get('id'),
+                url: rec.get('url'), /* '/messages/' + rec.get('id'), */
                 scripts: true
               });
               /* mark record as read, and select appropriate portfolio tab */

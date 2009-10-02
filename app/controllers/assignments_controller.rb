@@ -27,12 +27,25 @@ class AssignmentsController < ApplicationController
       @configured_modules_info = [ ]
 
       # we want to show instructor view of assignment
-      @performance_store_fields = [ 'id', 'name', 'is_participant', 'progress_info', 'grading' ]
+      @performance_store_fields = [ 'id', 'name', 'is_participant', 'progress_info', 'grading', 'messages_url' ]
       @performance_grid_columns = [
         { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name', :xtype => 'participantnamecolumn' },
       ]
 
-      @expander_template = '<table width="100%" border="0"><tr><th width="50%" align="center">Portfolio</th><th width="50%" align="center">Grading</th></tr><tr><td width="50%">{progress_info}</td><td width="50%">{grading}</td></tr></table>'
+      @expander_template = %{
+<table width="100%" border="0">
+  <tr>
+    <th width="50%" align="center">Portfolio</th>
+    <th width="50%" align="center">Grading</th>
+  </tr>
+  <tr>
+    <td width="50%">
+      <p><a href="{messages_url}" target="_new">Messages</a></p>
+      {progress_info}
+    </td>
+    <td width="50%">{grading}</td>
+  </tr>
+</table>}
 
       @assignment.configured_modules(nil).each do |m|
         @configured_modules_info << {
@@ -75,7 +88,7 @@ class AssignmentsController < ApplicationController
   def update
     @user = current_user
 
-    if @assignment.course.user == @user
+    if @assignment.course.is_designer?(@user)
       if !params[:assignment][:author_eval].nil?
         author_eval = {
           :instructions => params[:assignment][:author_eval][:instructions],

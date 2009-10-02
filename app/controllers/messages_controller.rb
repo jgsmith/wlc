@@ -15,6 +15,7 @@ class MessagesController < ApplicationController
 
     if !params[:assignment_id].blank?
       @assignment = Assignment.find(params[:assignment_id])
+      @store_url = assignment_messages_path(@assignment)
 
       if(!@assignment.course.is_student?(@user))
         render :text => 'Forbidden!', :status => 403
@@ -31,6 +32,19 @@ class MessagesController < ApplicationController
         r = get_recipients(@current_module)
         @assignment_participations = r[0]
         @recipients = r[1]
+      end
+    elsif !params[:assignment_submission_id].blank?
+      @assignment_submission = AssignmentSubmission.find(params[:assignment_submission_id])
+      @store_url = assignment_submission_messages_path(@assignment_submission)
+      @assignment = @assignment_submission.assignment
+      @current_module = @assignment.current_module(@assignment_submission.user)
+      if @user == @assignment_submission.user || @assignment.course.is_assistant?(@user)
+        @we_allow_new_messages = false
+        @assignment.configured_modules(@assignment_submission.user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
+          r = get_recipients(m,@assignment, @assignment_submission.user)
+          @assignment_participations = @assignment_participations + r[0]
+          @recipients = @recipients + r[1]
+        end
       end
     else
       @assignment.configured_modules(@user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
@@ -52,6 +66,18 @@ class MessagesController < ApplicationController
             ],
             :order => 'id'
           )
+        elsif !params[:assignment_submission_id].blank?
+          @assignment_submission = AssignmentSubmission.find(params[:assignment_submission_id])
+          @messages = Message.find_by_sql(["
+            SELECT DISTINCT m.* 
+            FROM messages m
+            LEFT JOIN assignment_participations a_p 
+                   ON a_p.id = m.assignment_participation_id
+            LEFT JOIN assignment_submissions a_s
+                   ON a_s.id = a_p.assignment_submission_id
+            WHERE (a_s.user_id = ? OR a_p.user_id = ?) AND a_s.assignment_id = ?
+            ORDER BY m.id
+          ", @assignment_submission.user.id, @assignment_submission.user.id, @assignment_submission.assignment.id])
         elsif !params[:assignment_id].blank?
           @assignment = Assignment.find(params[:assignment_id])
           # we want all of the messages for this user's assignment submission
@@ -77,6 +103,11 @@ class MessagesController < ApplicationController
                 :subject => m.subject,
                 :created_at => m.created_at.to_s,
               }
+          if @assignment_submission
+            h[:url] = message_path(m, { :assignment_submission_id => @assignment_submission.id })
+          else
+            h[:url] = message_path(m)
+          end
           if @user == m.user
             h[:is_read] = true
             h[:user] = "-"
@@ -148,46 +179,40 @@ class MessagesController < ApplicationController
     @message = Message.find(params[:id])
     @user = current_user
 
-    if @user == @message.user
-      if @message.assignment_participation.assignment_submission.user == @user
-        @recipient = @message.assignment_participation.participant_name
+    if @message.can_user_view_message?(@user)
+      if @message.assignment_participation.assignment_submission.assignment.course.is_assistant?(@user)
+        # require params[:assignment_submission_id]
+        @assignment_submission = AssignmentSubmission.find(params[:assignment_submission_id])
+        @reader = @assignment_submission.user
       else
-        @recipient = @message.assignment_participation.author_name
+        @reader = @user
       end
-    else
-      if @message.assignment_participation.assignment_submission.user == @user
-              # evaluator sent the message (you're the author)
-        @recipient = @message.assignment_participation.participant_name
+
+      if @reader == @message.user
+        if @message.assignment_participation.assignment_submission.user == @reader
+          @recipient = @message.assignment_participation.participant_name
+        else
+          @recipient = @message.assignment_participation.author_name
+        end
       else
-              # author sent the message (you're the evaluator)
-        @recipient = @message.assignment_participation.author_name
+        if @message.assignment_participation.assignment_submission.user == @reader
+                # evaluator sent the message (you're the author)
+          @recipient = @message.assignment_participation.participant_name
+        else
+                # author sent the message (you're the evaluator)
+          @recipient = @message.assignment_participation.author_name
+        end
       end
-    end
 
-    if @message.user == @user || 
-       @message.assignment_participation.user == @user || 
-       @message.assignment_participation.assignment_submission.user == @user
-
-      @message.is_read = true
-      @message.save
-
-      @recipients = [ ]
-      @assignment_participations = [ ]
-
-      @assignment = @message.assignment_participation.assignment_submission.assignment
-      @current_module = @assignment.current_module(@user)
-      if @current_module && @current_module.has_messaging?
-        @we_allow_new_messages = true
-        r = get_recipients(@current_module)
-        @assignment_participations = r[0]
-        @recipients = r[1]
+      if @message.user != @user && @user == @reader
+        @message.is_read = true
+        @message.save
       end
 
       respond_to do |format|
         format.html
         format.ext_json { render :json => @message.to_ext_json }
       end
-
     else
 
       respond_to do |format|
@@ -199,8 +224,10 @@ class MessagesController < ApplicationController
 
 protected
 
-  def get_recipients(m)
+  def get_recipients(m,assignment = nil,user = nil)
     recipients = [ ]
+    assignment = @assignment if assignment.nil?
+    user = @user if user.nil?
     ap = m.assignment_participations
     ap.sort_by(&:author_name).each do |p|
       recipients << [ p.id, p.author_name ]
@@ -208,7 +235,7 @@ protected
     AssignmentParticipation.find(:all,
       :joins => [ :assignment_submission ],
       :conditions => [
-        'assignment_submissions.assignment_id = ? AND assignment_submissions.user_id = ? AND assignment_participations.tag = ?', @assignment.id, @user.id, m.tag ],
+        'assignment_submissions.assignment_id = ? AND assignment_submissions.user_id = ? AND assignment_participations.tag = ?', assignment.id, user.id, m.tag ],
       :select => 'assignment_participations.*',
       :order => 'assignment_participations.participant_name'
     ).each do |p|

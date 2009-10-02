@@ -1,4 +1,4 @@
-class AssignmentParticipantsController < ApplicationController
+class AssignmentSubmissionsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
       format.json { render :json => { :success => false }, :status => :not_found }
@@ -7,9 +7,9 @@ class AssignmentParticipantsController < ApplicationController
     end
   end
 
-  before_filter :find_assignment, :only => [ :show ]
+  before_filter :find_assignment, :only => [ :index ]
 
-  def show
+  def index
     @user = current_user
     if @assignment.course.is_assistant?(@user)
       # dump all grades for all participants
@@ -25,6 +25,7 @@ class AssignmentParticipantsController < ApplicationController
         if submission
           grade[:is_participant] = true
           grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position : @assignment.configured_modules(nil).last.position)
+          grade[:messages_url] = assignment_submission_messages_path(submission)
 
           @assignment.configured_modules(nil).each do |m|
             if m.has_evaluation?

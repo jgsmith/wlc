@@ -20,7 +20,7 @@
   });
 
   var performance_store = new Ext.data.JsonStore({
-    url: #{(assignment_assignment_participants_path(@assignment) + "?format=ext_json").to_json},
+    url: #{(assignment_assignment_submissions_path(@assignment) + "?format=ext_json").to_json},
     root: 'items',
     /* idProperty: 'id', */
     autoLoad: true,

@@ -11,7 +11,7 @@
         ago
     %tr
       %td{:align => 'right', :style => 'font-weight: bold'}
-        - if @message.user == @user
+        - if @message.user == @reader
           To:
         - else
           From:
@@ -25,7 +25,7 @@
     %ol
       - @message.uploads.sort_by {|a| a.tag.to_i}.each do |u|
         %li
-          - if u.user == @user
+          - if u.user == @reader
             Your file, 
             = '"' + u.filename + '," is available as'
           %a{:href => u.url}=h u.download_name
