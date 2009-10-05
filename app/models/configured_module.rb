@@ -140,8 +140,8 @@ class ConfiguredModule
                   :tag => self.tag
                 )
                 if self.has_messaging? || self.has_evaluation?
-                  p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s
-                  p.participant_name = self.participant_name + ' #' + (c.assignment_participations.select{ |ap| ap.tag == self.tag }.size + 1).to_s
+                  p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s unless self.author_name.blank?
+                  p.participant_name = self.participant_name + ' #' + (c.assignment_participations.select{ |ap| ap.tag == self.tag }.size + 1).to_s unless self.participant_name.blank?
                 end
                 p.initialize_participation
                 p.save

@@ -28,6 +28,7 @@ module AssignmentsHelper
     }
 
     eval_item = 0
+    next_score = 0
     info[:eval][:prompts].each do |prompt|
       item = {
         :xtype => 'fieldset',
@@ -36,13 +37,20 @@ module AssignmentsHelper
       }
 
       prompt[:responses].each do |response|
+        this_score = response[:score]
+        this_score = next_score if this_score.blank?
         item[:items] << {
           :xtype => 'radio',
           :boxLabel => response[:response],
           :name => "eval[#{eval_item.to_s}]",
-          :inputValue => response[:score],
-          :checked => (!info[:values].nil? && response[:score].to_s == info[:values][eval_item.to_s].to_s)
+          :inputValue => this_score,
+          :checked => (!info[:values].nil? && this_score.to_s == info[:values][eval_item.to_s].to_s)
         }
+        if response[:score].blank?
+          next_score = next_score + 1
+        else
+          next_score = response[:score].to_i + 1
+        end
       end
 
       eval_item = eval_item + 1
