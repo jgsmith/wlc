@@ -38,7 +38,8 @@ class AssignmentSubmissionsController < ApplicationController
                      assignment_participations.tag = ? AND
                      assignment_participations.user_id = ?',
                     @assignment.id, m.tag, student.user.id
-                  ]).each do |ap|
+                  ],
+                  :order => 'author_name').each do |ap|
                      grade[('author_' + m.position.to_s + '_' + i.to_s)] =
                        ap.assignment_submission.user.name
                      i = i + 1
@@ -51,7 +52,8 @@ class AssignmentSubmissionsController < ApplicationController
                     'assignment_submission_id = ? AND
                      tag = ?',
                     submission.id, m.tag
-                  ]).each do |ap|
+                  ],
+                  :order => 'participant_name').each do |ap|
                     grade[('participant_' + m.position.to_s + '_' + i.to_s)] =
                       ap.user.name
                     i = i + 1
