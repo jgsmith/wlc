@@ -24,7 +24,7 @@ class AssignmentSubmissionsController < ApplicationController
         
         if submission
           grade[:is_participant] = true
-          grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position : @assignment.configured_modules(nil).last.position)
+          grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position + 1 : @assignment.configured_modules(nil).last.position + 1)
           grade[:messages_url] = assignment_submission_messages_path(submission)
 
           @assignment.configured_modules(nil).each do |m|
