@@ -18,6 +18,11 @@ module AssignmentsHelper
           :html =>  markdown(info[:eval][:instructions])
         }
       end
+    elsif !info[:portfolio].blank?
+      form_items << {
+        :xtype => 'panel',
+        :html => info[:portfolio]
+      }
     end
 
     form_items << {
