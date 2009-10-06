@@ -33,8 +33,8 @@ module AssignmentsHelper
     }
 
     eval_item = 0
-    next_score = 0
     info[:eval][:prompts].each do |prompt|
+      next_score = 0
       item = {
         :xtype => 'fieldset',
         :title => prompt[:prompt],
