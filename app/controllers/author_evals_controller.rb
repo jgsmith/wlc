@@ -10,8 +10,14 @@ class AuthorEvalsController < ApplicationController
     elsif !params[:assignment_participation_id].blank?
       @assignment_participation = AssignmentParticipation.find(params[:assignment_participation_id])
       # this is the author_eval stuff
-      @assignment_participation.author_eval = params[:eval]
-      @assignment_participation.save!
+      if @assignment_participation.assignment_submission.user == @user
+        @assignment_participation.author_eval = params[:eval]
+        @assignment_participation.save!
+      else
+        respond_to do |format|
+          format.html :text => 'Forbidden!', :status => 403
+        end
+      end
     else
       # uh oh -- we can't do anything
       respond_to do |format|
