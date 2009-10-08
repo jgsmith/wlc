@@ -66,8 +66,9 @@
     This assignment is not yet available.
     The first module will become available in
     = distance_of_time_in_words(@assignment.starts_at, @assignment.course.now) + '.'
-- elsif !@assignment.score_view.blank?
-  #score= (markdown @assignment.view_scores(@user) rescue '')
+- elsif ( @assignment.scores_final? rescue false )
+  #score
+    %p We are working on making your score available.
 - else
   %p
     This assignment has closed.
