@@ -52,9 +52,33 @@
         });
     - elsif @assignment.current_module(@user).is_evaluation
       #instructions
-        You have 
-        = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now)
-        to complete this evaluation.
+        %p
+          Below are a series of evaluations for this assignment.  These
+          evaluations are grouped by their associated module.  In each
+          evaluation, you are evaluating a different student, even if the
+          title is the same.  If the title is the same, the evaluation is
+          for someone in a different assignment module.
+
+        %p
+          You need to submit each evaluation separately by clicking on the
+          "Submit ... Evaluation" button.  When you successfully submit an
+          evaluation, that evaluation will close indicating that you have
+          already completed that evaluation.
+
+        %p
+          When you have finished the evaluations, you have completed this
+          assignment.  
+
+        %p
+          You may go back and change any of your answers until the evaluation
+          period is over.  To change your answers, open up the evaluation and
+          select different answers.  Then submit the evaluation as you did
+          before.
+
+        %p
+          You have 
+          = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now)
+          to complete these evaluations.
 
       = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
       - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
