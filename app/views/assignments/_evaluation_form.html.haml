@@ -24,14 +24,6 @@
             });
           }
         }
-      }, {
-        text: #{('Reset ' + form_title).to_json},
-        type: 'reset',
-        handler: function(f) {
-          var fp = this.ownerCt.ownerCt;
-          var form = fp.getForm();
-          form.reset();
-        }
       }],
       collapsible: true,
       collapsed: #{(!info[:values].nil? && !info[:values].empty?).to_json}
