@@ -20,8 +20,14 @@ class Course < ActiveRecord::Base
   end
 
   def is_student?(u)
-    CourseParticipant.count(:conditions => [ 'course_id = ? AND user_id = ? AND level = 0',
-      self.id, u.id ]) > 0
+    cp = CourseParticipant.first(
+      :conditions => [ 
+        'course_id = ? AND user_id = ?',
+        self.id, u.id 
+      ]
+    ) rescue nil
+
+    cp && cp.is_student?
   end
 
   def is_instructor?(u)
@@ -38,7 +44,7 @@ class Course < ActiveRecord::Base
       ]
     ) rescue nil
 
-    cp && cp.level > 1
+    cp && cp.is_designer?
   end
 
   def is_assistant?(u)
@@ -51,6 +57,6 @@ class Course < ActiveRecord::Base
       ]
     ) rescue nil
 
-    cp && cp.level > 0
+    cp && cp.is_assistant?
   end
 end
