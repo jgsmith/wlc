@@ -7,6 +7,7 @@ class ConfiguredModule
   attr_accessor :is_evaluation, :tag
   attr_accessor :download_filename_prefix
   attr_accessor :params
+  attr_accessor :author_rubric, :participant_rubric
 
   def instructions
     @instructions = module_def.instructions unless defined? @instructions
@@ -24,31 +25,58 @@ class ConfiguredModule
     @name
   end
 
+  #
+  # The UTC time at which the module ends.
+  #
   def utc_ends_at
     self.utc_starts_at + self.duration.to_i
   end
 
+  #
+  # ConfigureModule#utc_ends_at adjusted to the Course#tz.
+  #
   def ends_at
     self.assignment.course.tz.utc_to_local(self.utc_ends_at)
   end
 
+  #
+  # ConfigureModule#utc_starts_at adjusted to the Course#tz.
+  #
   def starts_at
     self.assignment.course.tz.utc_to_local(self.utc_starts_at)
   end
 
+  #
+  # True if the module is purely informational.  Informational modules
+  # have nothing with which students can interact.
+  #
   def informational?
     self.module_def.nil? && !self.has_messaging? && !self.is_evaluation
   end
 
+  #
+  # True if the module has private messaging.  Private messaging requires
+  # the module have a ConfiguredModule#participant_name and
+  # ConfiguredModule#author_name configured.
+  #
   def has_messaging?
     !!self.has_messaging && !self.participant_name.blank? && !self.author_name.blank?
   end
 
+  #
+  # True if a rubric is attached to this module.
+  #
   def has_evaluation?
     !self.author_eval.nil? && !self.author_eval.empty? || 
     !self.participant_eval.nil? && !self.participant_eval.empty?
   end
 
+  #
+  # Merges the given AssignmentModule or AssignmentTemplateModule
+  # configuration with the object's current configuration.  This is
+  # a shallow merge, so, for example, #params keys are not merged, but
+  # the entire Hash is replaced.
+  #
   def apply_module(am)
     self.instructions = am.instructions unless am.instructions.nil?
     self.name         = am.name         unless am.name.nil?
@@ -58,6 +86,8 @@ class ConfiguredModule
     self.author_name = am.author_name unless am.author_name.blank?
     self.author_eval  = am.author_eval  unless am.author_eval.nil?
     self.participant_eval = am.participant_eval unless am.participant_eval.nil?
+    self.author_rubric = am.author_rubric unless am.author_rubric.nil?
+    self.participant_rubric = am.participant_rubric unless am.participant_rubric.nil?
     self.duration     = am.duration     unless am.duration.nil?
     self.position     = am.position     unless self.position
     self.download_filename_prefix = am.download_filename_prefix unless am.download_filename_prefix.blank?
@@ -65,6 +95,9 @@ class ConfiguredModule
     self.params       = am.params       unless am.params.nil?
   end
 
+  #
+  # The AssignmentSubmission for the ConfiguredModule#assignment and
+  # ConfiguredModule#user, or nil if none exists
   def assignment_submission
      return nil if self.user.nil? || self.assignment.nil?
      AssignmentSubmission.find(:first, :conditions => [
@@ -73,6 +106,10 @@ class ConfiguredModule
      ])
   end
 
+  #
+  # True if there are messages associated with this module and the
+  # ConfiguredModule#user (either sent or recieved by the user).
+  #
   def has_messages?
     # if the user has sent any or received any, then we return true
     0 < Message.count_by_sql(%{
@@ -86,6 +123,19 @@ class ConfiguredModule
     }) #, @user.id, @user.id, @assignment.id])
   end
 
+  #
+  # Returns a list of AssignmentParticipation objects for this
+  # module and the ConfiguredModule#user.
+  #
+  # If this is the first module in an assignment, then an unsaved
+  # AssignmentParticipation is returned if the student has not already
+  # submitted data establishing participation in the assignment.
+  #
+  # If the existing AssignmentParticipation objects are not sufficient
+  # to satisfy the number needed by ConfiguredModule#number_participants,
+  # then random assignments are made beginning with students who have the
+  # fewest number of participants assigned to them.
+  #
   def assignment_participations
     # this is where we assign participations if we need to
     # this is from the self.user's pov
@@ -169,6 +219,11 @@ class ConfiguredModule
     return @assignment_participations
   end
 
+  #
+  # Returns a list of AssignmentSubmission objects for the 
+  # ConfiguredModule#assignment who do not have sufficient participants
+  # assigned for this module.
+  #
   def available_participants(u)
     available = self.assignment.assignment_submissions.select{|a|
       u.nil? ||
@@ -186,5 +241,9 @@ class ConfiguredModule
     end
     submissions.uniq!
     submissions.select{ |s| s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participants }
+  end
+
+  def save_score(as, t, s)
+    Rails.logger.info("#{self.assignment_module.id rescue '-'}.save_score(#{as.id}, #{t.to_s}, #{s})")
   end
 end

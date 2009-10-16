@@ -1,13 +1,46 @@
 class Assignment < ActiveRecord::Base
+
   belongs_to :course
 
-  has_many :assignment_modules
-  has_many :assignment_submissions
+  belongs_to :author_rubric, :class_name => 'Rubric'
+  belongs_to :participant_rubric, :class_name => 'Rubric'
+
+  has_many :assignment_modules, :order => 'position'
+  has_many :assignment_submissions, :order => 'id'
+  has_many :scores, :dependent => :delete_all
 
   acts_as_list :scope => :course_id
 
-  serialize :participant_eval
-  serialize :author_eval
+  serialize :old_participant_eval
+  serialize :old_author_eval
+
+  #
+  # Returns a Hash representing the instructions and prompts for the
+  # participant evaluation of the author.  This evaluation is done
+  # at the end of the assignment and is intended as a review of the
+  # entire assignment.  See Rubric#to_h.
+  #
+  def participant_eval
+    if participant_rubric
+      participant_rubric.to_h
+    else
+      old_participant_eval
+    end
+  end
+
+  #
+  # Returns a Hash representing the instructions and prompts for the
+  # author's self-evaluation.  This evaluation is done at the end of
+  # the assignment and is intended as a review of the entire assignment.
+  # See Rubric#to_h.
+  #
+  def author_eval
+    if author_rubric
+      author_rubric.to_h
+    else
+      old_author_eval
+    end
+  end
 
   def starts_at
     self.course.tz.utc_to_local(self.utc_starts_at)
@@ -19,6 +52,10 @@ class Assignment < ActiveRecord::Base
 
   def ends_at
     self.course.tz.utc_to_local(self.utc_ends_at)
+  end
+
+  def is_ended?
+    self.ends_at < self.course.now
   end
 
   def assignment_submission(user)
@@ -95,8 +132,10 @@ class Assignment < ActiveRecord::Base
         m.author_name = self.author_name unless self.author_name.blank?
         m.participant_eval = self.participant_eval unless self.participant_eval.nil?
         m.author_eval = self.author_eval unless self.author_eval.nil?
+        m.participant_rubric = self.participant_rubric unless self.participant_rubric.nil?
+        m.author_rubric = self.author_rubric unless self.author_rubric.nil?
         m.number_participants = self.number_evaluations unless self.number_evaluations < 1
-        if m.participant_eval.nil? || m.participant_eval.empty?
+        if m.participant_rubric.nil?
           m.number_participants = 0
         end
         @configured_modules << m
@@ -146,11 +185,295 @@ class Assignment < ActiveRecord::Base
     d
   end
 
-  def calculate_scores(raw_data)
-    return { } if self.calculate_score_fn.blank?
-    self.lua_call('calculate_score', self.calculate_score_fn, 'scores', raw_data)
+  def needs_trust?
+    self.configured_modules(nil).each do |cm|
+      return true if cm.author_rubric && cm.author_rubric.use_trust? ||
+                     cm.participant_rubric && cm.participant_rubric.use_trust? 
+    end
+    return false
+  end
+
+  def calculate_all_scores
+    self.calculate_scores
+    self.calculate_trust_scores if self.calculate_trust? || self.needs_trust?
+    self.calculate_composite_scores
+    self.update_attribute( :scores_calculated, true )
+  end
+
+  def calculate_scores
+    modules = { }
+    self.configured_modules(nil).each do |m|
+      modules[m.tag] = m
+    end
+    self.assignment_submissions.each do |s|
+      s.assignment_participations.each do |ap|
+        if modules[ap.tag].author_rubric && ap.author_eval
+          ap.author_eval_score = modules[ap.tag].author_rubric.calculate_score(ap.author_eval)
+        end
+        if modules[ap.tag].participant_rubric && ap.participant_eval
+          ap.participant_eval_score = modules[ap.tag].participant_rubric.calculate_score(ap.participant_eval)
+        end
+        ap.save
+      end
+      if self.author_rubric
+        s.author_eval_score = self.author_rubric.calculate_score(s.author_eval)
+        s.save
+      end
+    end
+  end
+
+  #
+  # Calculates the composite scores for an assignment if the assignment 
+  # is ended.
+  #
+  def calculate_composite_scores
+    self.scores.clear
+    self.assignment_submissions.each do |s|
+      # we want grades for each component...
+      self.configured_modules(nil).each do |m|
+        if m.has_evaluation?
+          s_obj = self.scores.build({
+            :user => s.user,
+            :tag => m.tag
+          })
+            
+          if m.author_rubric
+            weight = 0.0
+            score = 0.0
+            AssignmentParticipation.find(:all,
+              :joins => [ :assignment_submission ],
+              :conditions => [
+                'assignment_submissions.assignment_id = ? AND
+                 assignment_participations.tag = ? AND
+                 assignment_participations.user_id = ?',
+                self.id, m.tag, s.user.id
+              ]).each do |ap|
+                 if ap.author_eval
+                   if m.author_rubric.use_trust?
+                     w = ap.assignment_submission.trust
+                   else
+                     w = 1.0
+                   end
+                   weight = weight + w
+                   score = score + w*ap.author_eval_score
+                 end
+            end
+            if weight > 0.0
+              s_obj.participant_score = score / weight
+            end
+          end
+          if m.participant_rubric
+            weight = 0.0
+            score = 0.0
+            AssignmentParticipation.find(:all,
+              :conditions => [
+                'assignment_submission_id = ? AND
+                 tag = ?',
+                s.id, m.tag
+              ]).each do |ap|
+                if ap.participant_eval
+                  if m.participant_rubric.use_trust?
+                    w = self.assignment_submission(ap.user).trust
+                  else
+                    w = 1.0
+                  end
+                  weight = weight + w
+                  score = score + w*ap.participant_eval_score
+                end
+            end
+            if weight > 0.0
+              s_obj.author_score = score / weight
+            end
+          end
+          s_obj.save
+        end
+      end
+      # now calculate final scores
+      s.calculate_score(self.use_trust?)
+    end
   end   
+
+  #
+  # Calculates the trust scores for this assignment.  For information
+  # on the math behind the calculation, see the
+  # {Wikipedia article on Eigenvector Centrality}[http://en.wikipedia.org/wiki/Eigenvector_centrality#Eigenvector_centrality].
+  # 
+  # Trust scores are stored in each student's AssignmentSubmission associated
+  # with this Assignment.  Scores are renormalized so that the maximum score
+  # is 1.0.
+  #
+  # The adjacency matrix represents how close an arbitrary pair of students
+  # are with respect to their critical evaluation of the assignment.
+  # A student is considered to have no relationship with themselves.
+  #
+  # Two students with similar trust scores should grade the same assignment
+  # similarly.  A student with a higher trust score than another student
+  # should grade the same assignment more accurately.
+  #
+  # N.B.: The eigenvector is normalized to have a length of 1.0 before we
+  # renormalize it to have a maximum component of 1.0.  Thus, the values
+  # represent relative trust levels and are not comparable across
+  # assignments except to suggest that a student might be improving compared
+  # to the average student in the course.
+  #
+  def calculate_trust_matrix
+    # we need to collect all of the rubric grades
+    #   find out how many students participated in the assignment
+    #   create adjacency matrix
+    pair_wise = GSL::Matrix.zeros(self.assignment_submissions.count)
+
+    scorings = { }
+
+    self.assignment_submissions.each do |as|
+      as.assignment_participations.select{ |ap| ap.tag == self.eval_tag }.each do |ap1|
+        next if !ap1.participant_eval
+        as.assignment_participations.select{ |ap| ap.tag == self.eval_tag }.each do |ap2|
+          next if ap1 == ap2 || !ap2.participant_eval
+          n1 = "#{ap1.user.id}:#{ap2.user.id}"
+          n2 = "#{ap2.user.id}:#{ap2.user.id}"
+          scorings[n1] ||= [ ]
+          scorings[n1] << self.calculate_similarity(ap1.participant_eval_score, ap2.participant_eval_score)
+          scorings[n2] ||= [ ]
+          scorings[n2] << self.calculate_similarity(ap1.participant_eval_score, ap2.participant_eval_score)
+
+        end
+
+        n = "#{as.user.id}:{ap1.user.id}"
+        scorings[n] ||= [ ]
+        scorings[n] << self.calculate_similarity(as.author_eval_score, ap1.participant_eval_score)
+      end
+    end
+
+    subs = self.assignment_submissions
+    num_students = self.assignment_submissions.count
+    num_students.times do |i|
+      num_students.times do |j|
+        next if i >= j
+      
+        user_i = subs[i].user.id
+        user_j = subs[j].user.id
+        res = [ ]
+        res = res + scorings["#{user_i}:#{user_j}"] if scorings["#{user_i}:#{user_j}"]
+        res = res + scorings["#{user_j}:#{user_i}"] if scorings["#{user_j}:#{user_i}"]
+
+        # now do mean and store in matrix
+        if !res.nil? && !res.empty?
+          total = 0.0
+          if self.trust_mean.nil? || self.trust_mean == 0
+            # arithmetic mean
+            res.each do |r|
+              total = total + r
+            end
+            total = total / res.length
+          elsif self.trust_mean == 1 && res.collect{|r| r <= 0.0}.size == 0
+            
+            res.each do |r|
+              total = total + Math.log(r)
+            end
+            total = Math.exp(total / res.length)
+          elsif res.collect{|r| r == 0.0}.size == 0
+            total2 = 1.0
+            res.each do |r|
+              total = total + r
+              total2 = total2 * r
+            end
+            total = res.length * total2 / total unless total == 0.0
+          end
+          pair_wise[i,j] = total
+          pair_wise[j,i] = total
+        end
+      end
+    end
+
+    Rails.logger.info(pair_wise)
+    Rails.logger.info("Max: #{pair_wise.max}   Min: #{pair_wise.min}")
+    Rails.logger.info("Norm: #{pair_wise.norm}")
+    Rails.logger.info("Trace: #{pair_wise.trace}")
+    
+    return pair_wise
+  end
+
+  def trust_matrix
+    @trust_matrix ||= self.calculate_trust_matrix
+    @trust_matrix
+  end
+
+  #
+  # Calculates the trust scores for an assignment.  Uses the
+  # eigenvector for the largest eigenvalue of the Assignment#trust_matrix.
+  # The trust scores are scaled so the largest trust score is 1.0.
+  #
+  def trust_vector
+    if !defined? @trust_vector
+      #eigenval,eigenvec = self.trust_matrix.eigen_symmv
+      #GSL::Eigen::symmv_sort(eigenval,eigenvec, GSL::Eigen::SORT_VAL_DESC)
+      a = self.trust_matrix
+      b = GSL::Vector.alloc(a.size2)
+      b.set_all(0.0)
+      b_next = GSL::Vector.alloc(a.size2)
+      b_next.set_all(0.5)
+      i = 0
+      while(i < 200 && (b - b_next).nrm2 > 0.001) do
+        b = b_next
+        b_next = a * b
+        b_next.normalize!
+        Rails.logger.info("guess #{i}: #{b_next}")
+        i = i + 1
+      end
+
+      @trust_vector = b_next
+      #Rails.logger.info("Eigenvalues: #{eigenval}")
+      #@trust_vector = eigenvec[0]
+      Rails.logger.info("Eigenvector: #{@trust_vector}")
+      max_trust = @trust_vector.max
+      min_trust = @trust_vector.min
+      if min_trust < 0.0
+        Rails.logger.info("---------\n\n      Uh oh!  min trust is less than zero: #{min_trust}\n\n---------------\n")
+      end
+      @trust_vector.scale!(1.0/max_trust) if max_trust != 0.0
+    end
+    @trust_vector
+  end
+
+  #
+  # Initiates the trust calculation and stores the resulting scores
+  # in the appropriate AssignmentSubmission records.
+  #
+  def calculate_trust_scores
+    Rails.logger.info("any: #{self.trust_matrix.any}")
+    Rails.logger.info("any sum: #{self.trust_matrix.any.sum}")
+
+    Rails.logger.info(self.trust_vector)
+
+    trust = self.trust_vector
+
+    self.assignment_submissions.count.times do |i|
+      self.assignment_submissions[i].update_attribute(
+        :trust, trust[i]
+      )
+    end
+    
+  end
+
+  #
+  # Calculates the similarity in two scores on a scale of 0.0 to 1.0,
+  # inclusive.  Input scores are assumed to be between 0.0 and 100.0,
+  # inclusive.
+  #
+  def calculate_similarity(a,b)
+    return 0 if a.nil? || b.nil?
+    1.0 - (a-b)*(a-b)/10000.0
+  end
+
+  def calculate_final_score_fn
+    '(peer_edit_author + peer_edit_participant + 2 * eval_author) / 4'
+  end
         
+  def calculate_final_score(data)
+    fvars = data.keys.map{ |t| %{#{t} = (data.#{t} or 0)} }.join("\n")
+    self.lua_call('calculate_final_score', "#{fvars}\nresult = #{self.calculate_final_score_fn}\nreturn result", 'data', data)
+  end
+
 protected
         
  def lua_call(fname, fbody, data_name, data)
@@ -181,7 +504,6 @@ protected
 
     @lua_context
   end
-
 end
 
 class AssignmentDrop < Liquid::Drop

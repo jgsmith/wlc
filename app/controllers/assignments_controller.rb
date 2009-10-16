@@ -25,12 +25,23 @@ class AssignmentsController < ApplicationController
     @user = current_user
     if @assignment.course.is_assistant?(@user)
       @configured_modules_info = [ ]
+      @grade_store_fields = [ 'id', 'name', 'is_participant' ]
 
       # we want to show instructor view of assignment
       @performance_store_fields = [ 'id', 'name', 'is_participant', 'progress_info', 'grading', 'messages_url' ]
       @performance_grid_columns = [
         { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name', :xtype => 'participantnamecolumn' },
       ]
+      @grades_grid_columns = [
+        { :id => 'name', :header => 'Name', :width => 200, :sortable => true, :dataIndex => 'name', :xtype => 'participantnamecolumn' },
+      ]
+
+      if @assignment.calculate_trust?
+        @grades_grid_columns << {
+          :id => 'trust', :header => 'Trust', :dataIndex => 'trust'
+        }
+        @grade_store_fields << 'trust'
+      end
 
       @expander_template = %{
 <table width="100%" border="0">
@@ -59,24 +70,58 @@ class AssignmentsController < ApplicationController
             m.number_participants.times do |i|
               nm = 'author_' + m.position.to_s + '_' + i.to_s
               @performance_store_fields << nm
+              @grade_store_fields << nm
               @performance_grid_columns << {
                :id => nm, :header => m.author_name + ' #' + (i+1).to_s,
                :sortable => true, :dataIndex => nm
               }
+              @grades_grid_columns << {
+               :id => nm, :header => m.author_name + ' #' + (i+1).to_s,
+               :sortable => true, :dataIndex => nm
+              }
             end
+            @grades_grid_columns << {
+               :id => 'author_' + m.position.to_s + '_avg',
+               :header => m.author_name + ' Avg', :sortable => true,
+               :dataIndex => 'author_' + m.position.to_s + '_avg'
+            }
+            @grade_store_fields << 'author_' + m.position.to_s + '_avg'
           end
           if !m.participant_name.blank?
             m.number_participants.times do |i|
               nm = 'participant_' + m.position.to_s + '_' + i.to_s
               @performance_store_fields << nm
+              @grade_store_fields << nm
               @performance_grid_columns << {
                :id => nm, :header => m.participant_name + ' #' + (i+1).to_s,
                :sortable => true, :dataIndex => nm
               }
+              @grades_grid_columns << {
+               :id => nm, :header => m.participant_name + ' #' + (i+1).to_s,
+               :sortable => true, :dataIndex => nm
+              }
             end
+            @grades_grid_columns << {
+               :id => 'participant_' + m.position.to_s + '_avg',
+               :header => m.participant_name + ' Avg', :sortable => true,
+               :dataIndex => 'participant_' + m.position.to_s + '_avg'
+            }
+            @grade_store_fields << 'participant_' + m.position.to_s + '_avg'
           end
         end
       end
+      if !@assignment.author_eval.nil?
+        @grades_grid_columns << {
+          :id => 'self_eval', :header => 'Self Eval', :sortable => true,
+          :dataIndex => 'self_eval' 
+        } 
+        @grade_store_fields << 'self_eval'
+      end
+      @grades_grid_columns << {
+          :id => 'final', :header => 'Composite', :sortable => true,
+          :dataIndex => 'final' 
+      }
+      @grade_store_fields << 'final'
       render :action => 'show_instructor'
     elsif @assignment.course.is_student?(@user)
       # we show student view of assignment (default)

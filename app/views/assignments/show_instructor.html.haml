@@ -27,7 +27,14 @@
     fields: #{@performance_store_fields.to_json}
   });
 
-  WLC.debug(performance_store);
+  var grade_store = new Ext.data.JsonStore({
+    url: #{(assignment_grades_path(@assignment) + "?format=ext_json").to_json},
+    root: 'items',
+    autoLoad: true,
+    fields: #{@grade_store_fields.to_json}
+  });
+
+  WLC.debug(grade_store);
 
   var assignment_modules = new Ext.data.ArrayStore({
     fields: [
@@ -286,6 +293,7 @@
           }
         }],
         items: [{
+          /*
           xtype: 'textarea',
           name: 'assignment[calculate_score_fn]',
           fieldLabel: 'Score Calculation Function',
@@ -293,15 +301,45 @@
           width: 500,
           grow: true
         }, {
+          */
           inputType: 'hidden', 
           xtype: 'field',
           name: 'authenticity_token',
           value: #{form_authenticity_token.to_json}
         }, {
+          xtype: 'checkbox',
+          name: 'assignment[calculate_trust]',
+          fieldLabel: 'Calculate relative trust',
+          checked: #{@assignment.calculate_trust?.to_json}
+        }, {
+          xtype: 'checkbox',
+          name: 'assignment[use_trust]',
+          fieldLabel: 'Use trust calculation for final review rubric grade',
+          checked: #{@assignment.use_trust?.to_json}
+        }, {
+          xtype: 'checkbox',
+          name: 'assignment[trust_uses_self_eval]',
+          fieldLabel: 'Use self-evaluations in trust calculation',
+          checked: #{@assignment.trust_uses_self_eval?.to_json}
+        }, {
+          xtype: '',
+          name: 'assignment[trust_mean]',
+          fieldLabel: 'Mean for combining multiple trust values',
+          value: #{@assignment.trust_mean.to_json}
+        }, {
+          xtype: 'textarea',
+          name: 'assignment[trust_fn]',
+          fieldLabel: 'Trust function',
+          width: 500,
+          grow: true,
+          value: #{@assignment.trust_fn.to_json}
+          /*
+        }, {
           xtype: 'htmleditor',
           name: 'assignment[score_view]',
           fieldLabel: 'Score Display Template',
           value: #{@assignment.score_view.to_json}
+          */
         }]
       }, {
         xtype: 'grid',
@@ -340,10 +378,10 @@
           }
         }
       }, {
-        title: 'Performance',
+        title: 'Participations',
         flex: 1,
         xtype: 'grid',
-        height: 800,
+        height: 500,
         autoScroll: true,
         viewConfig: { forceFit: true, autoFill: true },
         width: 500,
@@ -357,12 +395,24 @@
           columns: [ expander, #{@performance_grid_columns.map { |c| c.to_json }.join(", ") } ]
         }),
         sortInfo: {field: 'name', direction: 'ASC'},
-        sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
-        listeners: {
-          rowdblclick: function(grid, index, e) {
-            var rec = grid.getStore().getAt(index);
-          }
-        }
+        sm: new Ext.grid.RowSelectionModel({singleSelect: true})
+      }, {
+        title: 'Grades',
+        flex: 1,
+        xtype: 'grid',
+        height: 500,
+        autoScroll: true,
+        viewConfig: { forceFit: true, autoFill: true },
+        width: 500,
+        store: grade_store,
+        colModel: new Ext.grid.ColumnModel({
+          defaults: {
+            width: 120,
+            sortable: true
+          },
+          columns: [ #{@grades_grid_columns.map { |c| c.to_json }.join(", ") } ]
+        }),
+        sm: new Ext.grid.RowSelectionModel({singleSelect: true})
       }]
     }]
   });

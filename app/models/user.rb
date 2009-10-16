@@ -6,6 +6,7 @@ class User < ActiveRecord::Base
   has_many :assignment_participations
   has_many :uploads
   has_many :messages
+  has_many :scores
 
   # Virtual attribute for the unencrypted password
 #  attr_accessor :password

@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 15) do
+ActiveRecord::Schema.define(:version => 17) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -23,12 +23,14 @@ ActiveRecord::Schema.define(:version => 15) do
     t.boolean  "has_messaging"
     t.string   "participant_name"
     t.string   "author_name"
-    t.text     "author_eval"
-    t.text     "participant_eval"
+    t.text     "old_author_eval"
+    t.text     "old_participant_eval"
     t.text     "params"
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "author_rubric_id"
+    t.integer  "participant_rubric_id"
   end
 
   create_table "assignment_participations", :force => true do |t|
@@ -43,6 +45,8 @@ ActiveRecord::Schema.define(:version => 15) do
     t.string   "author_name"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.float    "author_eval_score"
+    t.float    "participant_eval_score"
   end
 
   create_table "assignment_submissions", :force => true do |t|
@@ -52,6 +56,9 @@ ActiveRecord::Schema.define(:version => 15) do
     t.text     "scores"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.float    "author_eval_score"
+    t.float    "score"
+    t.float    "trust"
   end
 
   create_table "assignment_template_modules", :force => true do |t|
@@ -65,12 +72,14 @@ ActiveRecord::Schema.define(:version => 15) do
     t.boolean  "has_messaging"
     t.string   "participant_name"
     t.string   "author_name"
-    t.text     "author_eval"
-    t.text     "participant_eval"
+    t.text     "old_author_eval"
+    t.text     "old_participant_eval"
     t.text     "params"
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "author_rubric_id"
+    t.integer  "participant_rubric_id"
   end
 
   create_table "assignment_templates", :force => true do |t|
@@ -81,10 +90,17 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "number_evaluations"
     t.string   "eval_name"
     t.string   "author_name"
-    t.text     "author_eval"
-    t.text     "participant_eval"
+    t.text     "old_author_eval"
+    t.text     "old_participant_eval"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "author_rubric_id"
+    t.integer  "participant_rubric_id"
+    t.boolean  "calculate_trust"
+    t.boolean  "use_trust"
+    t.boolean  "trust_uses_self_eval"
+    t.integer  "trust_mean"
+    t.text     "trust_fn"
   end
 
   create_table "assignments", :force => true do |t|
@@ -92,17 +108,25 @@ ActiveRecord::Schema.define(:version => 15) do
     t.integer  "position"
     t.integer  "eval_duration"
     t.integer  "number_evaluations"
-    t.boolean  "late_work_acceptable", :default => false, :null => false
+    t.boolean  "late_work_acceptable",  :default => false, :null => false
     t.string   "eval_name"
     t.string   "author_name"
     t.string   "eval_tag"
-    t.text     "author_eval"
-    t.text     "participant_eval"
+    t.text     "old_author_eval"
+    t.text     "old_participant_eval"
     t.text     "calculate_score_fn"
     t.text     "score_view"
     t.datetime "utc_starts_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "author_rubric_id"
+    t.integer  "participant_rubric_id"
+    t.boolean  "scores_final"
+    t.boolean  "calculate_trust"
+    t.boolean  "use_trust"
+    t.boolean  "trust_uses_self_eval"
+    t.integer  "trust_mean"
+    t.text     "trust_fn"
   end
 
   create_table "course_participants", :force => true do |t|
@@ -144,6 +168,47 @@ ActiveRecord::Schema.define(:version => 15) do
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "prompts", :force => true do |t|
+    t.integer  "rubric_id"
+    t.integer  "position"
+    t.string   "prompt"
+    t.string   "tag"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "responses", :force => true do |t|
+    t.integer  "prompt_id"
+    t.integer  "position"
+    t.integer  "score"
+    t.string   "response"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "rubrics", :force => true do |t|
+    t.integer  "user_id"
+    t.string   "name"
+    t.text     "instructions"
+    t.text     "calculate_fn"
+    t.float    "minimum"
+    t.float    "floor"
+    t.float    "maximum"
+    t.float    "ceiling"
+    t.boolean  "inclusive_minimum"
+    t.boolean  "inclusive_maximum"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "scores", :force => true do |t|
+    t.integer "assignment_id"
+    t.integer "user_id"
+    t.string  "tag"
+    t.float   "author_score"
+    t.float   "participant_score"
   end
 
   create_table "semesters", :force => true do |t|
