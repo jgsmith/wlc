@@ -24,7 +24,7 @@ class Assignment < ActiveRecord::Base
     if participant_rubric
       participant_rubric.to_h
     else
-      old_participant_eval
+      old_participant_eval || {}
     end
   end
 
@@ -38,7 +38,7 @@ class Assignment < ActiveRecord::Base
     if author_rubric
       author_rubric.to_h
     else
-      old_author_eval
+      old_author_eval || {}
     end
   end
 
