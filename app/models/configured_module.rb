@@ -10,7 +10,7 @@ class ConfiguredModule
   attr_accessor :author_rubric, :participant_rubric
 
   def instructions
-    @instructions = module_def.instructions unless defined? @instructions
+    @instructions = module_def.instructions if !module_def.nil? && !defined? @instructions
     @instructions
   end
 
