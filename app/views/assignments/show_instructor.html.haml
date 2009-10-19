@@ -7,7 +7,7 @@
       'tag',
       'responses'
     ],
-    data: #{@assignment.author_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+    data: #{@assignment.author_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json rescue '[]'}
   });
 
   var participant_eval_prompts = new Ext.data.ArrayStore({
@@ -16,7 +16,7 @@
       'tag',
       'responses'
     ],
-    data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json}
+    data: #{@assignment.participant_eval[:prompts].map{|p| [ p[:prompt], p[:tag], p[:responses].map{|r| [ r[:response], r[:score] ]} ]}.to_json rescue '[]'}
   });
 
   var performance_store = new Ext.data.JsonStore({
@@ -24,17 +24,15 @@
     root: 'items',
     /* idProperty: 'id', */
     autoLoad: true,
-    fields: #{@performance_store_fields.to_json}
+    fields: #{@performance_store_fields.to_json rescue '[]'}
   });
 
   var grade_store = new Ext.data.JsonStore({
     url: #{(assignment_grades_path(@assignment) + "?format=ext_json").to_json},
     root: 'items',
     autoLoad: true,
-    fields: #{@grade_store_fields.to_json}
+    fields: #{@grade_store_fields.to_json rescue '[]'}
   });
-
-  WLC.debug(grade_store);
 
   var assignment_modules = new Ext.data.ArrayStore({
     fields: [
