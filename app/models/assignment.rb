@@ -316,144 +316,118 @@ class Assignment < ActiveRecord::Base
   # assignments except to suggest that a student might be improving compared
   # to the average student in the course.
   #
-  def calculate_trust_matrix
+  def calculate_trust_scores
     # we need to collect all of the rubric grades
     #   find out how many students participated in the assignment
     #   create adjacency matrix
-    pair_wise = GSL::Matrix.zeros(self.assignment_submissions.count)
 
     scorings = { }
+    @submissions_used_in_trust = [ ]
 
     self.assignment_submissions.each do |as|
-      as.assignment_participations.select{ |ap| ap.tag == self.eval_tag }.each do |ap1|
-        next if !ap1.participant_eval
-        as.assignment_participations.select{ |ap| ap.tag == self.eval_tag }.each do |ap2|
-          next if ap1 == ap2 || !ap2.participant_eval
+      as_used = false
+      aps = as.assignment_participations.select{ |ap| ap.tag == self.eval_tag }
+      aps.each do |ap1|
+        next if !ap1.participant_eval || !ap1.participant_eval_score
+        aps.each do |ap2|
+          next if ap1 == ap2 || !ap2.participant_eval || !ap2.participant_eval_score
           n1 = "#{ap1.user.id}:#{ap2.user.id}"
           n2 = "#{ap2.user.id}:#{ap2.user.id}"
           scorings[n1] ||= [ ]
           scorings[n1] << self.calculate_similarity(ap1.participant_eval_score, ap2.participant_eval_score)
           scorings[n2] ||= [ ]
           scorings[n2] << self.calculate_similarity(ap1.participant_eval_score, ap2.participant_eval_score)
-
+          as_used = true
         end
 
-        n = "#{as.user.id}:{ap1.user.id}"
-        scorings[n] ||= [ ]
-        scorings[n] << self.calculate_similarity(as.author_eval_score, ap1.participant_eval_score)
+        if as.author_eval_score
+          n = "#{as.user.id}:{ap1.user.id}"
+          scorings[n] ||= [ ]
+          scorings[n] << self.calculate_similarity(as.author_eval_score || 0, ap1.participant_eval_score)
+          as_used = true
+        end
       end
+      @submissions_used_in_trust << as if as_used
     end
 
-    subs = self.assignment_submissions
-    num_students = self.assignment_submissions.count
-    num_students.times do |i|
-      num_students.times do |j|
-        next if i >= j
-      
-        user_i = subs[i].user.id
-        user_j = subs[j].user.id
-        res = [ ]
-        res = res + scorings["#{user_i}:#{user_j}"] if scorings["#{user_i}:#{user_j}"]
-        res = res + scorings["#{user_j}:#{user_i}"] if scorings["#{user_j}:#{user_i}"]
+    self.assignment_submissions.each do |as|
+      as.update_attribute(:trust, 0) unless @submissions_used_in_trust.include?(as)
+    end
 
-        # now do mean and store in matrix
-        if !res.nil? && !res.empty?
-          total = 0.0
-          if self.trust_mean.nil? || self.trust_mean == 0
-            # arithmetic mean
-            res.each do |r|
-              total = total + r
+      submissions = @submissions_used_in_trust
+      #submissions.each do |i|
+      #  submissions.each do |j|
+      #    graph.remove_edge(i,j)
+      #    graph.remove_edge(j,i)
+      #  end
+      #  graph.remove_vertex(i)
+      #end
+      #vertices = graph.vertices
+      num_students = submissions.size
+      pair_wise = GSL::Matrix.zeros(num_students)
+      num_students.times do |i|
+        num_students.times do |j|
+          next if i >= j
+
+          user_i = submissions[i].user.id
+          user_j = submissions[j].user.id
+          res = [ ]
+          res = res + scorings["#{user_i}:#{user_j}"] if scorings["#{user_i}:#{user_j}"]
+          res = res + scorings["#{user_j}:#{user_i}"] if scorings["#{user_j}:#{user_i}"]
+
+          # now do mean and store in matrix
+          if !res.nil? && !res.empty?
+            total = 0.0
+            if self.trust_mean.nil? || self.trust_mean == 0
+              # arithmetic mean
+              res.each do |r|
+                total = total + r
+              end
+              total = total / res.length
+            elsif self.trust_mean == 1 && res.collect{|r| r <= 0.0}.size == 0
+          
+              res.each do |r|
+                total = total + Math.log(r)
+              end
+              total = Math.exp(total / res.length)
+            elsif res.collect{|r| r == 0.0}.size == 0
+              total2 = 1.0
+              res.each do |r|
+                total = total + r
+                total2 = total2 * r
+              end
+              total = res.length * total2 / total unless total == 0.0
             end
-            total = total / res.length
-          elsif self.trust_mean == 1 && res.collect{|r| r <= 0.0}.size == 0
-            
-            res.each do |r|
-              total = total + Math.log(r)
-            end
-            total = Math.exp(total / res.length)
-          elsif res.collect{|r| r == 0.0}.size == 0
-            total2 = 1.0
-            res.each do |r|
-              total = total + r
-              total2 = total2 * r
-            end
-            total = res.length * total2 / total unless total == 0.0
+            pair_wise[i,j] = total
+            pair_wise[j,i] = total
           end
-          pair_wise[i,j] = total
-          pair_wise[j,i] = total
         end
       end
-    end
-
-    Rails.logger.info(pair_wise)
-    Rails.logger.info("Max: #{pair_wise.max}   Min: #{pair_wise.min}")
-    Rails.logger.info("Norm: #{pair_wise.norm}")
-    Rails.logger.info("Trace: #{pair_wise.trace}")
-    
-    return pair_wise
-  end
-
-  def trust_matrix
-    @trust_matrix ||= self.calculate_trust_matrix
-    @trust_matrix
-  end
-
-  #
-  # Calculates the trust scores for an assignment.  Uses the
-  # eigenvector for the largest eigenvalue of the Assignment#trust_matrix.
-  # The trust scores are scaled so the largest trust score is 1.0.
-  #
-  def trust_vector
-    if !defined? @trust_vector
-      #eigenval,eigenvec = self.trust_matrix.eigen_symmv
+      Rails.logger.info(pair_wise)
+      Rails.logger.info("Max: #{pair_wise.max}   Min: #{pair_wise.min}")
+      Rails.logger.info("Norm: #{pair_wise.norm}")
+      Rails.logger.info("Trace: #{pair_wise.trace}")
+      pair_wise = (pair_wise + pair_wise.transpose) / 2
+      eigenval,eigenvec = pair_wise.eigen_symmv
       #GSL::Eigen::symmv_sort(eigenval,eigenvec, GSL::Eigen::SORT_VAL_DESC)
-      a = self.trust_matrix
-      b = GSL::Vector.alloc(a.size2)
-      b.set_all(0.0)
-      b_next = GSL::Vector.alloc(a.size2)
-      b_next.set_all(0.5)
-      i = 0
-      while(i < 200 && (b - b_next).nrm2 > 0.001) do
-        b = b_next
-        b_next = a * b
-        b_next.normalize!
-        Rails.logger.info("guess #{i}: #{b_next}")
-        i = i + 1
-      end
-
-      @trust_vector = b_next
-      #Rails.logger.info("Eigenvalues: #{eigenval}")
-      #@trust_vector = eigenvec[0]
-      Rails.logger.info("Eigenvector: #{@trust_vector}")
-      max_trust = @trust_vector.max
-      min_trust = @trust_vector.min
-      if min_trust < 0.0
+      trust_vector = eigenvec.column(0)
+      Rails.logger.info("Eigenvalues: #{eigenval}")
+      Rails.logger.info("Eigenvector: #{trust_vector}")
+      max_trust = trust_vector.max
+      min_trust = trust_vector.min
+      if min_trust < -1.0e-10
         Rails.logger.info("---------\n\n      Uh oh!  min trust is less than zero: #{min_trust}\n\n---------------\n")
       end
-      @trust_vector.scale!(1.0/max_trust) if max_trust != 0.0
-    end
-    @trust_vector
+      trust_vector.scale!(1.0/max_trust) if max_trust != 0.0
+      num_students.times do |i|
+        if trust_vector[i] < 1.0e-10
+          submissions[i].update_attribute( :trust, 0 )
+        else
+          submissions[i].update_attribute( :trust, trust_vector[i] )
+        end
+      end
   end
 
-  #
-  # Initiates the trust calculation and stores the resulting scores
-  # in the appropriate AssignmentSubmission records.
-  #
-  def calculate_trust_scores
-    Rails.logger.info("any: #{self.trust_matrix.any}")
-    Rails.logger.info("any sum: #{self.trust_matrix.any.sum}")
-
-    Rails.logger.info(self.trust_vector)
-
-    trust = self.trust_vector
-
-    self.assignment_submissions.count.times do |i|
-      self.assignment_submissions[i].update_attribute(
-        :trust, trust[i]
-      )
-    end
-    
-  end
 
   #
   # Calculates the similarity in two scores on a scale of 0.0 to 1.0,
