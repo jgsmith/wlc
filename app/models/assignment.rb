@@ -11,6 +11,14 @@ class Assignment < ActiveRecord::Base
 
   acts_as_list :scope => :course_id
 
+  validates_each :utc_starts_at do |record, attr, value|
+    record.errors.add "Assignment must start in the course's semester." if
+      value < record.course.semester.utc_starts_at ||
+      value > record.course.semester.utc_ends_at
+  end
+
+  validates_associated :assignment_modules
+
   serialize :old_participant_eval
   serialize :old_author_eval
 
@@ -409,8 +417,9 @@ class Assignment < ActiveRecord::Base
       Rails.logger.info("Trace: #{pair_wise.trace}")
       pair_wise = (pair_wise + pair_wise.transpose) / 2
       eigenval,eigenvec = pair_wise.eigen_symmv
-      #GSL::Eigen::symmv_sort(eigenval,eigenvec, GSL::Eigen::SORT_VAL_DESC)
+      GSL::Eigen::symmv_sort(eigenval,eigenvec, GSL::Eigen::SORT_VAL_DESC)
       trust_vector = eigenvec.column(0)
+      trust_vector = trust_vector * -1 unless trust_vector.isnonneg?
       Rails.logger.info("Eigenvalues: #{eigenval}")
       Rails.logger.info("Eigenvector: #{trust_vector}")
       max_trust = trust_vector.max
@@ -440,11 +449,11 @@ class Assignment < ActiveRecord::Base
   end
 
   def calculate_final_score_fn
-    '(peer_edit_author + peer_edit_participant + 2 * eval_author) / 4'
+    '(0.15*peer_edit_participant + 0.10*peer_edit_author + 0.25 * eval_author + 0.5 * eval_participant)'
   end
         
   def calculate_final_score(data)
-    fvars = data.keys.map{ |t| %{#{t} = (data.#{t} or 0)} }.join("\n")
+    fvars = data.keys.map{ |t| %{#{t} = (data.#{t} or 100)} }.join("\n")
     self.lua_call('calculate_final_score', "#{fvars}\nresult = #{self.calculate_final_score_fn}\nreturn result", 'data', data)
   end
 
