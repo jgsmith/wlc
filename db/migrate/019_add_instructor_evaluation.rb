@@ -6,8 +6,8 @@ class AddInstructorEvaluation < ActiveRecord::Migration
   end
 
   def self.down
-    drop_column :assignment_submissions, :instructor_score
-    drop_column :assignment_submissions, :instructor_eval
-    drop_column :assignment_submissions, :final_trust
+    remove_column :assignment_submissions, :instructor_score
+    remove_column :assignment_submissions, :instructor_eval
+    remove_column :assignment_submissions, :final_trust
   end
 end

@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 17) do
+ActiveRecord::Schema.define(:version => 19) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -59,6 +59,9 @@ ActiveRecord::Schema.define(:version => 17) do
     t.float    "author_eval_score"
     t.float    "score"
     t.float    "trust"
+    t.text     "instructor_eval"
+    t.float    "instructor_score"
+    t.float    "final_trust"
   end
 
   create_table "assignment_template_modules", :force => true do |t|
@@ -127,6 +130,7 @@ ActiveRecord::Schema.define(:version => 17) do
     t.boolean  "trust_uses_self_eval"
     t.integer  "trust_mean"
     t.text     "trust_fn"
+    t.boolean  "scores_calculated"
   end
 
   create_table "course_participants", :force => true do |t|
@@ -199,6 +203,7 @@ ActiveRecord::Schema.define(:version => 17) do
     t.float    "ceiling"
     t.boolean  "inclusive_minimum"
     t.boolean  "inclusive_maximum"
+    t.boolean  "use_trust"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -263,6 +268,7 @@ ActiveRecord::Schema.define(:version => 17) do
     t.datetime "updated_at"
     t.string   "remember_token"
     t.datetime "remember_token_expires_at"
+    t.boolean  "is_admin",                                :default => false
   end
 
 end
