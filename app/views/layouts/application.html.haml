@@ -6,21 +6,22 @@
     = stylesheet_link_tag "/images/icons/ext-silk.css"
     = javascript_include_tag 'prototype'
     = javascript_include_tag 'effects'
-    = javascript_include_tag 'lowpro'
-    = javascript_include_tag 'popup'
     = javascript_include_tag 'dragdrop'
     = javascript_include_tag 'controls'
     - if ENV['RAILS_ENV'] == 'development'
       = javascript_include_tag 'ext-prototype-adapter-debug.js'
       = javascript_include_tag 'ext-all-debug.js'
+      :javascript
+        Ext.BLANK_IMAGE_URL = #{(root_url + 'images/s.gif').to_json}; 
+        Ext.SSL_SECURE_URL = #{(root_url + 'blank.html').to_json};
     - else
       = javascript_include_tag 'ext-prototype-adapter.js'
       = javascript_include_tag 'ext-all.js'
+      :javascript
+        Ext.BLANK_IMAGE_URL = #{(root_url.gsub(/^http:/, 'https:') + 'images/s.gif').to_json}; 
+        Ext.SSL_SECURE_URL = #{(root_url.gsub(/^http:/, 'https:') + 'blank.html').to_json};
     = javascript_include_tag '/javascripts/ext3/examples/ux/RowExpander.js'
     = javascript_include_tag 'application'
-    :javascript
-      Ext.BLANK_IMAGE_URL = #{(root_url + 'images/s.gif').to_json}; 
-      Ext.SSL_SECURE_URL = #{(root_url.gsub(/^http:/, 'https:') + 'blank.html').to_json};
     = yield :head
   %body
     #container
