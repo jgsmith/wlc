@@ -1,0 +1,53 @@
+- if @user
+  - if !@currently_teaching.nil? && !@currently_teaching.empty?
+    %h2 You Are Currently Teaching
+    %ul
+      - @currently_teaching.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+
+  - if !@currently_assisting.nil? && !@currently_assisting.empty?
+    %h2 You are Currently Assisting
+    %ul
+      - @currently_assisting.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+
+  - if !@currently_taking.nil? && !@currently_taking.empty?
+    %h2 You Are Currently Enrolled In
+    %ul
+      - @currently_taking.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+
+  - if !@will_be_teaching.nil? && !@will_be_teaching.empty?
+    %h2 You Will be Teaching
+    %ul
+      - @will_be_teaching.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+          = course.semester.name
+
+  - if !@will_be_taking.nil? && !@will_be_taking.empty?
+    %h2 You Will Be Taking
+    %ul
+      - @will_be_taking.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+          = course.semester.name
+
+  - if !@prev_taught.nil? && !@prev_taught.empty?
+    %h2 You Have Taught
+    %ul
+      - @prev_taught.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+          = course.semester.name
+
+  - if !@prev_taken.nil? && !@prev_taken.empty?
+    %h2 You Have Taken
+    %ul
+      - @prev_taken.each do |course|
+        %li
+          %a{:href => course_path(course)}= course.name
+          = course.semester.name

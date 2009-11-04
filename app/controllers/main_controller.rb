@@ -1,40 +1,6 @@
 class MainController < ApplicationController
-#  before_filter CASClient::Frameworks::Rails::Filter
+  no_auth_required
 
   def index
-    @user = current_user
-    if @user
-      n = Time.now.utc
-      @current_semesters = Semester.find( :all,
-         :conditions => [ 'utc_starts_at <= ? AND utc_ends_at >= ?', n, n ]
-      )
-
-      @past_semesters = Semester.find( :all,
-         :conditions => [ 'utc_ends_at < ?', n ]
-      )
-
-      @future_semesters = Semester.find( :all,
-         :conditions => [ 'utc_starts_at > ?', n ]
-      )
-
-      @currently_teaching = @user.courses.select { |c| @current_semesters.include?(c.semester) }
-      @prev_teaching = @user.courses.select { |c| @past_semesters.include?(c.semester) }
-      @will_be_teaching = @user.courses.select { |c| @future_semesters.include?(c.semester) }
-
-      @currently_taking = @user.course_participants.select { |cp| cp.level == 0 && @current_semesters.include?(cp.course.semester) }.map { |cp| cp.course }
-      @prev_taking = @user.course_participants.select { |cp| cp.level == 0 && @past_semesters.include?(cp.course.semester) }.map { |cp| cp.course }
-      @will_be_taking = @user.course_participants.select { |cp| cp.level == 0 && @future_semesters.include?(cp.course.semester) }.map { |cp| cp.course }
-    else
-      @current_semesters = [ ]
-      @past_semesters = [ ]
-      @future_semesters = [ ]
-
-      @currently_teaching = [ ]
-      @prev_teaching = [ ]
-      @will_be_teaching = [ ]
-
-      @currently_taking = [ ]
-      @prev_taking = [ ]
-    end
   end
 end
