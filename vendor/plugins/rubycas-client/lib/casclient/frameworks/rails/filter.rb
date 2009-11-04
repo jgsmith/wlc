@@ -123,8 +123,14 @@ module CASClient
             @@log = client.log
           end
           
-          def use_gatewaying?
+          def use_gatewaying?(controller)
+            @@config[:gatewaying][controller.class.name] ||
             @@config[:use_gatewaying]
+          end
+
+          def use_gatewaying(controller)
+            @@config[:gatewaying] ||= { }
+            @@config[:gatewaying][controller.class.name] = true
           end
           
           # Returns the login URL for the current controller. 
