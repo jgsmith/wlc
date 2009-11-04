@@ -4,8 +4,13 @@ class AssignmentModule < ActiveRecord::Base
 
   belongs_to :author_rubric, :class_name => 'Rubric'
   belongs_to :participant_rubric, :class_name => 'Rubric'
+  acts_as_list :scope => :assignment_id
 
   has_many :scores
+
+  validates_numericality_of :number_participants, :only_integer => true, :greater_than_or_equal_to => 1, :allow_nil => true, :allow_blank => true
+  validates_format_of :tag, :with => /^[a-z][a-z0-9_]+$/, :allow_nil => true, :allow_blank => true
+  validates_presence_of :tag, :if => Proc.new { |m| m.module_type == -1 || !m.module_def.nil? && m.module_def.is_evaluative? }
 
   serialize :old_author_eval
   serialize :old_participant_eval
@@ -30,6 +35,28 @@ class AssignmentModule < ActiveRecord::Base
   validates_uniqueness_of :tag, :scope => :assignment_id
   validates_presence_of   :tag
   validates_presence_of   :assignment_id
+
+  def module_type
+    if self.has_messaging?
+      return -1
+    elsif self.module_def.nil?
+      return 0
+    else
+      return self.module_def.id
+    end
+  end
+
+  def module_type=(m)
+    if m == -1
+      self.has_messaging = true
+      self.module_def = nil
+    elsif m == 0
+      self.has_messaging = false
+      self.module_def = nil
+    else
+      self.module_def = ModuleDef.find(m)
+    end
+  end
 
   def configured_module(user)
     if self.module_def.nil?
