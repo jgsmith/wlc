@@ -2,8 +2,6 @@
 // This file is automatically included by javascript_include_tag :defaults
 Ext.QuickTips.init();
 
-Ext.BLANK_IMAGE_URL = '/images/s.gif';
-
 Ext.onReady(function(){
 Ext.namespace('WLC');
 
@@ -765,4 +763,43 @@ Ext.ComponentMgr.registerType('info-timeline-panel', WLC.ux.InfoTimelinePanel);
 Ext.ComponentMgr.registerType('eval-timeline-panel', WLC.ux.EvalTimelinePanel);
 
 Ext.grid.Column.types['participantnamecolumn'] = WLC.grid.ParticipantNameColumn;
+
+Ext.addBehaviors({
+  'a.popup@click': function(e,t) {
+    t = $(t);
+    var matches = t.href.match(/\#(.+)$/);
+    var href;
+    if (matches) {
+      href = matches[1];
+    }
+    else {
+      href = t.href;
+    }
+
+    var w = new Ext.Window({
+      title: t.title,
+      renderTo: document.body,
+      layout: 'fit',
+      items: [{
+        border: false,
+        xtype: 'panel',
+        autoScroll: true,
+        html: Ext.get(href).dom.innerHTML
+      }],
+      height: 500,
+      width: 400,
+      autoDestroy: true,
+      buttonAlign: 'center',
+      buttons: [{
+        text: 'Close',
+        handler: function() {
+          this.ownerCt.ownerCt.destroy();
+        }
+      }],
+      closeAction: 'hide'
+    });
+    w.doLayout();
+    w.show();
+  }
+});
 });
