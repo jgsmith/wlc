@@ -10,8 +10,9 @@
       - else
         %li= m.name
   - if @assignment.has_messaging?(@user)
-    %li{:style => 'float: right; border-left: none' }
-      %a{:href => assignment_messages_path(@assignment), :target => "_new"} Messages
+    - content_for :user_options do
+      %li
+        %a{:href => assignment_messages_path(@assignment), :target => "_new"} Messages
 
 - if !@assignment.current_module(@user).nil?
   - if @assignment.current_module(@user).position != 1 && !@assignment.is_participant?(@user)
@@ -19,41 +20,38 @@
       You missed the initial module that establishes your participation
       in this assignment.  Please contact your professor.
   - else
-    - if !@assignment.current_module(@user).has_messaging?
+    - if !@assignment.current_module(@user).has_messaging? && !@assignment.current_module(@user).is_evaluation
       #instructions
         = markdown @assignment.current_module(@user).instructions
 
     - if @assignment.current_module(@user).has_messaging?
+      - if !@assignment.current_module(@user).instructions.blank?
+        #instructions{:class => 'x-hidden'}
+          = markdown(@assignment.current_module(@user).instructions)
       %p
         This module ends in
         = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now) + "."
+        - if !@assignment.current_module(@user).instructions.blank?
+          There are
+          %a.popup{:href=>"#instructions", :title => 'Instructions'} instructions for this module.
       #message-container
       :javascript
         Ext.onReady(function(){
-          var p = new Ext.TabPanel({
+          var p = new Ext.Panel({
             renderTo: 'message-container',
-            activeTab: 0,
             autoHeight: true,
-            xtype: 'tabpanel',
-            items: [{
-              title: 'Instructions',
-              autoScroll: true,
-              html: #{('<div id="instructions">' + markdown(@assignment.current_module(@user).instructions) + '</div>').to_json}
-            }, {
-              title: #{(@assignment.current_module(@user).name + ' Messages').to_json},
-              autoHeight: true,
-              autoLoad: {
-                url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
-                scripts: true
-              }
-            }]
+            border: false,
+            /* title: #{(@assignment.current_module(@user).name + ' Messages').to_json}, */
+            autoLoad: {
+              url: #{(assignment_messages_path(@assignment)+"?embedded=1").to_json},
+              scripts: true
+            }
           });
-          p.setActiveTab(#{(@assignment.current_module(@user).has_messages? ? 1 : 0).to_json});
         });
     - elsif @assignment.current_module(@user).is_evaluation
-      #instructions
+      #instructions{:class => 'x-hidden'}
         %p
-          Below are a series of evaluations for this assignment.  These
+          Here is a series of evaluations for this assignment.  These
           evaluations are grouped by their associated module.  In each
           evaluation, you are evaluating a different student, even if the
           title is the same.  If the title is the same, the evaluation is
@@ -74,11 +72,13 @@
           period is over.  To change your answers, open up the evaluation and
           select different answers.  Then submit the evaluation as you did
           before.
+      %p
+        You have 
+        = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now)
+        to complete these evaluations.
+        There are
+        %a.popup{:href => '#instructions', :title => 'Instructions'} instructions for this module.
 
-        %p
-          You have 
-          = distance_of_time_in_words(@assignment.current_module(@user).ends_at, @assignment.course.now)
-          to complete these evaluations.
 
       = render :partial => 'evaluation', :collection => @assignment.configured_modules(@user).select{ |cm| cm.has_evaluation? }
       - if !@assignment.author_eval.nil? && !@assignment.author_eval.empty?
