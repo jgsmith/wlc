@@ -47,6 +47,7 @@ module AssignmentsHelper
         item[:items] << {
           :xtype => 'radio',
           :boxLabel => response[:response],
+          :hideLabel => true,
           :name => "eval[#{eval_item.to_s}]",
           :inputValue => this_score,
           :checked => (!info[:values].nil? && this_score.to_s == info[:values][eval_item.to_s].to_s)
