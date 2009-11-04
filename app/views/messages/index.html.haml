@@ -104,7 +104,7 @@
 
   var dims = document.viewport.getDimensions();
   var h = dims['height'];
-  var w = dims['width'];
+  var w = 660;
   var message_panel;
   var message_store = new Ext.data.JsonStore({
     url: #{(@store_url + "?format=ext_json").to_json},
@@ -137,7 +137,7 @@
         height: 150,
         items: [{
           /* title: 'Messages', */
-          flex: 1,
+          flex: 3,
           xtype: 'grid',
           id: 'message-list',
           tbar: message_panel_tools,
@@ -198,7 +198,7 @@
         }, {
           title: 'Portfolios',
           xtype: 'tabpanel',
-          flex: 1,
+          flex: 2,
           itemId: 'message-portfolios',
           height: 150,
           activeItem: 0,
