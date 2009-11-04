@@ -2,8 +2,6 @@ class AssignmentsController < ApplicationController
 
   include ExtScaffold
 
-  before_filter CASClient::Frameworks::Rails::Filter
-
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
       format.json { render :json => { :success => false }, :status => :not_found }
@@ -11,8 +9,10 @@ class AssignmentsController < ApplicationController
     end
   end
 
-  before_filter :find_assignment, :only => [ :show, :update ]
-  before_filter :find_course,     :only => [ :index ]
+  before_filter :find_assignment, :only => [ :show, :update, :edit, :trust ]
+  before_filter :find_course,     :only => [ :index, :new, :create ]
+  before_filter :require_assistant, :only => [ :trust, :edit, :update ]
+  before_filter :require_instructor, :only => [ :new, :create ]
 
   def index
     @assignments = @course.assignments
@@ -21,8 +21,18 @@ class AssignmentsController < ApplicationController
     end
   end
 
+  def trust
+    @needed_papers = [ ]
+    @assignment.calculate_all_scores unless @assignment.scores_calculated?
+    @needed_papers = @assignment.assignment_submissions.find(:all,
+      :conditions => [ 'trust < 1.e-5' ]
+    ).map{ |as| @assignment.assignment_submissions.find(:all,
+      :joins => [ :assignment_participations ],
+      :conditions => [ 'assignment_participations.user_id = ? and assignment_participations.tag = ?', as.user.id, @assignment.eval_tag ]
+    ) + (@assignment.author_rubric.nil? ? [] : [ as ]) }.flatten.uniq
+  end
+
   def show
-    @user = current_user
     if @assignment.course.is_assistant?(@user)
       @configured_modules_info = [ ]
       @grade_store_fields = [ 'id', 'name', 'is_participant' ]
@@ -58,6 +68,8 @@ class AssignmentsController < ApplicationController
   </tr>
 </table>}
 
+      grade_expander_info = [ ]
+
       @assignment.configured_modules(nil).each do |m|
         @configured_modules_info << {
           :flex => m.duration,
@@ -66,11 +78,21 @@ class AssignmentsController < ApplicationController
         }
 
         if m.has_evaluation?
-          if !m.author_name.blank?
+          m_grade_x = {
+            :title => m.name,
+            :size => m.number_participants
+          }
+          if !m.author_name.blank? && m.participant_rubric
+            m_grade_x[:author_prompts] = m.participant_rubric.prompts.collect{|x| x.tag}
+            m_grade_x[:author_prefix] = 'author_' + m.position.to_s + '_'
+            m_grade_x[:author_name] = m.author_name
             m.number_participants.times do |i|
               nm = 'author_' + m.position.to_s + '_' + i.to_s
               @performance_store_fields << nm
               @grade_store_fields << nm
+              m.author_rubric.prompts.each do |p|
+                @grade_store_fields << nm + '_rubric_' + p.tag
+              end
               @performance_grid_columns << {
                :id => nm, :header => m.author_name + ' #' + (i+1).to_s,
                :sortable => true, :dataIndex => nm
@@ -87,11 +109,17 @@ class AssignmentsController < ApplicationController
             }
             @grade_store_fields << 'author_' + m.position.to_s + '_avg'
           end
-          if !m.participant_name.blank?
+          if !m.participant_name.blank? && m.author_rubric
+            m_grade_x[:participant_prompts] = m.author_rubric.prompts.collect{|x| x.tag}
+            m_grade_x[:participant_prefix] = 'participant_' + m.position.to_s + '_'
+            m_grade_x[:participant_name] = m.participant_name
             m.number_participants.times do |i|
               nm = 'participant_' + m.position.to_s + '_' + i.to_s
               @performance_store_fields << nm
               @grade_store_fields << nm
+              m.participant_rubric.prompts.each do |p|
+                @grade_store_fields << nm + '_rubric_' + p.tag
+              end
               @performance_grid_columns << {
                :id => nm, :header => m.participant_name + ' #' + (i+1).to_s,
                :sortable => true, :dataIndex => nm
@@ -107,10 +135,34 @@ class AssignmentsController < ApplicationController
                :dataIndex => 'participant_' + m.position.to_s + '_avg'
             }
             @grade_store_fields << 'participant_' + m.position.to_s + '_avg'
+            grade_expander_info << m_grade_x
           end
         end
       end
-      if !@assignment.author_eval.nil?
+      if @assignment.participant_rubric && !@assignment.author_name.nil?
+        nm = 'participant_' + @assignment.configured_modules(nil).last.position.to_s
+        grade_expander_info << {
+          :title => @assignment.eval_name,
+          :size => @assignment.number_evaluations,
+          :author_name => @assignment.author_name,
+          :author_prefix => nm + '_',
+          :author_prompts => @assignment.participant_rubric.prompts.collect{|x| x.tag }
+        }
+        @assignment.number_evaluations.times do |i|
+          @grade_store_fields << nm + '_' + i.to_s
+          @assignment.participant_rubric.prompts.each do |p|
+            @grade_store_fields << nm + '_' + i.to_s + '_rubric_' + p.tag
+          end
+        end
+      end
+      if !@assignment.author_rubric.nil?
+        grade_expander_info << {
+          :author_name => 'Self Eval',
+          :size => 1,
+          :title => '',
+          :author_prefix => 'self_eval_',
+          :author_prompts => @assignment.author_rubric.prompts.collect{|x| x.tag}
+        }
         @grades_grid_columns << {
           :id => 'self_eval', :header => 'Self Eval', :sortable => true,
           :dataIndex => 'self_eval' 
@@ -122,6 +174,76 @@ class AssignmentsController < ApplicationController
           :dataIndex => 'final' 
       }
       @grade_store_fields << 'final'
+
+      max_prompts = 0
+      grade_expander_info.each do |x|
+        if x[:author_prompts]
+          max_prompts = x[:author_prompts].length > max_prompts ?
+                        x[:author_prompts].length :
+                        max_prompts
+        end
+        if x[:participant_prompts]
+          max_prompts = x[:participant_prompts].length > max_prompts ?
+                        x[:participant_prompts].length :
+                        max_prompts
+        end
+      end
+      @grade_expander_template = %{
+        <table border="0" width="100%">
+      }
+      grade_expander_info.each do |x|
+        @grade_expander_template = @grade_expander_template + %{
+          <tr><td align="center" colspan="#{max_prompts+1}"><h2>#{x[:title]}</h2></td></tr>
+        }
+        if x[:author_prompts]
+          @grade_expander_template = @grade_expander_template + %{
+            <tr><td colspan="#{max_prompts+1}"><h3>#{x[:author_name]}</h3></td></tr>
+            <tr><td></td>
+          }
+          x[:author_prompts].each do |t|
+            @grade_expander_template = @grade_expander_template +
+              %{<td>#{t}</td>}
+          end
+          @grade_expander_template = @grade_expander_template +
+            %{</tr>}
+
+          x[:size].times do |i|
+            @grade_expander_template = @grade_expander_template +
+              %{<tr><td>{#{x[:author_prefix]}#{i}_name}</td>}
+            x[:author_prompts].each do |t|
+              @grade_expander_template = @grade_expander_template +
+                %{<tr><td>{#{x[:author_prefix]}#{i}_rubric_#{t}}}
+            end
+            @grade_expander_template = @grade_expander_template +
+              %{</tr>}
+          end
+        end
+        if x[:participant_prompts]
+          @grade_expander_template = @grade_expander_template + %{
+            <tr><td colspan="#{max_prompts+1}"><h3>#{x[:participant_name]}</h3></td></tr>
+            <tr><td></td>
+          }
+          x[:participant_prompts].each do |t|
+            @grade_expander_template = @grade_expander_template +
+              %{<td>#{t}</td>}
+          end
+          @grade_expander_template = @grade_expander_template +
+            %{</tr>}
+
+          x[:size].times do |i|
+            @grade_expander_template = @grade_expander_template +
+              %{<tr><td>{#{x[:participant_prefix]}#{i}_name}</td>}
+            x[:participant_prompts].each do |t|
+              @grade_expander_template = @grade_expander_template +
+                %{<tr><td>{#{x[:participant_prefix]}#{i}_rubric_#{t}}}
+            end
+            @grade_expander_template = @grade_expander_template +
+              %{</tr>}
+          end
+        end
+      end
+      @grade_expander_template = @grade_expander_template + %{</table>}
+      @gxinfo = grade_expander_info
       render :action => 'show_instructor'
     elsif @assignment.course.is_student?(@user)
       # we show student view of assignment (default)
@@ -130,9 +252,13 @@ class AssignmentsController < ApplicationController
     end
   end
 
-  def update
-    @user = current_user
+  def edit
+    if !@assignment.course.is_designer?(@user)
+      render :text => 'Forbidden!', :status => :forbidden
+    end
+  end
 
+  def update
     if @assignment.course.is_designer?(@user)
       if !params[:assignment][:author_eval].nil?
         author_eval = {
@@ -193,5 +319,13 @@ protected
 
   def find_course
     @course = Course.find(params[:course_id])
+  end
+
+  def require_assistant
+    @assignment.course.is_assistant?(@user)
+  end
+
+  def require_instructor
+    @assignment.course.user == @user
   end
 end
