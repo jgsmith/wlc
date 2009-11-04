@@ -53,5 +53,6 @@ CASClient::Frameworks::Rails::Filter.configure(
 )
 
 Mime::Type.register_alias "text/html", :ext_json_html
+Mime::Type.register_alias "text/svg", :svg
 
 Sass::Plugin.options[:style] = :compact
