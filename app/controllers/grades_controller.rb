@@ -49,8 +49,9 @@ class GradesController < ApplicationController
                     @assignment.id, m.tag, cp.user.id
                   ],
                   :order => 'participant_name').each do |ap|
-                     grade[('participant_' + m.position.to_s + '_' + i.to_s)] =
-                       ap.author_eval ? (ap.author_eval_score*100).round.to_f/100 : '-'
+                     nm = 'participant_' + m.position.to_s + '_' + i.to_s
+                     grade[nm] = ap.author_eval ? (ap.author_eval_score*100).round.to_f/100 : '-'
+                     grade[nm + '_name'] = ap.assignment_submission.user.name
                      i = i + 1
                 end
                 grade[('participant_' + m.position.to_s + '_avg')] = (s_obj.participant_score*100).round.to_f/100 unless s_obj.participant_score.nil?
@@ -64,8 +65,9 @@ class GradesController < ApplicationController
                     s.id, m.tag
                   ],
                   :order => 'author_name').each do |ap|
-                    grade[('author_' + m.position.to_s + '_' + i.to_s)] =
-                      ap.participant_eval ? (ap.participant_eval_score*100).round.to_f/100 : '-'
+                    nm = 'author_' + m.position.to_s + '_' + i.to_s
+                    grade[nm] = ap.participant_eval ? (ap.participant_eval_score*100).round.to_f/100 : '-'
+                     grade[nm + '_name'] = ap.user.name
                     i = i + 1
                 end
                 grade[('author_' + m.position.to_s + '_avg')] = (s_obj.author_score*100).round.to_f/100 unless s_obj.author_score.nil?
