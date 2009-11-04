@@ -59,4 +59,18 @@ class Course < ActiveRecord::Base
 
     cp && cp.is_assistant?
   end
+
+  def current_assignments
+    self.assignments.select{|a| 
+      Rails.logger.info('starts at: ' + a.utc_starts_at.to_s)
+      Rails.logger.info('ends at: ' + a.utc_ends_at.to_s)
+      a.utc_starts_at < self.now && a.utc_ends_at > self.now }
+  end
+
+  def has_current_assignment?
+    self.assignments.each do |a|
+      return true if a.utc_starts_at <= self.now && a.utc_ends_at >= self.now
+    end
+    return false
+  end
 end
