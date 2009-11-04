@@ -1,0 +1,34 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  = link_to 'Timeline', { :controller => 'assignment_modules', :assignment_id => @assignment }
+  &gt;
+  = @assignment_module.name
+
+%ul
+  - if @assignment.course.is_designer?(@user)
+    %li= link_to 'Edit this module', { :action => 'edit', :id => @assignment_module }
+
+%p
+  Module Type:
+  - if !@assignment_module.module_def.nil?
+    = link_to @assignment_module.module_def.name, @assignment_module.module_def
+  - elsif @assignment_module.module_type == 0
+    Informational
+  - else
+    Messaging
+
+- if @assignment_module.module_type == -1 || !@assignment_module.module_def.nil? && @assignment_module.module_def.is_evaluative?
+  %p
+    This module is evaluative;
+    = pluralize(@assignment_module.number_participants, 'student')
+    will evaluate the author's work in some manner.
+ 
+  
+- if !@assignment_module.instructions.blank?
+  %h3 Instructions
+  %p The following is a preview of the instructions for this module.
+  .preview
+    = markdown @assignment_module.instructions

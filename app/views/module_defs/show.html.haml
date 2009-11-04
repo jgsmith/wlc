@@ -1,0 +1,20 @@
+%h2.title
+  = link_to 'Modules', { :controller => 'module_defs' }
+  &gt;
+  = @module_def.name
+
+- if @user.is_admin?
+  %ul
+    %li= link_to 'Edit this module', { :action => 'edit', :id => @module_def }
+
+= markdown @module_def.description rescue ''
+
+%p The following states and transitions are defined for this module.
+
+%ul
+  - @module_def.state_defs.sort_by(&:name).each do |s|
+    %li
+      = link_to s.name, s
+      transitions to
+      - s.transition_defs.each do |t|
+        = link_to t.to_state.name, t

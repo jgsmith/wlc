@@ -1,0 +1,35 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  Timeline
+
+/ we want a drag-n-drop way of managing modules
+/ we also want to focus on the timeline instead of how long each module
+/ is open
+
+/ first module opens when the assignment opens
+/ so we only need to track when each module ends
+
+%ul
+  - if @assignment.course.is_designer?(@user)
+    %li= link_to 'Edit timeline', { :action => 'edit', :assignment_id => @assignment }
+
+%p
+  The assignment begins on 
+  = @assignment.starts_at.strftime("%a, %b %d at %I:%M %p.")
+  - cur_date = @assignment.starts_at
+
+%ol
+  - @assignment.assignment_modules.each do |m|
+    - cur_date = cur_date + m.duration
+    %li
+      = link_to m.name, m
+      = cur_date.strftime("(through %a, %b %d at %I:%M %p)")
+      
+  - if !@assignment.eval_name.blank? || @assignment.author_rubric || @assignment.participant_rubric
+    - cur_date = cur_date + @assignment.eval_duration
+    %li
+      = @assignment.eval_name || 'Evaluation'
+      = cur_date.strftime("(through %a, %b %d at %I:%M %p)")

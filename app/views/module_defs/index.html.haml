@@ -1,0 +1,6 @@
+%h2.title
+  Modules
+
+%ul
+  - ModuleDef.all.sort_by(&:name).each do |m|
+    %li= link_to m.name + (m.is_evaluative? ? ' (Evaluative)' : ''), m

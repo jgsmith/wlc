@@ -1,0 +1,65 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  = link_to 'Timeline', { :controller => 'assignment_modules', :assignment_id => @assignment }
+  &gt;
+  = link_to @assignment_module.name, @assignment_module
+  &gt;
+  Edit
+
+- form_for @assignment_module do |f|
+  = display_success
+  = display_errors
+
+  .form-field
+    = label(:assignment_module, :name)
+    = f.text_field :name
+
+  .form-field
+    = label(:assignment_module, :tag, 'Tag (should be lowercase letters, digits, or underscore)')
+    = f.text_field :tag, :size => 15
+
+  .form-field
+    = label(:assignment_module, :module_type, 'Module Type')
+    = f.select(:module_type, [ [ 'Messaging', -1 ], [ 'Informational', 0 ] ] + ModuleDef.all.sort_by(&:name).collect{|m| [ m.name + (m.is_evaluative? ? ' (Evaluative)' : ''), m.id ]})
+
+  %fieldset{:style => 'margin-top: 10px; padding: 3px;'}
+    %legend For Evaluative/Messaging Modules
+
+    .form-field
+      = label(:assignment_module, :number_participants, "Number Participants")
+      = f.text_field :number_participants, :size => 5
+
+    .form-field
+      = label(:assignment_module, :author_name, "Author Name Prefix")
+      = f.text_field :author_name
+
+    .form-field
+      = label(:assignment_module, :participant_name, "Participant Name Prefix")
+      = f.text_field :participant_name
+
+  .form-field
+    = label(:assignment_module, :instructions, "Instructions (use Markdown)")
+    = f.text_area :instructions, :style => 'width: 100%;'
+
+   
+ 
+/  t.references :assignment
+/      t.references :module_def
+/      t.string  :name
+/      t.integer :position
+/      t.string  :tag
+/      t.integer :number_participants
+/      t.integer :duration
+/      t.text :instructions
+/      t.boolean :has_messaging
+/      t.string :participant_name
+/      t.string :author_name
+/      t.text :author_eval
+/      t.text :participant_eval
+/      t.text :params
+/      t.string :download_filename_prefix
+
+

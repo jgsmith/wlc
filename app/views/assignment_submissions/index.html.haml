@@ -1,0 +1,61 @@
+%h2.title
+  = link_to @assignment.course.name, @assignment.course
+  &gt;
+  = link_to 'Assignment #' + @assignment.position.to_s, @assignment
+  &gt;
+  Participants
+
+#participants-holder
+  #participants
+
+%div{:style => 'clear: both;'}
+
+
+:javascript
+  Ext.onReady(function(){
+  var performance_store = new Ext.data.JsonStore({
+    url: #{(assignment_assignment_submissions_path(@assignment) + "?format=ext_json").to_json},
+    root: 'items',
+    /* idProperty: 'id', */
+    autoLoad: true,
+    fields: #{@performance_store_fields.to_json rescue '[]'}
+  });
+
+  var participant_view_tmpl = new Ext.XTemplate(
+    '<p><a href="{messages_url}" target="_new">Messages</a></p>',
+    '{progress_info}'
+  )
+  participant_view_tmpl.compile();
+
+  var listView = new Ext.ListView({
+    store: performance_store,
+    renderTo: 'participants',
+    multiSelect: false,
+    emptyText: 'No participants to display',
+    width: 660,
+    reserveScrollOffset: true,
+    listeners: {
+      click: function(view,index, node, e) {
+        var rec = performance_store.getAt(index);
+        var w = new Ext.Window({
+          title: rec.get("name"),
+          items: [{
+            xtype: 'panel',
+            html: participant_view_tmpl.apply(rec.data),
+          }],
+          renderTo: document.body,
+          width: 350,
+          buttons: [{
+            text: 'Close',
+            handler: function(b,e) {
+              this.ownerCt.ownerCt.destroy();
+            }
+          }],
+          buttonAlign: 'center'
+        });
+        w.show();
+      }
+    },
+    columns: [ #{@performance_columns.map { |c| c.to_json}.join(", ") } ]
+  });
+  });

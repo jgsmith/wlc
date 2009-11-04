@@ -1,0 +1,12 @@
+#module-def
+  - @module_def.state_defs.each do |state_def|
+    .state-def{:id => 'state-def-' + state_def.id.to_s}
+      .name=h state_def.name
+    - state_def.transition_defs.each do |transition_def|
+      .transition-def{:id => 'transition-def-' + transition_def.id.to_s}
+        
+:javascript
+  Ext.onReady(function(){
+    /* we want to place the state defs well and draw lines between them */
+    
+  });
