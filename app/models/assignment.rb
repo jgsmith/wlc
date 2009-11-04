@@ -77,6 +77,24 @@ class Assignment < ActiveRecord::Base
     !self.assignment_submission(user).nil?
   end
 
+  def not_participating
+    User.find(:all,
+      :select => 'DISTINCT users.*',
+      :joins => %{
+        LEFT JOIN course_participants cp ON cp.user_id = users.id AND cp.level = 0
+        LEFT JOIN courses c ON c.id = cp.course_id
+        LEFT JOIN assignments a ON a.course_id = c.id
+        LEFT OUTER JOIN assignment_submissions a_s ON cp.user_id = a_s.user_id
+          AND a_s.assignment_id = a.id
+      },
+      :conditions => [
+        'a.id = ? AND a_s.id IS NULL',
+        self.id
+      ],
+      :order => 'name'
+    )
+  end
+
   def can_accept_late_work?
     return false unless self.late_work_acceptable?
 

@@ -34,6 +34,7 @@ class AssignmentsController < ApplicationController
 
   def show
     if @assignment.course.is_assistant?(@user)
+      @missing_students = @assignment.not_participating
       @configured_modules_info = [ ]
       @grade_store_fields = [ 'id', 'name', 'is_participant' ]
 
