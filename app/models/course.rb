@@ -62,8 +62,6 @@ class Course < ActiveRecord::Base
 
   def current_assignments
     self.assignments.select{|a| 
-      Rails.logger.info('starts at: ' + a.utc_starts_at.to_s)
-      Rails.logger.info('ends at: ' + a.utc_ends_at.to_s)
       a.utc_starts_at < self.now && a.utc_ends_at > self.now }
   end
 
