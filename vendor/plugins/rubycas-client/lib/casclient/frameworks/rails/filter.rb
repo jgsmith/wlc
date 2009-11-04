@@ -119,6 +119,7 @@ module CASClient
           def configure(config)
             @@config = config
             @@config[:logger] = RAILS_DEFAULT_LOGGER unless @@config[:logger]
+            @@config[:gatewaying] = {} unless @@config[:gatewaying]
             @@client = CASClient::Client.new(config)
             @@log = client.log
           end
