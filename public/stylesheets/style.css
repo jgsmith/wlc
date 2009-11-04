@@ -46,7 +46,7 @@ h1, h2, h3, h4, h5, h6, p, pre, blockquote, fieldset, ul, ol, dl { margin-bottom
 
 #main-navigation { background: url(../images/maroon-bkgd.png) repeat-x scroll center center; background-color: #500000; border-bottom: 1px solid; border-bottom-color: #800000; border-top: 1px solid; border-top-color: #c00000; }
 #main-navigation ul { list-style-image: none; list-style-position: outside; list-style-type: none; margin: 0; }
-#main-navigation ul li.on { float: left; color: #f8f8f8; padding: 7px 16px 7px 17px; background: url(nav-bkgd-h.png) repeat-x scroll center center; border-bottom: 3px solid; border-bottom-color: #f8f8f8; }
+#main-navigation ul li.on { float: left; color: #f8f8f8; padding: 7px 16px 7px 17px; background: url(../images/maroon-bkgd-h.png) repeat-x scroll center center; border-bottom: 3px solid; border-bottom-color: #f8f8f8; }
 #main-navigation ul li { float: left; }
 #main-navigation ul li a { color: #f8f8f8; display: block; font-weight: bold; background: url(../images/maroon-bkgd.png) repeat-x scroll center center; padding: 7px 16px 10px 17px; text-decoration: none; border-bottom: none; }
 #main-navigation ul li a:hover { background: url(../images/maroon-bkgd-h.png) repeat-x scroll center center; border-right: 1px solid; border-right-color: #500000; border-left: 1px solid; border-left-color: #500000; padding: 7px 15px 7px 16px; border-bottom: 3px solid; border-bottom-color: #f8f8f8; }
