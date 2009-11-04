@@ -22,6 +22,14 @@ class User < ActiveRecord::Base
   #validates_uniqueness_of   :login, :email, :case_sensitive => false
 #  before_save :encrypt_password
 
+  def is_designer?
+    return true unless self.courses.empty?
+    return true unless self.course_participants.count(:conditions => [
+      %{level > 0}
+    ]) == 0
+    return false
+  end
+
   # Authenticates a user by their login name and unencrypted password.  Returns the user or nil.
   # We are authenticating through CAS for now
   def self.authenticate(login, password)
