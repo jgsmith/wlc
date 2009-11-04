@@ -130,6 +130,7 @@ module CASClient
           end
 
           def use_gatewaying(controller)
+            @@config ||= { }
             @@config[:gatewaying] ||= { }
             @@config[:gatewaying][controller.class.name] = true
           end
