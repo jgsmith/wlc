@@ -6,11 +6,12 @@ ActionController::Routing::Routes.draw do |map|
       course.resource  :course_participants, :as => 'roster'
       course.resources :assignments do |assignment|
         assignment.resources :messages
-        assignment.resources :assignment_modules, :as => 'modules'
+        assignment.resources :assignment_modules, :as => 'timeline'
         assignment.resource  :author_eval
         assignment.resource  :grades
         assignment.resources :assignment_submissions, :as => 'participants' do |participant|
           participant.resources :messages
+          participant.resource  :instructor_eval
         end
         #assignment.resource  :assignment_participants, :as => 'participants'
         assignment.resources :assignment_participations do |participation|
@@ -20,6 +21,12 @@ ActionController::Routing::Routes.draw do |map|
           participation.resource  :participant_eval
         end
       end
+    end
+  end
+
+  map.resources :module_defs, :shallow => true do |module_def|
+    module_def.resources :state_defs do |state_def|
+      state_def.resources :transition_defs
     end
   end
 
