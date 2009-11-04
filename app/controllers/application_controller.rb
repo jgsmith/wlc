@@ -5,7 +5,8 @@ class ApplicationController < ActionController::Base
   include AuthenticatedSystem
   include ExtScaffold
 
-  before_filter :cas_auth
+  before_filter CASClient::Frameworks::Rails::Filter
+  #before_filter :cas_auth
   before_filter :set_users
 
   helper :all # include all helpers, all the time
@@ -47,7 +48,7 @@ class ApplicationController < ActionController::Base
   end
 
   def self.no_auth_required
-    CASClient::Frameworks::Rails::Filter.use_gatewaying(self)
+    #CASClient::Frameworks::Rails::Filter.use_gatewaying(self)
   end
 
   def cas_auth
