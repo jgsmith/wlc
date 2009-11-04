@@ -6,6 +6,8 @@
     = stylesheet_link_tag "/images/icons/ext-silk.css"
     = javascript_include_tag 'prototype'
     = javascript_include_tag 'effects'
+    = javascript_include_tag 'lowpro'
+    = javascript_include_tag 'popup'
     = javascript_include_tag 'dragdrop'
     = javascript_include_tag 'controls'
     - if ENV['RAILS_ENV'] == 'development'
@@ -16,27 +18,63 @@
       = javascript_include_tag 'ext-all.js'
     = javascript_include_tag '/javascripts/ext3/examples/ux/RowExpander.js'
     = javascript_include_tag 'application'
+    :javascript
+      Ext.BLANK_IMAGE_URL = #{(root_url + 'images/s.gif').to_json}; 
+      Ext.SSL_SECURE_URL = #{(root_url.gsub(/^http:/, 'https:') + 'blank.html').to_json};
     = yield :head
   %body
-    #header
-      - if @user
-        .logged-in-as
-          Logged in as
-          = @user.login
-          - if @actual_user
-            %a{:href => '/user/revert'}
-              Revert to
-              = @actual_user.login
-      - else
-        .logged-in-as
-          %a{:href=> "https://netid.tamu.edu/cas?service=https://wlc-system.tamu.edu/"} Log in
-      %h1.title
-        %a{:href=>'/'}=h @title || 'Writing and Learning Communities'
+    #container
+      #container-inner
+        #header
+          #header-inner
+            #header-content
+              #header-name
+                %a{:href=>'/'}=h @title || 'Writing and Learning Communities'
+        #main-navigation
+          #main-navigation-inner
+            %ul
+              %li{:class => current_page?(:controller => 'main') ? 'on' : ''}= link_to_unless_current('Home', { :controller => 'main' })
+              %li{:class => current_page?(:controller => 'courses') ? 'on' : ''}= link_to_unless_current('Courses', { :controller => 'courses' })
+              - if @user.is_admin? || @user.is_designer? 
+                %li{:class => current_page?(:controller => 'module_defs') ? 'on' : ''}= link_to_unless_current('Modules', { :controller => 'module_defs' })
 
-    #content= yield
+          %div{:style=>'clear: both;'}
 
+        #content
+          #content-inner
+            #alpha
+              #alpha-inner
+                = yield
+            #beta
+              #beta-inner
+                - if @user
+                  - uo = yield :user_options
+                  - if !uo.blank?
+                    .module
+                      .hd=h @user.login
+                      .bd
+                        %ul
+                          = uo
+                      .ft
+                - if !@current_assignments.empty?
+                  .module
+                    .hd Current Assignments
+                    .bd
+                      - @current_assignments.each do |course|
+                        = link_to course.name, course
+                        %ul
+                          - course.current_assignments.each do |assignment|
+                            %li
+                              = link_to 'Assignment #' + assignment.position.to_s, assignment
+                              = '(' + assignment.current_module(@user).name + ')'
+                    .ft
+
+                = yield :sidebar
+
+      #container-footer
     #footer
-      %p{:style => 'height: 20px; padding-top: 5px; font-size: 15px;'}
-        This courseware is being developed by Dr. Stephen Balfour and 
-        James Smith at Texas A&amp;M University.  For all questions, please 
-        contact Dr. Balfour.
+      #footer-content
+        %p
+          This courseware is being developed by Dr. Stephen Balfour and 
+          James Smith at Texas A&amp;M University.  For all questions, please 
+          contact Dr. Balfour.
