@@ -1,0 +1,17 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  Trust
+
+%p
+  The following students either have near zero proto-trust or were graded
+  by a student who has near zero proto-trust.  Please provide final
+  evaluations for as many of these as possible so we can calculate proper
+  trust for the class on this assignment.
+
+- @needed_papers.sort_by(&:trust).each do |as|
+  %div[as]
+  = render :partial => 'evaluation_form', :locals => {:info => {:id => 'assignment-submission-' + as.id.to_s, :eval => @assignment.participant_eval, :values => as.instructor_eval, :portfolio => as.show_info(@assignment.configured_modules(as.user).last.position, @user) }, :form_url => assignment_submission_instructor_eval_path(as), :form_title => as.user.name }
+
