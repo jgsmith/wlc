@@ -24,7 +24,7 @@
   var participant_view_tmpl = new Ext.XTemplate(
     '<p><a href="{messages_url}" target="_new">Messages</a></p>',
     '{progress_info}'
-  )
+  );
   participant_view_tmpl.compile();
 
   var listView = new Ext.ListView({
@@ -41,7 +41,7 @@
           title: rec.get("name"),
           items: [{
             xtype: 'panel',
-            html: participant_view_tmpl.apply(rec.data),
+            html: participant_view_tmpl.apply(rec.data)
           }],
           renderTo: document.body,
           width: 350,
