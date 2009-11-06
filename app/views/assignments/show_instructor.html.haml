@@ -16,7 +16,11 @@
   %p All students are participating in this assignment.
 - else
   %p
-    The following students are not participating in this assignment:
+    The following 
+    = pluralize(@missing_students.size, 'student is', 'students are')
+    not 
+    = ((@assignment.current_module(nil).position == 1 ? 'yet' : '') rescue '')
+    participating in this assignment:
     %ul
       - @missing_students.each do |s|
         %li
