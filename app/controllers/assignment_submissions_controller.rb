@@ -10,7 +10,6 @@ class AssignmentSubmissionsController < ApplicationController
   before_filter :find_assignment, :only => [ :index ]
 
   def index
-    @user = current_user
     if @assignment.course.is_assistant?(@user)
       respond_to do |format|
         format.html { prep_for_index_html }

@@ -1,3 +1,10 @@
-%h1 Grades
+%h2.title
+  =link_to @assignment.course.name, @assignment.course
+  &gt;
+  =link_to  'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  Grades
 
-%pre=h YAML::dump @grades
+%ul
+  %li= link_to 'Download CSV of grades', :format => 'csv'
+  %li= link_to 'Download CSV of rubric responses', :type => 'responses', :format => 'csv'

@@ -136,7 +136,7 @@ class ConfiguredModule
   # then random assignments are made beginning with students who have the
   # fewest number of participants assigned to them.
   #
-  def assignment_participations
+  def assignment_participations(override_timing = false)
     # this is where we assign participations if we need to
     # this is from the self.user's pov
     return [ ] if self.assignment.nil? || self.user.nil?
@@ -152,7 +152,7 @@ class ConfiguredModule
       ])
 
     ## don't assign any participations if we aren't the current module
-    if self.starts_at > assignment.course.now || assignment.course.now > self.ends_at
+    if !override_timing && (self.starts_at > assignment.course.now || assignment.course.now > self.ends_at)
       return @assignment_participations
     end
 

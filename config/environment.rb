@@ -7,6 +7,7 @@ require 'lua'
 require 'digest/md5'
 require 'erb'
 require 'gsl'
+require 'csv'
 
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
@@ -54,5 +55,6 @@ CASClient::Frameworks::Rails::Filter.configure(
 
 Mime::Type.register_alias "text/html", :ext_json_html
 Mime::Type.register_alias "text/svg", :svg
+Mime::Type.register_alias "text/csv", :csv
 
 Sass::Plugin.options[:style] = :compact

@@ -91,7 +91,7 @@ class Assignment < ActiveRecord::Base
         'a.id = ? AND a_s.id IS NULL',
         self.id
       ],
-      :order => 'name'
+      :order => 'users.name'
     )
   end
 

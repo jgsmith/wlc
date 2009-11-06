@@ -9,6 +9,7 @@
   %li= link_to 'Timeline', { :controller => "assignment_modules", :assignment_id => @assignment }
   - if @assignment.is_ended?
     %li= link_to 'Trust', { :controller => 'assignments', :id => @assignment, :action => 'trust' }
+    %li= link_to 'Grades', { :controller => 'grades', :assignment_id => @assignment, :action => 'show' }
   %li= link_to 'Participants', { :controller => 'assignment_submissions', :assignment_id => @assignment }
 
 - if @missing_students.empty?
@@ -18,4 +19,50 @@
     The following students are not participating in this assignment:
     %ul
       - @missing_students.each do |s|
-        %li= s.name
+        %li
+          %a.start-assignment[s]= s.name
+
+:javascript
+  Ext.addBehaviors({
+    'a.start-assignment@click': function(e,t) {
+      var ids = t.id.match(/_(\d+)$/);
+      var id;
+      var url = #{new_assignment_assignment_participation_path(:assignment_id => @assignment, :module => 0).to_json};
+      if(ids) {
+        id = ids[1];
+
+
+        var w = new Ext.Window({   
+          title: Ext.get(t.id).dom.innerHTML,
+          renderTo: document.body,
+          layout: 'fit',
+          items: [{
+            border: false,
+            xtype: 'panel',
+            id: 'participation-s-' + id,
+            autoScroll: true,
+            autoHeight: true,
+            autoLoad: {
+              url: url + '&user_id=' + id,
+              callback: function() { w.doLayout(); },
+              scripts: true
+            }
+          }],
+          autoHeight: true,
+          width: 600,
+          autoDestroy: true,
+          buttonAlign: 'center',
+          buttons: [{
+            text: 'Close',
+            handler: function() {
+              this.ownerCt.ownerCt.destroy();
+            }
+          }],
+          closeAction: 'hide'
+        });
+        w.doLayout();
+        w.show();
+      }
+    }
+    });
+

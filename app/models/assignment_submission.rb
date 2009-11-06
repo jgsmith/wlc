@@ -40,6 +40,25 @@ class AssignmentSubmission < ActiveRecord::Base
     )
   end
 
+  def participations_for(m, role)
+    if role == :author
+      AssignmentParticipation.find(:all,
+        :conditions => [ 'assignment_submission_id = ? AND tag = ?',
+          self.id, m.tag
+        ],
+        :order => 'participant_name'
+      )
+    else  # role == :participant 
+      AssignmentParticipation.find(:all,
+        :joins => [ :assignment_submission ],
+        :conditions => [ 'assignment_submissions.assignment_id = ? AND tag = ? AND assignment_participations.user_id = ?',
+          self.assignment.id, m.tag, self.user.id
+        ],
+        :order => 'author_name'
+      )
+    end
+  end
+
 protected
 
   def tag_responses(rubric,responses)
