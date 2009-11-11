@@ -16,15 +16,19 @@
   %p All students are participating in this assignment.
 - else
   %p
-    The following 
-    = pluralize(@missing_students.size, 'student is', 'students are')
-    not 
-    = ((@assignment.current_module(nil).position == 1 ? 'yet' : '') rescue '')
-    participating in this assignment:
-    %ul
-      - @missing_students.each do |s|
-        %li
-          %a.start-assignment[s]= s.name
+    - if @assignment.starts_at < @assignment.course.now && (@assignment.current_module(nil).nil? || @assignment.current_module(nil).position > 1 || @missing_students.size*2 < @assignment.course.student_count) 
+      The following 
+      = pluralize(@missing_students.size, 'student is', 'students are')
+      not 
+      = ((@assignment.current_module(nil).position == 1 ? 'yet' : '') rescue '')
+      participating in this assignment:
+      %ul
+        - @missing_students.each do |s|
+          %li
+            %a.start-assignment[s]= s.name
+    - else
+      = pluralize(@missing_students.size, 'student is', 'students are')
+      not yet participating in this assignment.
 
 :javascript
   Ext.addBehaviors({

@@ -1,6 +1,4 @@
 class AssignmentParticipationsController < ApplicationController
-  before_filter :find_assignment, :only => [ :new, :create ]
-  #before_filter :find_student, :only => [ :new, :create, :show, :update ]
   before_filter :find_assignment_participation, :only => [ :index, :show, :update, :new, :create ]
 
   def index
@@ -17,7 +15,6 @@ class AssignmentParticipationsController < ApplicationController
   end
 
   def create
-    @assignment_participation = @assignment.current_module(@user).assignment_participations.first
     @assignment_participation.process_params(params)
     respond_to do |format|
       format.html

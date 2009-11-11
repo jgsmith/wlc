@@ -60,6 +60,46 @@ class Course < ActiveRecord::Base
     cp && cp.is_assistant?
   end
 
+  def assistants
+    User.find(:all,
+      :joins => [ :course_participants ],
+      :select => 'DISTINCT users.*',
+      :conditions => [ %{
+        course_participants.course_id = ?
+        AND course_participants.level > 1
+      }, self.id],
+      :order => 'name'
+    )
+  end
+
+  def designers
+    User.find(:all,
+      :joins => [ :course_participants ],
+      :select => 'DISTINCT users.*',
+      :conditions => [ %{
+        course_participants.course_id = ?
+        AND course_participants.level > 0
+      }, self.id],
+      :order => 'name'
+    )
+  end
+
+  def students
+    User.find(:all,
+      :join => [ :course_participants ],
+      :select => 'DISTINCT users.*',
+      :conditions => [ %{
+        course_participants.course_id = ?
+        AND course_participants.level = 0
+      }, self.id],
+      :order => 'name'
+    )
+  end
+
+  def student_count
+    self.course_participants.count(:conditions => ['level = 0'])
+  end
+
   def current_assignments
     self.assignments.select{|a| 
       a.utc_starts_at < self.now && a.utc_ends_at > self.now }

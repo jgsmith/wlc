@@ -1,3 +1,10 @@
+- if @course.is_instructor?(@user)
+  - content_for :user_options do
+    %li= 'Download CSV Roster'
+    %li= 'Upload CSV Roster'
+    %li= 'Add single student'
+    %li= 'Remove single student'
+
 %h2=h @course.name  + ' (' + @course.semester.name + ')'
 
 #description= markdown @course.description
@@ -26,3 +33,23 @@
         Ended
         = distance_of_time_in_words(assignment.ends_at, @course.now)
         ago.
+
+- if @course.is_assistant?(@user)
+  %h3 Roster
+  %h4 Assistants
+  %ul
+    - @course.assistants.each do |a|
+      %li= a.name
+
+  %h4 Designers
+  %ul
+    - @course.designers.each do |d|
+      %li= d.name
+
+  %h4 Students
+  %p
+    There are
+    = @course.student_count
+    students in this course.
+    - if @course.is_instructor?(@user)
+      Use the options in the sidebar to manage the roster.
