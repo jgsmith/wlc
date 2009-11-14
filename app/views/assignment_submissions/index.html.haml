@@ -5,11 +5,13 @@
   &gt;
   Participants
 
-#participants-holder
+#participants-holder{:style => 'overflow: scroll;'}
   #participants
 
 %div{:style => 'clear: both;'}
 
+- width = @performance_columns.size * 120
+- width = 660 if width < 660
 
 :javascript
   Ext.onReady(function(){
@@ -36,7 +38,7 @@
     renderTo: 'participants',
     multiSelect: false,
     emptyText: 'No participants to display',
-    width: 660,
+    width: #{width.to_json},
     autoHeight: true,
     viewConfig: {
       forceFit: true
