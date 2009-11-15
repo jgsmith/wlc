@@ -113,3 +113,6 @@ dl.file-info dd { text-indent: 1em; }
 .x-panel-body ol { list-style-image: none; list-style-position: outside; list-style-type: decimal; }
 
 .preview { margin-left: 10px; margin-right: 10px; padding: 5px; border: 1px solid #cccccc; background-color: #eeeeee; }
+
+body.wide #beta { display: none; }
+body.wide #alpha { width: 940px; }

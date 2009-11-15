@@ -23,7 +23,7 @@
     = javascript_include_tag '/javascripts/ext3/examples/ux/RowExpander.js'
     = javascript_include_tag 'application'
     = yield :head
-  %body
+  %body{:class => params[:_layout]}
     #container
       #container-inner
         #header
@@ -50,7 +50,7 @@
               #beta-inner
                 - if @user
                   - uo = yield :user_options
-                  - if !uo.blank?
+                  - if true || !uo.blank?
                     .module
                       .hd=h @user.login
                       .bd

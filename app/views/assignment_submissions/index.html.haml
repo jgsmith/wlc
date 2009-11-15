@@ -1,3 +1,4 @@
+- params[:_layout] = 'wide'
 %h2.title
   = link_to @assignment.course.name, @assignment.course
   &gt;
@@ -5,7 +6,7 @@
   &gt;
   Participants
 
-#participants-holder{:style => 'overflow: scroll;'}
+#participants-holder
   #participants
 
 %div{:style => 'clear: both;'}
@@ -26,6 +27,8 @@
     autoLoad: true,
     fields: #{@performance_store_fields.to_json rescue '[]'}
   });
+
+  $('alpha').setStyle({ width:#{((width+10).to_s + "px").to_json} });
 
   var participant_view_tmpl = new Ext.XTemplate(
     '<p><a href="{messages_url}" target="_new">Messages</a></p>',
