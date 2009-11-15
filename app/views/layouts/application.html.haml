@@ -50,7 +50,7 @@
               #beta-inner
                 - if @user
                   - uo = yield :user_options
-                  - if true || !uo.blank?
+                  - if !uo.blank?
                     .module
                       .hd=h @user.login
                       .bd
