@@ -6,6 +6,7 @@
       title: #{form_title.to_json},
       url: #{form_url.to_json},
       items: #{prompts_to_extjs_items(info).to_json},
+      buttonAlign: 'left',
       buttons: [{
         text: #{('Save ' + form_title).to_json},
         type: 'submit',
