@@ -21,17 +21,17 @@ class GradesController < ApplicationController
     end
 
     @grades = [ ]
-    @csv_columns = [:uin]
-    @csv_column_names = [ 'uin' ]
+    @csv_columns = [:uin, :name]
+    @csv_column_names = [ 'uin', 'name' ]
     
     if @assignment.is_ended? && !params[:format].blank? && params[:format] != 'html'
       @assignment.calculate_all_scores unless @assignment.scores_calculated?
 
       if params[:type].blank? || params[:type] == 'grades'
         params[:type] = 'grades'
-        get_grades
+        get_responses(:grades)
       elsif params[:type] == "responses"
-        get_responses
+        get_responses(:responses)
       else
         render :text => 'Forbidden!', :status => :forbidden
       end
@@ -58,33 +58,67 @@ class GradesController < ApplicationController
 
 protected
 
-  def get_responses
+  def get_responses(rtype = :responses)
     @assignment.configured_modules(nil).each do |m|
       if !m.participant_rubric.nil?  && !m.author_name.blank?
+        nm = m.tag + '_' + m.author_name.downcase + '_' 
         m.number_participants.times do |i|
-          nm = m.tag + '_' + m.author_name.downcase + '_' 
-          m.participant_rubric.prompts.each do |p|
-            @csv_columns << nm + i.to_s + '_' + p.tag
-            @csv_column_names << nm + (i+1).to_s + '_' + p.tag
+          case rtype
+            when :responses:
+              m.participant_rubric.prompts.each do |p|
+                @csv_columns << nm + i.to_s + '_' + p.tag
+                @csv_column_names << nm + (i+1).to_s + '_' + p.tag
+              end
+            when :grades:
+              @csv_columns << nm + i.to_s
+              @csv_column_names << nm + (i+1).to_s
           end
+        end
+        case rtype
+          when :grades:
+            @csv_columns << nm + 'avg'
+            @csv_column_names << nm + 'avg'
         end
       end
       if !m.author_rubric.nil? && !m.participant_name.blank?
+        nm = m.tag + '_' + m.participant_name.downcase + '_' 
         m.number_participants.times do |i|
-          nm = m.tag + '_' + m.participant_name.downcase + '_' 
-          m.author_rubric.prompts.each do |p|
-            @csv_columns << nm + i.to_s + '_' + p.tag
-            @csv_column_names << nm + (i+1).to_s + '_' + p.tag
+          case rtype
+            when :responses:
+              m.author_rubric.prompts.each do |p|
+                @csv_columns << nm + i.to_s + '_' + p.tag
+                @csv_column_names << nm + (i+1).to_s + '_' + p.tag
+              end
+            when :grades:
+              @csv_columns << nm + i.to_s
+              @csv_column_names << nm + (i+1).to_s
           end
+        end
+        case rtype
+          when :grades:
+            @csv_columns << nm + 'avg'
+            @csv_column_names << nm + 'avg'
         end
       end
     end
     if @assignment.author_rubric
-      nm = 'self_eval_'
-      @assignment.author_rubric.prompts.each do |p|
-        @csv_columns << nm + p.tag
-        @csv_column_names << nm + p.tag
+      nm = 'self_eval'
+      case rtype
+        when :responses:
+          @assignment.author_rubric.prompts.each do |p|
+            @csv_columns << nm + '_' + p.tag
+            @csv_column_names << nm + '_' + p.tag
+          end
+        when :grades:
+          @csv_columns << nm
+          @csv_column_names << nm
       end
+    end
+    if rtype == :grades
+      @csv_columns << :final
+      @csv_column_names << 'final'
+      @csv_columns << :trust
+      @csv_column_names << 'trust'
     end
 
     @assignment.course.course_participants.each do |cp|
@@ -105,42 +139,81 @@ protected
             if !m.participant_rubric.nil?  && !m.author_name.blank?
               nm = m.tag + '_' + m.author_name.downcase + '_' 
               i = 0
+              total = 0
+              weight = 0
               s.participations_for(m,:author).each do |ap|
                 e = ap.participant_eval
                 if !e.nil? && !e.empty?
-                  m.participant_rubric.prompts.each do |p|
-                    grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
-                                                       e[p.position-1] ||
-                                                       e[(p.position-1).to_s]
+                  case rtype
+                    when :responses:
+                      m.participant_rubric.prompts.each do |p|
+                        grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
+                                                           e[p.position-1] ||
+                                                           e[(p.position-1).to_s]
+                      end
+                    when :grades:
+                      grade[nm+i.to_s] = round_score(ap.participant_eval_score)
+                      total = total + ap.participant_eval_score
+                      weight = weight + 1
                   end
                 end
                 i = i + 1
+              end
+              case rtype
+                when :grades:
+                  grade[nm+'avg'] = round_score(total / weight) if weight > 0
               end
             end
             if !m.author_rubric.nil?  && !m.participant_name.blank?
               nm = m.tag + '_' + m.participant_name.downcase + '_' 
               i = 0
+              total = 0
+              weight = 0
               s.participations_for(m,:participant).each do |ap|
                 e = ap.author_eval
                 if !e.nil? && !e.empty?
-                  m.author_rubric.prompts.each do |p|
-                    grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
-                                                       e[p.position-1] ||
-                                                       e[(p.position-1).to_s]
+                  case rtype
+                    when :responses:
+                      m.author_rubric.prompts.each do |p|
+                        grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
+                                                           e[p.position-1] ||
+                                                           e[(p.position-1).to_s]
+                      end
+                    when :grades:
+                      grade[nm+i.to_s] = round_score(ap.author_eval_score)
+                      total = total + ap.author_eval_score
+                      weight = weight + 1
                   end
                 end
                 i = i + 1
+              end
+              case rtype
+                when :grades:
+                  grade[nm+'avg'] = round_score(total / weight) if weight > 0
               end
             end
           end
         end
         if @assignment.author_rubric
           e = s.author_eval
-          nm = 'self_eval_'
+          nm = 'self_eval'
           if !e.nil? && !e.empty?
-            @assignment.author_rubric.prompts.each do |p|
-              grade[nm + p.tag] = e[p.tag] || e[p.position-1] || e[(p.position-1).to_s]
+            case rtype
+              when :responses:
+                @assignment.author_rubric.prompts.each do |p|
+                  grade[nm + '_' + p.tag] = e[p.tag] || e[p.position-1] || e[(p.position-1).to_s]
+                end
+              when :grades:
+                grade[nm] = round_score(s.author_eval_score)
             end
+          end
+        end
+        if rtype == :grades
+          grade[:final] = round_score(s.score)
+          if s.trust.nil?
+            grade[:trust] = '-'
+          else
+            grade[:trust] = round_score(s.trust*100.0)
           end
         end
       else
@@ -238,5 +311,9 @@ protected
 
   def find_assignment
     @assignment = Assignment.find(params[:assignment_id])
+  end
+
+  def round_score(s)
+    (s * 100).round.to_f/100
   end
 end
