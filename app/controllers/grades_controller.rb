@@ -281,7 +281,7 @@ protected
               i = i + 1
             end
           end
-          grade['total_var'] = total_var
+          grade['total_var'] = round_score(total_var)
         end
       else
         grade[:is_participant] = false
