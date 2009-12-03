@@ -8,7 +8,28 @@ class GradesController < ApplicationController
     end
   end
 
-  before_filter :find_assignment, :only => [ :show ]
+  before_filter :find_assignment, :only => [ :show, :edit, :create ]
+
+  def edit
+    if !@assignment.course.is_assistant?(@user)
+      render :text => 'Forbidden!', :status => :forbidden
+    end
+  end
+
+  def create
+    if !@assignment.course.is_assistant?(@user)
+      render :text => 'Forbidden!', :status => :forbidden
+    else
+      params[:score].each_pair do |sub_id,score|
+        next if score.blank?
+        submission = (AssignmentSubmission.find(sub_id.to_i) rescue nil)
+        next if submission.nil?
+        next unless submission.assignment == @assignment
+        submission.update_attribute(:instructor_score, score.to_f)
+      end
+      redirect_to :action => :edit
+    end
+  end
 
   def show
     if !@assignment.course.is_assistant?(@user)

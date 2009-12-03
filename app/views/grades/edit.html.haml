@@ -1,0 +1,26 @@
+%h2.title
+  =link_to @assignment.course.name, @assignment.course
+  &gt;
+  =link_to  'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  =link_to 'Grades', assignment_grades_path(@assignment)
+  &gt;
+  Update Instructor Grades
+
+- form_tag(assignment_grades_path(@assignment)) do
+  %table{:cellpadding => 2}
+    %tr
+      %th Student
+      - if @assignment.calculate_trust?
+        %th Peer Trust
+      %th Grade
+    - @assignment.assignment_submissions.sort_by{|a| a.user.name }.each do |submission|
+      %tr
+        %td=h submission.user.name
+        - if @assignment.calculate_trust?
+          %td= (submission.trust * 10000.0).to_i.to_f/100.0
+        %td
+          = text_field_tag "score[#{submission.id}]", submission.instructor_score, { :size => 5, :maxlength => 10 }
+    %tr
+      %td{:colspan => @assignment.calculate_trust? ? 3 : 2, :align => 'center'}
+        = submit_tag
