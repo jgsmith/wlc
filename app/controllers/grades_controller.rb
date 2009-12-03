@@ -50,9 +50,9 @@ class GradesController < ApplicationController
 
       if params[:type].blank? || params[:type] == 'grades'
         params[:type] = 'grades'
-        get_responses(:grades)
+        get_response_data(:grades)
       elsif params[:type] == "responses"
-        get_responses(:responses)
+        get_response_data(:responses)
       else
         render :text => 'Forbidden!', :status => :forbidden
       end
@@ -79,7 +79,7 @@ class GradesController < ApplicationController
 
 protected
 
-  def get_responses(rtype = :responses)
+  def get_response_data(rtype = :responses)
     @assignment.configured_modules(nil).each do |m|
       if !m.participant_rubric.nil?  && !m.author_name.blank?
         nm = m.tag + '_' + m.author_name.downcase + '_' 
@@ -133,9 +133,26 @@ protected
         when :grades:
           @csv_columns << nm
           @csv_column_names << nm
+          @csv_columns << nm + '_var'
+          @csv_column_names << nm + '_var'
       end
     end
+    if @assignment.participant_rubric
+      nm = @assignment.eval_tag
+      case rtype
+        when :grades:
+          @assignment.number_evaluations.times do |i|
+            @csv_columns << nm + '_' + (i+1).to_s + '_var'
+            @csv_column_names << nm + '_' + (i+1).to_s + '_var'
+          end
+      end
+    end
+
     if rtype == :grades
+      @csv_columns << 'total_var'
+      @csv_column_names << 'total_var'
+      @csv_columns << :instructor
+      @csv_column_names << 'instructor'
       @csv_columns << :final
       @csv_column_names << 'final'
       @csv_columns << :trust
@@ -215,6 +232,7 @@ protected
             end
           end
         end
+        total_var = 0
         if @assignment.author_rubric
           e = s.author_eval
           nm = 'self_eval'
@@ -226,6 +244,12 @@ protected
                 end
               when :grades:
                 grade[nm] = round_score(s.author_eval_score)
+                if s.instructor_score.blank?
+                  grade[nm + '_var'] = '-'
+                else
+                  total_var = (s.author_eval_score - s.instructor_score).abs
+                  grade[nm + '_var'] = round_score(total_var)
+                end
             end
           end
         end
@@ -236,96 +260,32 @@ protected
           else
             grade[:trust] = round_score(s.trust*100.0)
           end
+
+          # now get instructor grade info
+          nm = @assignment.eval_tag + '_'
+          if s.instructor_score.blank?
+            grade[:instructor] = '-'
+          else
+            grade[:instructor] = round_score(s.instructor_score)
+          end
+          if @assignment.participant_rubric
+            i = 1
+            s.participations_for(@assignment.configured_modules(nil).last,:participant).each do |ap|
+              if ap.assignment_submission.instructor_score.blank? || ap.participant_eval_score.blank?
+                grade[nm+i.to_s+'_var'] = '-'
+              else
+                v = (ap.participant_eval_score - ap.assignment_submission.instructor_score).abs
+                grade[nm + i.to_s + '_var'] = round_score(v)
+                total_var = total_var + v
+              end
+              i = i + 1
+            end
+          end
+          grade['total_var'] = total_var
         end
       else
         grade[:is_participant] = false
       end
-      @grades << grade
-    end
-  end
-
-  def get_grades
-    @assignment.configured_modules(nil).each do |m|
-      if m.has_evaluation?
-        if !m.participant_rubric.nil? && !m.author_name.blank?
-          m.number_participants.times do |i|
-            @csv_columns << 'participant_' + m.position.to_s + '_' + i.to_s
-            @csv_column_names << m.tag + '_' + m.author_name.downcase + '_' + (i+1).to_s
-          end
-          @csv_columns << 'participant_' + m.position.to_s + '_avg'
-          @csv_column_names << m.tag + '_' + m.author_name.downcase + '_avg'
-        end
-        if !m.author_rubric.nil? && !m.participant_name.blank?
-          m.number_participants.times do |i|
-            @csv_columns << 'author_' + m.position.to_s + '_' + i.to_s
-            @csv_column_names << m.tag + '_' + m.participant_name.downcase + '_' + (i+1).to_s
-          end
-          @csv_columns << 'author_' + m.position.to_s + '_avg'
-          @csv_column_names << m.tag + '_' + m.participant_name.downcase + '_avg'
-        end
-      end
-    end
-    if @assignment.author_rubric
-      @csv_columns << :self_eval
-      @csv_column_names << 'self_eval'
-    end
-    @csv_columns << :final
-    @csv_columns << :is_participant
-    @csv_column_names << 'final'
-    @csv_column_names << 'is_participant'
-
-    @assignment.course.course_participants.each do |cp|
-      next unless cp.is_student?
-      grade = {
-        :id => cp.user.id,
-        :name => cp.user.name,
-        :uin => cp.user.uin,
-      }
-
-      push_grade = false
-      if @assignment.is_participant?(cp.user)
-        s = @assignment.assignment_submission(cp.user)
-        # we want grades for each component...
-        grade[:is_participant] = true
-        @assignment.configured_modules(nil).each do |m|
-          if m.has_evaluation?
-            s_obj = @assignment.scores.first(:conditions => [
-              'user_id = ? and tag = ?', cp.user.id, m.tag
-            ])
-            if m.participant_rubric && !m.author_name.blank?
-              i = 0
-              s.participations_for(m, :author).each do |ap|
-                nm = 'author_' + m.position.to_s + '_' + i.to_s
-                grade[nm] = ap.participant_eval ? (ap.participant_eval_score*100).round.to_f/100 : '-'
-                grade[nm + '_name'] = ap.user.name
-                i = i + 1
-              end
-              grade[('author_' + m.position.to_s + '_avg')] = (s_obj.participant_score*100).round.to_f/100 unless s_obj.participant_score.nil?
-            end
-            if m.author_rubric && !m.participant_name.blank?
-              i = 0
-              s.participations_for(m, :participant).each do |ap|
-                nm = 'participant_' + m.position.to_s + '_' + i.to_s
-                grade[nm] = ap.author_eval ? (ap.author_eval_score*100).round.to_f/100 : '-'
-                grade[nm + '_name'] = ap.assignment_submission.user.name
-                i = i + 1
-              end
-              grade[('participant_' + m.position.to_s + '_avg')] = (s_obj.author_score*100).round.to_f/100 unless s_obj.author_score.nil?
-            end
-          end
-        end
-
-        grade[:self_eval] = (s.author_eval_score*100).round.to_f/100
-        grade[:final] = (s.score*100).round.to_f/100
-        if s.trust.nil?
-          grade[:trust] = '-'
-        else
-          grade[:trust] = (s.trust * 100.0 * 100).round.to_f/100
-        end
-      else
-        grade[:is_participant] = false
-      end
-
       @grades << grade
     end
   end
