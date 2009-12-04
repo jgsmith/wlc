@@ -170,7 +170,7 @@ protected
       end
     end
 
-    @assignment.course.course_participants.sort_by{|c| c.user.name}.each do |cp|
+    @assignment.course.course_participants.sort_by{|c| c.user.name || ''}.each do |cp|
       next unless cp.is_student?
       grade = {
         :id => cp.user.id,
