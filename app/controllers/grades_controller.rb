@@ -147,6 +147,8 @@ protected
           end
           @csv_columns << nm + '_var'
           @csv_column_names << nm + '_var'
+          @csv_columns << nm + '_grade'
+          @csv_column_names << nm + '_grade'
       end
     end
 
@@ -281,6 +283,7 @@ protected
           end
           eval_var_t = 0
           eval_var_n = 0
+          eval_grade = 0
           if @assignment.participant_rubric
             i = 1
             s.participations_for(@assignment.configured_modules(nil).last,:participant).each do |ap|
@@ -298,6 +301,7 @@ protected
                 end
               else
                 v = (ap.participant_eval_score - ap.assignment_submission.instructor_score).abs
+                eval_grade = eval_grade + 33.4 - v * 0.534
                 grade[nm + i.to_s + '_var'] = round_score(v)
                 grade[nm + i.to_s + '_instructor'] = round_score(ap.assignment_submission.instructor_score)
                 grade[nm+i.to_s + '_student'] = round_score(ap.participant_eval_score)
@@ -312,6 +316,7 @@ protected
             else
               grade[nm+'var'] = '-'
             end
+            grade[nm+'grade'] = round_score(eval_grade)
           end
           grade['total_var'] = round_score(total_var)
         end
