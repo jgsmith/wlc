@@ -145,6 +145,8 @@ protected
             @csv_columns << nm + '_' + (i+1).to_s + '_var'
             @csv_column_names << nm + '_' + (i+1).to_s + '_var'
           end
+          @csv_columns << nm + '_var'
+          @csv_column_names << nm + '_var'
       end
     end
 
@@ -157,9 +159,18 @@ protected
       @csv_column_names << 'final'
       @csv_columns << :trust
       @csv_column_names << 'trust'
+      if @assignment.participant_rubric
+        nm = @assignment.eval_tag
+        @assignment.number_evaluations.times do |i|
+          @csv_columns << nm + '_' + (i+1).to_s + '_student'
+          @csv_column_names << nm + '_' + (i+1).to_s + '_student'
+          @csv_columns << nm + '_' + (i+1).to_s + '_instructor'
+          @csv_column_names << nm + '_' + (i+1).to_s + '_instructor'
+        end
+      end
     end
 
-    @assignment.course.course_participants.each do |cp|
+    @assignment.course.course_participants.sort_by{|c| c.user.name}.each do |cp|
       next unless cp.is_student?
       grade = {
         :id => cp.user.id,
@@ -268,17 +279,38 @@ protected
           else
             grade[:instructor] = round_score(s.instructor_score)
           end
+          eval_var_t = 0
+          eval_var_n = 0
           if @assignment.participant_rubric
             i = 1
             s.participations_for(@assignment.configured_modules(nil).last,:participant).each do |ap|
               if ap.assignment_submission.instructor_score.blank? || ap.participant_eval_score.blank?
                 grade[nm+i.to_s+'_var'] = '-'
+                if ap.assignment_submission.instructor_score.blank?
+                  grade[nm+i.to_s+'_instructor'] = '-'
+                else
+                  grade[nm+i.to_s+'_instructor'] = round_score(ap.assignment_submission.instructor_score)
+                end
+                if ap.participant_eval_score.blank?
+                  grade[nm+i.to_s+'_student'] = '-'
+                else
+                  grade[nm+i.to_s+'_student'] = round_score(ap.participant_eval_score)
+                end
               else
                 v = (ap.participant_eval_score - ap.assignment_submission.instructor_score).abs
                 grade[nm + i.to_s + '_var'] = round_score(v)
-                total_var = total_var + v
+                grade[nm + i.to_s + '_instructor'] = round_score(ap.assignment_submission.instructor_score)
+                grade[nm+i.to_s + '_student'] = round_score(ap.participant_eval_score)
+                eval_var_t = eval_var_t + v
+                eval_var_n = eval_var_n + 1
               end
               i = i + 1
+            end
+            if eval_var_n > 0
+              grade[nm+'var'] = round_score(eval_var_t / eval_var_n)
+              total_var = total_var + eval_var_t / eval_var_n
+            else
+              grade[nm+'var'] = '-'
             end
           end
           grade['total_var'] = round_score(total_var)
@@ -295,6 +327,10 @@ protected
   end
 
   def round_score(s)
-    (s * 100).round.to_f/100
+    if s.blank? || s == false
+      '-'
+    else
+      (s * 100).round.to_f/100
+    end
   end
 end
