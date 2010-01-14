@@ -54,11 +54,6 @@ module CASClient
       
       if is_success?
         @user = @xml.elements["cas:user"].text.strip if @xml.elements["cas:user"]
-        ## LEGACY (TODO): Support for TAMU's broken CAS installation 
-        ##                (cas:NetID instead of cas:user)
-
-        @user = @xml.elements["cas:NetID"].text.strip if @xml.elements["cas:NetID"]
-        @user_uin = @xml.elements["cas:UIN"].text.strip if @xml.elements["cas:UIN"]
         @pgt_iou =  @xml.elements["cas:proxyGrantingTicket"].text.strip if @xml.elements["cas:proxyGrantingTicket"]
         
         proxy_els = @xml.elements.to_a('//cas:authenticationSuccess/cas:proxies/cas:proxy')
@@ -78,8 +73,10 @@ module CASClient
         @extra_attributes.each do |k, v|
           @extra_attributes[k] = YAML.load(v)
         end
+        #@user_uin = @xml.elements["cas:UIN"].text.strip if @xml.elements["cas:UIN"]
+        #@user_uin = @extra_attributes['uin']
 
-        @extra_attributes['uin'] = @user_uin
+        #@extra_attributes['uin'] = @user_uin
       elsif is_failure?
         @failure_code = @xml.elements['//cas:authenticationFailure'].attributes['code']
         @failure_message = @xml.elements['//cas:authenticationFailure'].text.strip

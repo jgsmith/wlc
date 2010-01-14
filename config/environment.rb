@@ -49,9 +49,15 @@ Rails::Initializer.run do |config|
   # config.i18n.default_locale = :de
 end
 
-CASClient::Frameworks::Rails::Filter.configure(
-  :cas_base_url => "https://netid.tamu.edu/cas"
-)
+if RAILS_ENV == 'production'
+  CASClient::Frameworks::Rails::Filter.configure(
+    :cas_base_url => "https://cas.tamu.edu/cas"
+  )
+else
+  CASClient::Frameworks::Rails::Filter.configure(
+    :cas_base_url => "https://cas-dev.tamu.edu/cas"
+  )
+end
 
 Mime::Type.register_alias "text/html", :ext_json_html
 Mime::Type.register_alias "text/svg", :svg
