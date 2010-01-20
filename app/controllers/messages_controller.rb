@@ -42,14 +42,14 @@ class MessagesController < ApplicationController
       if @user == @assignment_submission.user || @assignment.course.is_assistant?(@user)
         @reader = @assignment_submission.user
         @we_allow_new_messages = false
-        @assignment.configured_modules(@assignment_submission.user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
+        @assignment.configured_modules(@assignment_submission.user).select{ |m| (@current_module.nil? || m.position <= @current_module.position ) && m.has_messaging? }.each do |m|
           r = get_recipients(m,@assignment, @assignment_submission.user)
           @assignment_participations = @assignment_participations + r[0]
           @recipients = @recipients + r[1]
         end
       end
     else
-      @assignment.configured_modules(@user).select{ |m| m.position <= @current_module.position && m.has_messaging? }.each do |m|
+      @assignment.configured_modules(@user).select{ |m| (@current_module.nil? || m.position <= @current_module.position) && m.has_messaging? }.each do |m|
         r = get_recipients(m)
         @assignment_participations = @assignment_participations + r[0]
         @recipients = @recipients + r[1]
