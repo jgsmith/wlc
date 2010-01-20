@@ -39,6 +39,7 @@ class MessagesController < ApplicationController
       @store_url = assignment_submission_messages_path(@assignment_submission)
       @assignment = @assignment_submission.assignment
       @current_module = @assignment.current_module(@assignment_submission.user)
+
       if @user == @assignment_submission.user || @assignment.course.is_assistant?(@user)
         @reader = @assignment_submission.user
         @we_allow_new_messages = false
@@ -54,6 +55,15 @@ class MessagesController < ApplicationController
         @assignment_participations = @assignment_participations + r[0]
         @recipients = @recipients + r[1]
       end
+    end
+
+    if @current_module
+      @current_module_position = @current_module.position
+    else
+      @current_module_position = 0
+      if @assignment.is_ended?
+        @current_module_position = @assignment.configured_modules(@user).last.position
+      end 
     end
 
     respond_to do |format|
