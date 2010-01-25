@@ -434,7 +434,7 @@ class Assignment < ActiveRecord::Base
       Rails.logger.info("Norm: #{pair_wise.norm}")
       Rails.logger.info("Trace: #{pair_wise.trace}")
       # for testing algorithms
-      CSV.open("/tmp/D-matrix-#{@assignment.id.to_s}.csv") do |writer|
+      CSV.open("/tmp/D-matrix-#{@assignment.id.to_s}.csv","w") do |writer|
         pair_wise.size1.times do |i|
           writer << [ submissions[i].user.id ] + pair_wise.row(i).to_a
         end
