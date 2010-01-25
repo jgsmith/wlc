@@ -433,6 +433,12 @@ class Assignment < ActiveRecord::Base
       Rails.logger.info("Max: #{pair_wise.max}   Min: #{pair_wise.min}")
       Rails.logger.info("Norm: #{pair_wise.norm}")
       Rails.logger.info("Trace: #{pair_wise.trace}")
+      # for testing algorithms
+      CSV.open("/tmp/D-matrix-#{@assignment.id.to_s}.csv") do |writer|
+        pair_wise.size1.times do |i|
+          writer << [ submissions[i].user.id ] + pair_wise.row(i).to_a
+        end
+      end
       pair_wise = (pair_wise + pair_wise.transpose) / 2
       eigenval,eigenvec = pair_wise.eigen_symmv
       GSL::Eigen::symmv_sort(eigenval,eigenvec, GSL::Eigen::SORT_VAL_DESC)
