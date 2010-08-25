@@ -11,15 +11,24 @@ class AssignmentSubmission < ActiveRecord::Base
   def show_info(position, u = nil)
     # we want to show all of the information up to the specified position
 
-    assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info(u) }.join("")
+    #assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info(u) }.join("")
+    assignment_participations.select{ |ap| 
+      ap.position < position && 
+      (ap.user == self.user || 
+         (ap.assignment_submission.user == self.user && 
+          !ap.configured_module.nil? && 
+          ap.configured_module.is_evaluative?
+         )
+      ) }.map { |ap| ap.show_info(u) }.join("")
   end
 
   def view_scores
     return ''
     self.calculate_scores if self.scores.nil? || self.scores.empty?
-    Liquid::Template.parse(self.assignment.score_view).render({
-      'scores' => self.scores,
-    })
+#    Liquid::Template.parse(self.assignment.score_view).render({
+#      'scores' => self.scores,
+#    })
+    ''
   end
 
   def calculate_score(use_trust)
@@ -57,6 +66,10 @@ class AssignmentSubmission < ActiveRecord::Base
         :order => 'author_name'
       )
     end
+  end
+
+  def is_evaluative?
+    has_evaluation? || !self.module_def.nil? && self.module_def.is_evaluative?
   end
 
 protected

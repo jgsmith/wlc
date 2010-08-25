@@ -7,7 +7,8 @@ class CoursesController < ApplicationController
     end
   end
 
-  before_filter :find_course, :only => [ :show ]
+  before_filter :find_course, :only => [ :show, :edit, :update ]
+  before_filter :find_semester, :only => [ :new ]
 
   def index
     @user = current_user
@@ -54,9 +55,34 @@ class CoursesController < ApplicationController
     @assignments = @course.assignments
   end
 
+  def new
+    @course = Course.new
+    @course.semester = @semester
+    @course.timezone = @semester.timezone
+  end
+
+  def create
+    @course = Course.new
+    params[:course][:semester] = Semester.find(params[:course][:semester].to_i)
+    @course.update_attributes(params[:course])
+    @course.save!
+    redirect_to :action => :show, :id => @course.id
+  end
+
+  def edit
+
+  end
+
+  def update
+  end
+
 protected
 
   def find_course
     @course = Course.find(params[:id])
+  end
+
+  def find_semester
+    @semester = Semester.find(params[:semester_id])
   end
 end

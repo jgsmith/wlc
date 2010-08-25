@@ -1,0 +1,16 @@
+%h2= @semester.name
+- if @user && @user.is_admin?
+  %ul
+    %li
+      %a{ :href => edit_semester_path(@semester) } Edit Semester
+    %li
+      %a{ :href => new_semester_course_path(@semester) } Create New Course
+
+- if @courses.empty?
+  %p There are no courses in this semester.
+- else
+  %ul
+    - @courses.each do |course|
+      %li
+        %a{ :href => course_path(course) }= course.name
+

@@ -12,24 +12,51 @@
 / first module opens when the assignment opens
 / so we only need to track when each module ends
 
-%ul
-  - if @assignment.course.is_designer?(@user)
-    %li= link_to 'Edit timeline', { :action => 'edit', :assignment_id => @assignment }
+//%ul
+//  - if @assignment.course.is_designer?(@user)
+//    %li= link_to 'Edit timeline', { :action => 'edit', :assignment_id => @assignment }
 
 %p
   The assignment begins on 
   = @assignment.starts_at.strftime("%a, %b %d at %I:%M %p.")
   - cur_date = @assignment.starts_at
 
-%ol
+/ if designer, allow editing -- otherwise, just show the info
+- if @assignment.course.is_designer?(@user)
+  %a{ :href => new_assignment_assignment_module_path(@assignment) } Add Module
+
+.item-set
+  - first = true
   - @assignment.assignment_modules.each do |m|
-    - cur_date = cur_date + m.duration
-    %li
-      = link_to m.name, m
-      = cur_date.strftime("(through %a, %b %d at %I:%M %p)")
-      
+    - last = false
+    .item
+      .title= h m.name
+      .description
+        %p
+          = cur_date.strftime("%a, %b %d at %I:%M %p")
+          through
+          - cur_date = cur_date + m.duration
+          = cur_date.strftime("%a, %b %d at %I:%M %p")
+        %p
+          = m.number_participants
+          participants
+      - if @assignment.course.is_designer?(@user)
+        .options
+          - if !first
+            = link_to 'Move up', { :action => 'move_higher', :id => m }
+          - if !last
+            = link_to 'Move down', { :action => 'move_lower', :id => m }
+          = link_to 'Edit', { :action => 'edit', :id => m }
+          - if !m.module_def.nil?
+            = link_to 'Params', { :action => 'edit_params', :id => m }
+          = link_to("Delete", { :action => "destroy", :id => m }, :confirm => "Are you sure you want to delete this module?", :method => :delete)
+    - first = false
+        
   - if !@assignment.eval_name.blank? || @assignment.author_rubric || @assignment.participant_rubric
-    - cur_date = cur_date + @assignment.eval_duration
-    %li
-      = @assignment.eval_name || 'Evaluation'
-      = cur_date.strftime("(through %a, %b %d at %I:%M %p)")
+    .assignment-module
+      .title= h @assignment.eval_name || 'Evaluation'
+      .description
+        = cur_date.strftime("%a, %b %d at %I:%M %p")
+        through
+        - cur_date = cur_date + @assignment.eval_duration
+        = cur_date.strftime("%a, %b %d at %I:%M %p")

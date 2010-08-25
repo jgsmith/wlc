@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 19) do
+ActiveRecord::Schema.define(:version => 23) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -131,6 +131,7 @@ ActiveRecord::Schema.define(:version => 19) do
     t.integer  "trust_mean"
     t.text     "trust_fn"
     t.boolean  "scores_calculated"
+    t.text     "xml_definition"
   end
 
   create_table "course_participants", :force => true do |t|
@@ -140,6 +141,8 @@ ActiveRecord::Schema.define(:version => 19) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "course_participants", ["course_id", "user_id"], :name => "course_participants_course_id_user_id", :unique => true
 
   create_table "courses", :force => true do |t|
     t.string   "name"
@@ -172,6 +175,7 @@ ActiveRecord::Schema.define(:version => 19) do
     t.string   "download_filename_prefix"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "xml_definition"
   end
 
   create_table "prompts", :force => true do |t|
@@ -193,7 +197,6 @@ ActiveRecord::Schema.define(:version => 19) do
   end
 
   create_table "rubrics", :force => true do |t|
-    t.integer  "user_id"
     t.string   "name"
     t.text     "instructions"
     t.text     "calculate_fn"
@@ -206,6 +209,7 @@ ActiveRecord::Schema.define(:version => 19) do
     t.boolean  "use_trust"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "course_id"
   end
 
   create_table "scores", :force => true do |t|
@@ -232,6 +236,17 @@ ActiveRecord::Schema.define(:version => 19) do
     t.text     "post_fn"
     t.text     "view_text"
     t.text     "view_form"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.text     "view"
+  end
+
+  create_table "temp_files", :force => true do |t|
+    t.integer  "holder_id"
+    t.string   "holder_type",  :default => "AssignmentParticipati\non"
+    t.string   "filename"
+    t.integer  "size"
+    t.string   "content_type"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -270,5 +285,7 @@ ActiveRecord::Schema.define(:version => 19) do
     t.datetime "remember_token_expires_at"
     t.boolean  "is_admin",                                :default => false
   end
+
+  add_index "users", ["uin"], :name => "users_uin", :unique => true
 
 end

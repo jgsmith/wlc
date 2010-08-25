@@ -1,8 +1,8 @@
 class Prompt < ActiveRecord::Base
   belongs_to :rubric
-  has_many   :responses
+  has_many   :responses, :dependent => :destroy
 
-  #acts_as_list :scope => 'rubric_id'
+  acts_as_list :scope => :rubric_id
 
   def to_h
     { :tag => self.tag,  

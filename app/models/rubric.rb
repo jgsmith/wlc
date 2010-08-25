@@ -1,6 +1,16 @@
 class Rubric < ActiveRecord::Base
-  belongs_to :user
-  has_many   :prompts
+  belongs_to :course
+  has_many   :prompts, :dependent => :destroy
+
+  def user
+    self.course.user
+  end
+
+  def assignments
+    # collect all of the assignments we're part of (includes assignments
+    # and assignment modules)
+    []
+  end
 
   #
   # Calculates the grade for the particular rubric given the data from
@@ -31,7 +41,8 @@ class Rubric < ActiveRecord::Base
       md[p.tag] = (data[p.tag] || data[(p.position-1).to_s] || data[p.position-1] || 0).to_i
     end
 #    Rails.logger.info(YAML::dump(md))
-    raw = self.lua_call('calculate', self.calculate_fn,tags,md)
+# TODO: change this to a calculation using Fabulator expressions
+    raw = nil # self.lua_call('calculate', self.calculate_fn,tags,md)
 #    Rails.logger.info(">>> score >>> #{raw}")
     if !self.minimum.nil?
       if self.inclusive_minimum?
@@ -61,36 +72,4 @@ class Rubric < ActiveRecord::Base
     }
   end
 
-protected
-
-  # Returns a Lua interpreter object
-  def lua_context
-    if !defined? @lua_context 
-      @lua_context = Lua.new('baselib', 'mathlib', 'stringlib')
-    end
-    return @lua_context
-  end
-
-  # Runs the given function with the given data.  Compiles the function if
-  # it has not been compiled yet for the Lua context associated with the
-  # Rubric.
-  def lua_call(fname, fbody, tags, data)
-    return 0 if tags.nil? || tags.empty?
-
-#    Rails.logger.info(YAML::dump(data))
-    lua = self.lua_context
-    lua.eval("temp159 = type(#{fname})")
-    if lua.get("temp159") != 'function'
-      fvars = tags.map{ |t| %{#{t} = (data.#{t} or 0)} }.join("\n") 
-#      Rails.logger.info("function #{fname}(data)\n#{fvars}\nresult = #{fbody}\nreturn result\nend")
-      lua.eval("function #{fname}(data)\n#{fvars}\nresult = #{fbody}\nreturn result\nend")
-      lua.eval("temp159 = type(#{fname})")
-      if lua.get("temp159") != 'function'
-        raise "Unable to define the function '#{fname}' in Lua"
-      end
-    end
-
-#    Rails.logger.info("Calling into Lua with data=:#{YAML::dump(data)}")
-    lua.call(fname, data)
-  end
 end

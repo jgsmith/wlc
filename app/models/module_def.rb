@@ -1,22 +1,31 @@
+require 'xml/libxml'
+
 class ModuleDef < ActiveRecord::Base
   has_many :state_defs
 
   serialize :params
 
+  def state_machine
+    @state_machine ||= Fabulator::Core::StateMachine.new.compile_xml(LibXML::XML::Document.string self.xml_definition)
+    @state_machine
+  end
+
+  def states
+    self.state_machine.state_names
+  end
+
+  def references_state?(s)
+    self.states.include?(s)
+  end
+
+  def context
+    state_machine.fabulator_context
+  end
+
   def initialize_participation(participation)
-    participation.state_def = state_defs.select{ |s| s.name == 'start' }.first
-    if !self.init_fn.blank?
-      begin
-        participation.lua_call('initialize', self.init_fn)
-      rescue Exception => e
-        if e.message =~ /^goto (.+)$/
-          new_state = $1
-          participation.state_def = state_defs.select{ |s| s.name == new_state }.first
-        else
-          raise
-        end
-      end
-    end
+    context = Fabulator::Expr::Context.new
+    context.root = participation.roots['data']
+    self.state_machine.init_context(context)
   end
 
   def configured_module(user)

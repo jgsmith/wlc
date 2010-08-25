@@ -1,0 +1,14 @@
+%h2.title
+  = link_to 'Courses', { :controller => 'courses' }
+  &gt;
+  = link_to @course.name, @course
+  &gt;
+  Rubrics
+
+%ul
+  %li
+    %a{:href => new_course_rubric_path(@course)} Create Rubric
+  - @rubrics.each do |rubric|
+    %li
+      %a{:href => rubric_path(rubric) }= h rubric.name
+   

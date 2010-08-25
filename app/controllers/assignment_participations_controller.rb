@@ -15,7 +15,8 @@ class AssignmentParticipationsController < ApplicationController
   end
 
   def create
-    @assignment_participation.process_params(params)
+    @assignment_participation.process_params({}.update(params))
+    @form = get_form_info
     respond_to do |format|
       format.html
       format.ext_json { render :json => { :success => true } }
@@ -29,7 +30,7 @@ class AssignmentParticipationsController < ApplicationController
     # make sure we are the user of this participation and that it's
     # configured_module is the current one
     if @assignment_participation.user == @user && (@assignment_participation.position == @assignment.current_module(@user).position || @assignment_participation.position == params[:module]+1 && @user != @real_user)
-      @assignment_participation.process_params(params)
+      @assignment_participation.process_params({}.update(params))
       respond_to do |format|
         format.html
         format.ext_json { render :json => { :success => true } }
@@ -47,7 +48,11 @@ class AssignmentParticipationsController < ApplicationController
 protected
 
   def get_form_info
-    form = @assignment_participation.view_form
+    form = {
+      :content => @assignment_participation.view_form
+    }
+    # XML - need to add values, captions, etc.
+    
     args = { }
     if @user != @real_user
       args[:user_id] = @user
@@ -55,7 +60,13 @@ protected
         args[:module] = params[:module]
       end
     end
-    if !form.empty?
+    if !form[:content].blank?
+
+      xml = %{<view><form>} + form[:content] + %{</form></view>}
+
+      tmpl_parser = Fabulator::Template::Parser.new
+      parsed = tmpl_parser.parse(@assignment_participation.expr_context, xml)
+      form[:content] = parsed.is_a?(String) ? parsed : parsed.to_html(:form => false)
 
       if @assignment_participation.position == 1
         form[:id] = "participation-s-#{@user.id}"
@@ -63,11 +74,11 @@ protected
         form[:id] = "participation-#{@assignment_participation.id}"
       end
 
-      if !form[:items].select{ |i| i[:inputType] == 'file' }.empty?
-        form[:fileUpload] = true
-      else
-        form[:fileUpload] = false
-      end
+      # now we want to convert the form info to something we can use in ExtJS
+      # this is temporary
+
+      # should check for an <asset/> element
+      form[:fileUpload] = true
      
       if @assignment_participation.new_record?
         args[:assignment_id] = @assignment_participation.assignment
@@ -84,35 +95,17 @@ protected
         form[:url] = url_for(args)
         form[:method] = 'PUT'
       end
+      form[:content] += "<input type='hidden' name='authenticity_token' value='#{form_authenticity_token}'/>"
+      form[:content] += "<input type='hidden' name='_method' value='#{form[:method]}' />"
 
-      form[:items] << {
-        :inputType => 'hidden',
-        :name => 'authenticity_token',
-        :value => form_authenticity_token,
-        :xtype => 'field'
-      }
+      mod_ctx = @assignment_participation.assignment_module.params_context
 
-      form[:items] << {
-        :inputType => 'hidden',
-        :name => '_method',
-        :value => form[:method],
-        :xtype => 'field'
-      }
-
-      mod_params = @assignment_participation.configured_module.params
-      if !mod_params.nil? && !mod_params.empty?
-        form[:items].each do |i|
-          if !mod_params[:field_labels][i[:name]].blank?
-            i[:fieldLabel] = mod_params[:field_labels][i[:name]]
-          end
-        end
-
-        cstate = @assignment_participation.state_def.nil? ? 
-                    :start : @assignment_participation.state_def.name.to_sym
+      cstate = @assignment_participation.state_def.nil? ? 
+                    'start' : @assignment_participation.state_def.name.to_s
        
-        if !mod_params[:submit_labels][cstate].blank?
-          form[:submit] = mod_params[:submit_labels][cstate]
-        end
+      submit_label = mod_ctx.eval_expression("sys::/submit-labels/#{cstate}").first
+      if !submit_label.nil? && !submit_label.to_s.blank?
+        form[:submit] = submit_label.to_s
       end
     end
     form
@@ -146,6 +139,7 @@ protected
       elsif @assignment.course.is_assistant?(@real_user)
         @assignment_participation = @assignment.configured_modules(@user)[params[:module].to_i].assignment_participations(true).first
       end
+      @assignment_participation.assignment = @assignment
     else
       @assignment_participation = AssignmentParticipation.find(params[:id])
       @assignment = @assignment_participation.assignment_submission.assignment

@@ -3,7 +3,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
   belongs_to :assignment_submission
   belongs_to :user
-  belongs_to :state_def
+#  belongs_to :state_def
   has_many :uploads, :as => :holder
 
   serialize :context
@@ -13,6 +13,31 @@ class AssignmentParticipation < ActiveRecord::Base
   attr_accessor :data
   attr_accessor :params
   attr_accessor :viewing_user
+
+  def initialize
+    super
+  end
+
+  def roots
+    if self.context.nil?
+      self.initialize_participation
+    end
+    if self.context.nil?
+      { }
+    else
+      self.context[:roots]
+    end
+  end
+
+  def expr_context
+    assignment_module.configured_module(user).context.with_root(
+      self.context[:data]
+    )
+  end
+
+  def state
+    self.context[:state]
+  end
 
   def assignment_module
     AssignmentModule.first :conditions => [
@@ -65,11 +90,26 @@ class AssignmentParticipation < ActiveRecord::Base
   end
 
   def download_filename_prefix
-    if configured_module
-      return configured_module.download_filename_prefix
+    if !self.configured_module.nil?
+      return self.configured_module.download_filename_prefix
     else
       return 'download'
     end
+  end
+
+  def state_def
+    if self.configured_module.nil?
+      return nil
+    end
+
+    if self.state.nil?
+      return nil
+    end
+
+    candidates = self.configured_module.module_def.state_defs.select{ |s|
+      s.name == self.state
+    }
+    return candidates.first
   end
 
   def view_text
@@ -99,142 +139,88 @@ class AssignmentParticipation < ActiveRecord::Base
 
   def initialize_participation
     return if self.configured_module.module_def.nil?
+
+    ctx = {
+      :state => 'start',
+      :roots => {
+      }
+    }
+
+    ctx[:roots]['data'] = Fabulator::Expr::Node.new('data', ctx[:roots], nil, [])
+
+    self.context = ctx
     self.configured_module.module_def.initialize_participation(self)
   end
 
   def process_params(params)
     return if self.configured_module.module_def.nil?
-    self.params = params
 
-    @data = { }
+    sm = self.configured_module.module_def.state_machine
+    sm.context = self.context
 
-    params.each_pair do |k,v|
-      @data[k] = v unless v.kind_of?(ActionController::UploadedFile)
-    end
-
-    best_score = 0
-    best_errors = nil
-    best_valid = { }
-    best_transition = nil
-    self.state_def.transition_defs.each do |transition|
-      r = transition.validate_params(self)
-      if r['score'] > best_score
-        best_score = r['score']
-        best_errors = r['errors']
-        best_valid = r['valid']
-        best_transition = transition
+    params.delete("format")
+    params.delete("assignment_id")
+    params.delete("action")
+    params.delete("authenticity_token")
+    params.delete("_method")
+    params.delete("controller")
+    params.keys.each do |k|
+      next if params[k].is_a?(String)
+      if params[k].is_a?(Tempfile)
+        file = TempFile.new
+        file.holder = self
+        file.upload = params[k] 
+        file.save
+        params[k] = sm.context[:data].root.anon_node("#{file.class.name} #{file.id}", [ Fabulator::ASSETS_NS, 'asset' ])
+        params[k].set_attribute('size', file.size)
+        params[k].set_attribute('content_type', file.content_type)
+        params[k].set_attribute('original-filename', file.filename)
+        params[k].set_attribute('user', self.user.id)
       end
     end
 
-    if !best_transition.nil? && best_errors.nil? || best_errors.empty?
-      # take this transition
-      self.data = best_valid
-      begin
-        best_transition.process_params(self)
-      rescue Exception => e
-        if e.message =~ /^goto (.+)$/
-          new_state = state_def.module_def.state_defs.select { |s| s.name == $1 }.first
-          self.state_def = new_state
-        else
-          raise
-        end
-      else
-        self.state_def = best_transition.to_state
-      end
-      self.save
-      return true
-    else
-      return false
+    self.ensure_submission
+    sm.run(params)
+    @sm_missing_args = sm.missing_params
+    @sm_errors       = sm.errors
+
+    ctx = sm.context
+    ctx[:data].root.roots.keys.each do |k|
+      next if k == 'data'
+      ctx[:data].root.roots.delete(k)
     end
+    self.context = ctx
+    self.save
+    return true
   end
 
   def render(template)
-    Liquid::Template.parse(template).render({
-      'data' => self.data,
-      'params' => self.configured_module.params[:views],
-      'participation' => self.to_liquid,
-      'user' => self.viewing_user.to_liquid,
+    parser = Fabulator::Template::Parser.new
+    c = self.expr_context
+
+    c.root.roots['data'] = self.data
+    c.root.roots['sys'] = self.assignment_module.params
+    if c.root.roots['sys'].nil?
+      c.root.roots['sys'] = c.root.anon_node(nil)
+      c.root.roots['sys'].axis = 'sys'
+    end
+    c.with_root(c.root.roots['sys']).merge_data({
+      'user' => self.viewing_user.nil? ? 0 : self.viewing_user.id,
       'dates' => {
         'assignment' => {
-          'starts_at' => distance_of_time_in_words(self.assignment.starts_at, self.assignment.course.now),
-          'ends_at' => distance_of_time_in_words(self.assignment.ends_at, self.assignment.course.now)
+          'starts-at' => distance_of_time_in_words(self.assignment.starts_at, self.assignment.course.now),
+          'ends-at' => distance_of_time_in_words(self.assignment.ends_at, self.assignment.course.now)
         },
         'module' => {
-          'starts_at' => distance_of_time_in_words(self.configured_module.starts_at, self.assignment.course.now),
-          'ends_at' => distance_of_time_in_words(self.configured_module.ends_at, self.assignment.course.now)
-        }
+          'starts-at' => distance_of_time_in_words(self.configured_module.starts_at, self.assignment.course.now),
+          'ends-at' => distance_of_time_in_words(self.configured_module.ends_at, self.assignment.course.now),
+        },
+        'participation' => {
+          'participant-name' => (self.assignment.course.is_assistant?(self.viewing_user) ? self.user.name : '')
+        },
       }
     })
-  end
-
-  def to_liquid
-    d = AssignmentParticipationDrop.new
-    d.assignment_participation = self
-    d
-  end
-
-  def lua_goto(sname)
-    raise "goto #{sname}"
-  end
-
-  def lua_pre(sname)
-    s = self.state_def.module_def.state_defs.select { |s| s.name == sname }
-    if defined? s
-      s.pre(self)
-    end
-  end
-
-  def lua_post(sname)
-    s = self.state_def.module_def.state_defs.select { |s| s.name == sname }
-    if defined? s
-      s.post(self)
-    end
-  end
-
-  def lua_has_upload(pname)
-    @params[pname].kind_of?(ActionController::UploadedFile)
-  end
-
-  def lua_has_attached_upload(pname)
-    return !self.new_record? && self.uploads.select{ |u| u.tag == pname }.size > 0
-  end
-
-  def lua_attach_upload(pname)
-    if lua_has_upload(pname)
-
-      ensure_submission
-
-      u = Upload.first(:conditions => [
-        "holder_type = 'AssignmentParticipation' AND holder_id = ? AND tag = ?",
-        self.id, pname
-      ])
-
-      if u.nil?
-        u = Upload.new
-        u.user = self.user
-        u.holder = self
-        u.tag = pname
-      end
-
-      u.upload = @params[pname]
-      u.save
-    end
-  end
-
-  def lua_call(fname, fbody)
-    lua = self.lua_context
-
-    lua.eval("temp159 = type(#{fname})")
-    if lua.get("temp159") != 'function'
-      
-      lua.eval("function #{fname}(data)\n#{fbody}\nend")
-      lua.eval("temp159 = type(#{fname})")
-      if lua.get("temp159") != 'function'
-        raise "Unable to define the function '#{fname}' in Lua"
-      end
-    end
-
-    lua.call(fname, self.data || {})
+    parser.parse(c, template).to_s
   end
 
 protected
@@ -258,31 +244,4 @@ protected
     end
   end
 
-  def lua_context
-    if !defined? @lua_context
-      @lua_context = Lua.new('baselib', 'mathlib', 'stringlib')
-
-      @lua_context.setFunc('goto', self, 'lua_goto')
-      @lua_context.setFunc('pre', self, 'lua_pre')
-      @lua_context.setFunc('post', self, 'lua_post')
-
-      @lua_context.setFunc('has_upload', self, 'lua_has_upload')
-      @lua_context.setFunc('attach_upload', self, 'lua_attach_upload')
-      @lua_context.setFunc('has_attached_upload', self, 'lua_has_attached_upload')
-    end
-
-    @lua_context
-  end
-end
-
-class AssignmentParticipationDrop < Liquid::Drop
-  attr_accessor :assignment_participation
-
-  def user
-    assignment_participation.user.to_liquid
-  end
-
-  def uploads
-    assignment_participation.uploads.map { |u| u.to_liquid }
-  end
 end

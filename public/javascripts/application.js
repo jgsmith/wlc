@@ -802,4 +802,26 @@ Ext.addBehaviors({
     w.show();
   }
 });
+
+/* We want to go through an get any text areas that should be code edit
+   blocks */
+
+$$('textarea.code-editor').each(function(el) {
+  var t, files;
+  t = el.readAttribute('data-parser') || "xml";
+  WLC.debug("parser: " + t);
+  files = [ ];
+  if(t != "xml") {
+    files.push("tokenize" + t + ".js");
+  }
+  files.push("parse" + t + ".js");
+  
+  CodeMirror.fromTextArea(el.id, {
+    path: "/javascripts/CodeMirror-0.7/js/",
+    parserfile: files,
+    stylesheet: "/javascripts/CodeMirror-0.7/css/" + t + "colors.css",
+    textWrapping: false,
+    lineNumbers: true
+  });
+});
 });

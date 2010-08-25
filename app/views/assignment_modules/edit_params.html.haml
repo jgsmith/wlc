@@ -1,0 +1,16 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  = link_to 'Timeline', { :controller => 'assignment_modules', :assignment_id => @assignment }
+  &gt;
+  = link_to @assignment_module.name, @assignment_module
+  &gt;
+  Edit Parameters
+
+- form_for @assignment_module, :url => { :action => 'update_params', :id => @assignment_module } do |f|
+  = display_success
+  = display_errors
+
+  = @assignment_module.params_form

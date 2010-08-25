@@ -39,7 +39,7 @@ protected
     ]
 
     @assignment.configured_modules(nil).each do |m|
-      if m.has_evaluation?
+      if m.is_evaluative?
         if !m.author_name.blank?
           m.number_participants.times do |i|
             nm = 'author_' + m.position.to_s + '_' + i.to_s
@@ -80,11 +80,11 @@ protected
   
       if submission
         grade[:is_participant] = true
-        grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position + 1 : @assignment.configured_modules(nil).last.position + 1)
+        grade[:progress_info] = submission.show_info(@assignment.current_module(nil) ? @assignment.current_module(nil).position + 1 : @assignment.configured_modules(nil).last.position + 1, @user)
         grade[:messages_url] = assignment_submission_messages_path(submission)
 
         @assignment.configured_modules(nil).each do |m|
-          if m.has_evaluation?
+          if m.is_evaluative?
             if !m.author_name.blank?
               i = 0
               AssignmentParticipation.find(:all,

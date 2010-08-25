@@ -1,17 +1,23 @@
-.text= markdown @assignment_participation.view_text
+.text
+  = markdown @assignment_participation.view_text
+  %p
+    %strong Portfolio
+  = (@assignment_participation.assignment_submission.show_info(@assignment_participation.position, @user) rescue '')
 
-.info= @assignment_participation.show_info(@user)
+.info= (@assignment_participation.show_info(@user) rescue '')
+
+= (@assignment_submission.show_info(@current_module_position, @user) rescue '')
 
 - if !@form.empty?
   .form{:id => "form-#{@form[:id]}"}
-
+    
   :javascript
     Ext.onReady(function(){
       new Ext.form.FormPanel({
         renderTo: "form-#{@form[:id]}",
-        items: #{@form[:items].to_json},
+        html: #{@form[:content].to_json},
         method: #{@form[:method].to_json},
-        fileUpload: #{@form[:fileUpload].to_json},
+        fileUpload: #{@form[:fileUpload] ? 'true' : 'false'},
         url: #{@form[:url].to_json},
         buttons: [{
           text: #{@form[:submit].to_json},
@@ -25,6 +31,7 @@
                 url: #{@form[:url].to_json},
                 success: function(f,a) {
                   var panel = Ext.ComponentMgr.get(#{@form[:id].to_json});
+                  console.log("Loading panel");
                   panel.load({
                     url: #{@form[:show_url].to_json},
                     scripts: true

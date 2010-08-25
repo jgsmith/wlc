@@ -1,0 +1,37 @@
+%p
+  Editing state definition:
+  = @state_def.name
+  for module
+  = @state_def.module_def.name
+
+%p
+  The two fields need to be combined into a single field -- handle forms
+  like we would in Radiant.  Captions should be configurable in the parameters,
+  though -- and configured parameters substituted in when we render the
+  form.
+
+- form_for @state_def do |f|
+  .element
+    %caption View Text
+    = f.text_area :view_text
+  .element
+    %caption View Form
+    = f.text_area :view_form
+
+:javascript
+  /*
+  CodeMirror.fromTextArea('state_def_view_text', {
+    path: "/javascripts/CodeMirror-0.7/js/",
+    parserfile: "parsexml.js",
+    stylesheet: "/javascripts/CodeMirror-0.7/css/xmlcolors.css",
+    textWrapping: false,
+    lineNumbers: true
+  });
+  CodeMirror.fromTextArea('state_def_view_form', {
+    path: "/javascripts/CodeMirror-0.7/js/",
+    parserfile: "parsexml.js",
+    stylesheet: "/javascripts/CodeMirror-0.7/css/xmlcolors.css",
+    textWrapping: false,
+    lineNumbers: true
+  });
+  */

@@ -42,38 +42,4 @@ class Upload < ActiveRecord::Base
   def url
     "/uploads/" + self.id.to_s
   end
- 
-  def to_liquid
-    d = UploadDrop.new
-    d.upload = self
-    d
-  end
-end
-
-class UploadDrop < Liquid::Drop
-  attr_accessor :upload
-
-  def user
-    upload.user.to_liquid
-  end
-
-  def id
-    upload.id
-  end
-
-  def url
-    upload.url
-  end
-
-  def filename
-    upload.filename
-  end
-
-  def size
-    upload.size
-  end
-
-  def download_name
-    upload.download_name
-  end
 end

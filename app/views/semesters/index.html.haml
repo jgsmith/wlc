@@ -1,0 +1,8 @@
+- if @user && @user.is_admin?
+  %a{:href => new_semester_path} Create New Semester
+
+%ul
+  - @semesters.each do |semester|
+    %li
+      %a{:href => semester_path(semester)}= semester.name
+  

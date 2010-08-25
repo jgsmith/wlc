@@ -1,0 +1,14 @@
+%h2.title
+  = link_to 'Courses', { :controller => 'courses' }
+  &gt;
+  = link_to @course.name, { :controller => 'courses', :id => @course }
+  &gt;
+  New Assignment
+
+- form_for @assignment, :url => course_assignments_path(@course) do |f|
+  //= render :partial => 'form', :locals => { :f => f }
+  .element
+    .caption Use the template:
+    = select_tag 'template', '<option id="0">Blank Assignment</option>' + options_from_collection_for_select( @course.user.assignment_templates, 'id', 'name' )
+  = submit_tag 'Create Assignment'
+

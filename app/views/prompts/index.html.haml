@@ -1,0 +1,53 @@
+%h2.title
+  = link_to 'Rubrics', { :controller => 'rubrics', :course_id => @rubric.course }
+  &gt;
+  = link_to @rubric.name, @rubric
+  &gt;
+  Prompts
+
+%a{ :href => new_rubric_prompt_path(@rubric) } Add Prompt
+
+
+.item-set
+  - first = true
+  - @prompts.each do |prompt|
+    - last = false
+    .item
+      .title= h prompt.prompt
+      .description
+        %p
+          Tag:
+          = h prompt.tag
+        - if prompt.responses.empty?
+          %p 
+            There are no responses.
+            %a{ :href => new_prompt_response_path(prompt) } Add Response
+        - else
+          %p
+            Responses (
+            %a{ :href => new_prompt_response_path(prompt) } Add Response
+            ):
+          %table
+            %tr
+              %th &nbsp;
+              %th Score
+              %th Response
+            - prompt.responses.each do |r|
+              %tr
+                %td
+                  = link_to 'Up', { :controller => 'responses', :action => "move_higher", :id => r }
+                  = link_to 'Down', { :controller => 'responses', :action => "move_lower", :id => r }
+                  = link_to 'Edit', { :controller => 'responses', :action => 'edit', :id => r }
+                  = link_to("Delete", { :action => "destroy", :id => r, :controller => 'responses' }, :confirm => "Are you sure you want to delete this response?", :method => :delete)
+                %td= r.score
+                %td=h r.response
+      - if @rubric.user == @user || @user.is_admin?
+        .options
+          - if !first
+            = link_to 'Move up', { :action => 'move_higher', :id => prompt }
+          - if !last
+            = link_to 'Move down', { :action => 'move_lower', :id => prompt }
+          = link_to 'Edit', { :action => 'edit', :id => prompt }
+          = link_to("Delete", { :action => "destroy", :id => prompt }, :confirm => "Are you sure you want to delete this prompt?", :method => :delete)
+    - first = false
+

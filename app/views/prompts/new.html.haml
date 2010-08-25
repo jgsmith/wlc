@@ -1,0 +1,8 @@
+- form_for @prompt, :url => rubric_prompts_path(@rubric) do |f|
+  %div
+    .caption Prompt
+    = f.text_field :prompt
+  %div
+    .caption Tag (letters, numbers, underscore, or hyphen, and must begin with a letter)
+    = f.text_field :tag
+  = submit_tag 'Create Prompt'

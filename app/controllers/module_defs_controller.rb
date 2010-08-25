@@ -8,7 +8,7 @@ class ModuleDefsController < ApplicationController
     end
   end
 
-  before_filter :find_module_def, :only => [ :show, :update ]
+  before_filter :find_module_def, :only => [ :show, :update, :edit ]
   before_filter :require_admin, :except => [ :show, :index ]
 
   def index
@@ -24,12 +24,34 @@ class ModuleDefsController < ApplicationController
   def show
     respond_to do |format|
       format.html
-      format.json { render :json => @module_def.to_json }
-      format.ext_json { render :json => @module_def.to_ext_json }
-      format.svg
+#      format.json { render :json => @module_def.to_json }
+#      format.ext_json { render :json => @module_def.to_ext_json }
+#      format.svg
     end
   end
     
+  def edit
+    respond_to do |format|
+      format.html
+    end
+  end
+
+  def update
+    @module_def.update_attributes(params[:module_def])
+    @module_def.save
+    render :action => 'show'
+  end
+
+  def new
+    @module_def = ModuleDef.new
+  end
+
+  def create
+    @module_def = ModuleDef.new
+    @module_def.update_attributes(params[:module_def])
+    @module_def.save
+    render :action => 'show'
+  end
 
 protected
   def find_module_def

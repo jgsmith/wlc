@@ -1,0 +1,24 @@
+.element
+  %caption Name
+  = f.text_field :name
+.element
+  %caption Is Evaluative?
+  = f.check_box :is_evaluative
+.element
+  %caption Default Download Filename Prefix
+  = f.text_field :download_filename_prefix
+.element
+  %caption Description
+  = f.text_area :description, { :class => 'code-editor' }
+.element
+  %caption Instructions
+  = f.text_area :instructions, { :class => 'code-editor' }
+.element
+  %caption Info View
+  = f.text_area :show_info, { :class => 'code-editor' }
+.element
+  %caption Parameterization Form
+  = f.text_area :params, { :class => 'code-editor' }
+.element
+  %caption Definition
+  = f.text_area :xml_definition, { :class => 'code-editor' }

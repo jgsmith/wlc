@@ -1,0 +1,28 @@
+.element
+  .caption Name
+  = f.text_field :name
+.element
+  .caption Minimum
+  = f.text_field :minimum
+  (
+  = f.check_box :inclusive_minimum
+  inclusive)
+.element
+  .caption Maximum
+  = f.text_field :maximum
+  (
+  = f.check_box :inclusive_maximum
+  inclusive)
+.element
+  .caption Floor
+  = f.text_field :floor
+.element
+  .caption Ceiling
+  = f.text_field :ceiling
+.element
+  .caption Instructions
+  = f.text_area :instructions
+.element
+  .caption Score Calculation
+  = f.text_area :calculate_fn, { :class => 'code-editor', 'data-parser' => 'javascript' }
+

@@ -1,7 +1,7 @@
 class Response < ActiveRecord::Base
   belongs_to :prompt
 
-  #acts_as_list :scope => 'prompt_id'
+  acts_as_list :scope => :prompt_id
 
   def to_h
     { :score => self.score,

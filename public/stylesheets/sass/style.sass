@@ -400,3 +400,92 @@ body.wide
     display: none
   #alpha
     width: 940px
+
+.CodeMirror-wrapping
+  :margin-left 5px
+  :padding 2px
+  :background-color white
+  :border 1px solid grey
+
+.item-set
+  :border 1px solid #cccccc
+  :padding 2px
+  .item
+    :border 1px solid #cccccc
+    :padding 0px
+    .title
+      :background-color #eeeeee
+      :border-bottom 1px solid #cccccc
+      :font-weight bold
+      :padding 2px
+    .description
+      :padding 2px
+    .options
+      :border-top 1px solid #cccccc
+      :padding 2px
+
+  .item + .item
+    :margin-top 4px
+
+.form-entry-required-marker
+  :color red
+
+.form-entry-missing
+  :font-weight bold
+
+.form-body
+
+  fieldset
+
+.form-element
+  :border none
+  :clear left
+
+  .form-element-label
+    :min-width 12em
+    :text-align right
+    :display block
+    :float left
+
+  input
+    :float left
+
+  select
+    :float left
+
+.form-buttons
+  :display block
+  :text-align center
+
+fieldset
+  :border 1px solid grey
+  :padding 2px
+  :margin 2px
+  :clear left
+  .form-selection
+    :border auto
+    :margin 0px 0px 0px 15px
+
+  .form-body
+  
+.form-selection-option
+  :display block
+  :margin-left 1em
+
+.form-element + .form-element
+  :display block
+
+.form-selection-option + .form-element
+  :display block
+
+
+.form-disabled
+  .form-element
+    input, select
+      :display none
+      :color #ccc
+
+
+  .form-selection-option
+    :display none
+    :color #ccc

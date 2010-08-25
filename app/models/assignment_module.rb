@@ -10,7 +10,11 @@ class AssignmentModule < ActiveRecord::Base
 
   validates_numericality_of :number_participants, :only_integer => true, :greater_than_or_equal_to => 1, :allow_nil => true, :allow_blank => true
   validates_format_of :tag, :with => /^[a-z][a-z0-9_]+$/, :allow_nil => true, :allow_blank => true
-  validates_presence_of :tag, :if => Proc.new { |m| m.module_type == -1 || !m.module_def.nil? && m.module_def.is_evaluative? }
+  validates_presence_of :tag, :if => Proc.new { |m| r = m.is_evaluative?
+    Rails.logger.info("tag required? #{r ? 'true' : 'false' }")
+    r }
+  validates_uniqueness_of :tag, :scope => :assignment_id, :allow_nil => true, :allow_blank => true
+  validates_presence_of   :assignment_id
 
   serialize :old_author_eval
   serialize :old_participant_eval
@@ -32,9 +36,6 @@ class AssignmentModule < ActiveRecord::Base
     end
   end
 
-  validates_uniqueness_of :tag, :scope => :assignment_id
-  validates_presence_of   :tag
-  validates_presence_of   :assignment_id
 
   def module_type
     if self.has_messaging?
@@ -47,6 +48,7 @@ class AssignmentModule < ActiveRecord::Base
   end
 
   def module_type=(m)
+    Rails.logger.info("Setting module type to [#{m}]")
     if m == -1
       self.has_messaging = true
       self.module_def = nil
@@ -56,6 +58,30 @@ class AssignmentModule < ActiveRecord::Base
     else
       self.module_def = ModuleDef.find(m)
     end
+  end
+
+  def params_context
+    ctx = Fabulator::Expr::Context.new
+    ctx.root = self.params
+    ctx
+  end
+
+  def params_form
+    return '' if module_def.nil?
+    parser = Fabulator::Template::Parser.new
+    ctx = self.params_context
+    doc = parser.parse(ctx, "<view><form id='params'>" + module_def.params + "<submit><caption>Update Parameters</caption></submit></form></view>")
+    doc.add_default_values(ctx)
+    doc.to_html(:form => false)
+  end
+
+  def is_evaluative?
+    Rails.logger.info("has messaging: #{self.has_messaging}")
+    return false if self.has_messaging
+    Rails.logger.info("module_def: #{self.module_def.nil? ? 'nil' : self.module_def}")
+    return false if self.module_def.nil?
+    Rails.logger.info("evaluative: ...?")
+    return self.module_def.is_evaluative?
   end
 
   def configured_module(user)

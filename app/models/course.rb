@@ -6,10 +6,24 @@ class Course < ActiveRecord::Base
 
   has_many :course_participants
   has_many :assignments, :order => 'position'
+  has_many :rubrics
 
   def tz
     @tz ||= TZInfo::Timezone.get(self.timezone)
     @tz
+  end
+
+  def user_uin
+    @user.nil? ? nil : @user.uin
+  end
+
+  def user_uin=(uin)
+    u = User.find_by_uin(uin)
+    if u.nil?
+    end
+    if !u.nil?
+      self.user = u
+    end
   end
 
   # the .utc makes sure we convert to utc first regardless of the tz of
@@ -48,6 +62,8 @@ class Course < ActiveRecord::Base
   end
 
   def is_assistant?(u)
+    return false if u.nil?
+
     return true if is_instructor?(u)
 
     cp = CourseParticipant.first(

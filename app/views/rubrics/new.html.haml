@@ -1,0 +1,14 @@
+%h2.title
+  = link_to 'Courses', { :controller => 'courses' }
+  &gt;
+  = link_to @course.name, @course
+  &gt;
+  = link_to 'Rubrics', { :controller => 'rubrics', :course_id => @course }
+  &gt;
+  New Rubric
+
+- form_for @rubric, :url => course_rubrics_path(@course) do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  = submit_tag 'Create Rubric'
+
+

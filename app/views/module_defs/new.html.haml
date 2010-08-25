@@ -1,0 +1,8 @@
+%h2.title
+  = link_to 'Modules', { :controller => 'module_defs' }
+  &gt;
+  New Module
+
+- form_for @module_def do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  = submit_tag 'Create Module'

@@ -1,0 +1,23 @@
+%h2.title
+  %a{:href => course_path(@assignment.course)}=h @assignment.course.name
+  &gt;
+  = link_to 'Assignment #'  + @assignment.position.to_s, @assignment
+  &gt;
+  = link_to 'Timeline', { :controller => 'assignment_modules', :assignment_id => @assignment }
+  &gt;
+  New Module
+
+- form_for @assignment_module, :url => assignment_assignment_modules_path(@assignment) do |f|
+
+  .form-field
+    = label(:assignment_module, :module_type, 'Module Type')
+    - if @assignment.assignment_modules.empty?
+      = f.select(:module_type, ModuleDef.all.select{ |m| !m.is_evaluative? }.sort_by(&:name).collect{|m| [ m.name, m.id ]})
+    - else
+      = f.select(:module_type, [ [ 'Messaging', -1 ], [ 'Informational', 0 ] ] + ModuleDef.all.sort_by(&:name).collect{|m| [ m.name + (m.is_evaluative? ? ' (Evaluative)' : ''), m.id ]})
+
+  .form-field
+    = label(:assignment_module, :tag, 'Tag (should be lowercase letters, digits, or underscore)')
+    = f.text_field :tag, :size => 15
+
+  = submit_tag "Add Module"

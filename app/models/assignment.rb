@@ -5,7 +5,7 @@ class Assignment < ActiveRecord::Base
   belongs_to :author_rubric, :class_name => 'Rubric'
   belongs_to :participant_rubric, :class_name => 'Rubric'
 
-  has_many :assignment_modules, :order => 'position'
+  has_many :assignment_modules, :order => 'position', :dependent => :destroy
   has_many :assignment_submissions, :order => 'id'
   has_many :scores, :dependent => :delete_all
 
@@ -191,7 +191,7 @@ class Assignment < ActiveRecord::Base
   end
 
   def utc_ends_at
-    @utc_ends_at ||= self.configured_modules(nil).last.utc_ends_at
+    @utc_ends_at ||= (self.configured_modules(nil).last.utc_ends_at rescue self.utc_starts_at)
     @utc_ends_at
   end
 
@@ -203,12 +203,6 @@ class Assignment < ActiveRecord::Base
     ])
 
     return as.view_scores
-  end
-
-  def to_liquid
-    d = AssignmentDrop.new
-    d.assignment = self
-    d
   end
 
   def needs_trust?
@@ -478,49 +472,7 @@ class Assignment < ActiveRecord::Base
         
   def calculate_final_score(data)
     fvars = data.keys.map{ |t| %{#{t} = (data.#{t} or 100)} }.join("\n")
-    self.lua_call('calculate_final_score', "#{fvars}\nresult = #{self.calculate_final_score_fn}\nreturn result", 'data', data)
+#    self.lua_call('calculate_final_score', "#{fvars}\nresult = #{self.calculate_final_score_fn}\nreturn result", 'data', data)
   end
 
-protected
-        
- def lua_call(fname, fbody, data_name, data)
-    lua = self.lua_context
-          
-    lua.eval("temp159 = type(#{fname})")
-    if lua.get("temp159") != 'function'
-              
-      lua.eval("function #{fname}(#{data_name})\n#{fbody}\nend")
-      lua.eval("temp159 = type(#{fname})")
-      if lua.get("temp159") != 'function'
-        raise "Unable to define the function '#{fname}' in Lua"
-      end
-    end
-
-    lua.call(fname, data)
-  end
-
-  def lua_debug(x)
-    Rails.logger.info(">>>>>>>>>>>>>>> From LUA: \n" + YAML::dump(x) + "\n^^^^^^^^^^^^^^")
-  end
-
-  def lua_context
-    if !defined? @lua_context
-      @lua_context = Lua.new('baselib', 'mathlib', 'stringlib')
-      @lua_context.setFunc('debug', self, 'lua_debug')
-    end
-
-    @lua_context
-  end
-end
-
-class AssignmentDrop < Liquid::Drop
-  attr_accessor :assignment
-
-  def course
-    d.course.to_liquid
-  end
-
-  def assignment_modules
-    d.assignment_modules.map { |am| am.to_liquid }
-  end
 end

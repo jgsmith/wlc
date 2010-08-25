@@ -1,0 +1,46 @@
+// late_work_acceptable  | boolean                     | not null default false
+// author_rubric_id      | integer                     |
+// participant_rubric_id | integer                     |
+// scores_final          | boolean                     |
+// calculate_trust       | boolean                     |
+// use_trust             | boolean                     |
+// trust_uses_self_eval  | boolean                     |
+// trust_mean            | integer                     |
+// scores_calculated     | boolean                     |
+
+.form-field
+  = label(:assignment, :starts_at, "First module opens at")
+  = f.datetime_select :starts_at, { :use_short_month => true, :start_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_starts_at).year, :end_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_ends_at).year, :discard_seconds => true, }
+
+%fieldset
+  %legend Evaluation
+  .form-field
+    .caption Evaluation Tag
+    = f.text_field :eval_tag
+  .form-field
+    .caption Assignment Evaluation Duration
+    = f.text_field :eval_duration
+  .form-field
+    .caption Number of Assignment Evaluations
+    = f.text_field :number_evaluations
+  .form-field
+    .caption Evaluator's Name
+    = f.text_field :eval_name
+  .form-field
+    .caption Evaluator's Rubric
+  .form-field
+    .caption Author's Name
+    = f.text_field :author_name
+  .form-field
+    = label(:assignment_module, :author_rubric, "Author Rubric")
+    = f.select(:author_rubric_id, @assignment.course.user.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
+  .form-field
+    = label(:assignment_module, :participant_rubric, "Participant Rubric")
+    = f.select(:participant_rubric_id, @assignment.course.user.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
+
+.form-field
+  .caption Score View
+  = f.text_area :score_view, { :class => 'code-editor' }
+.form-field
+  .caption Score Calculation
+  = f.text_area :calculate_score_fn, { :class => 'code-editor', 'data-parser' => 'javascript' }

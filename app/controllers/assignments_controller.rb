@@ -1,6 +1,6 @@
 class AssignmentsController < ApplicationController
 
-  include ExtScaffold
+#  include ExtScaffold
 
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
@@ -9,9 +9,9 @@ class AssignmentsController < ApplicationController
     end
   end
 
-  before_filter :find_assignment, :only => [ :show, :update, :edit, :trust ]
+  before_filter :find_assignment, :only => [ :show, :update, :edit, :trust, :move_higher, :move_lower, :destroy ]
   before_filter :find_course,     :only => [ :index, :new, :create ]
-  before_filter :require_assistant, :only => [ :trust, :edit, :update ]
+  before_filter :require_assistant, :only => [ :trust, :edit, :update, :move_higher, :move_lower, :destroy ]
   before_filter :require_instructor, :only => [ :new, :create ]
 
   def index
@@ -20,6 +20,22 @@ class AssignmentsController < ApplicationController
       format.ext_json { render :json => @assignments.to_ext_json(:class => Assignment) }
     end
   end
+
+  def move_higher
+    @assignment.move_higher
+    redirect_to :action => :show, :id => @assignment.course, :controller => 'courses'
+  end
+  
+  def move_lower
+    @assignment.move_lower
+    redirect_to :action => :show, :id => @assignment.course, :controller => 'courses'
+  end
+
+  def destroy
+    @assignment.destroy
+    redirect_to :action => :show, :id => @assignment.course, :controller => 'courses'
+  end
+
 
   def trust
     @needed_papers = [ ]
@@ -253,6 +269,23 @@ class AssignmentsController < ApplicationController
     end
   end
 
+  def new
+    @assignment = Assignment.new
+    @assignment.course = @assignment.course
+  end
+
+  def create
+    @assignment = Assignment.new
+    @assignment.course = @course
+    @assignment.utc_starts_at = @course.semester.utc_starts_at
+    if !params[:template].blank? && params[:template].to_i != 0
+      template = @course.user.assignment_templates.find(params[:template])
+      @assignment.copy_from_template(template) if !template.nil?
+    end
+    @assignment.save!
+    redirect_to :action => :show, :id => @assignment
+  end
+
   def edit
     if !@assignment.course.is_designer?(@user)
       render :text => 'Forbidden!', :status => :forbidden
@@ -323,10 +356,18 @@ protected
   end
 
   def require_assistant
-    @assignment.course.is_assistant?(@user)
+    if @assignment.nil?
+      @course.is_assistant?(@user)
+    else
+      @assignment.course.is_assistant?(@user)
+    end
   end
 
   def require_instructor
-    @assignment.course.user == @user
+    if @assignment.nil?
+      @course.is_instructor?(@user)
+    else
+      @assignment.course.is_instructor?(@user)
+    end
   end
 end

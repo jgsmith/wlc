@@ -1,0 +1,18 @@
+%h2.title
+  = link_to 'Courses', { :controller => 'courses' }
+  &gt;
+  = link_to @prompt.rubric.course.name, @prompt.rubric.course
+  &gt;
+  = link_to 'Rubrics', { :controller => 'rubrics', :course_id => @prompt.rubric.course }
+  &gt;
+  = link_to @prompt.rubric.name, @prompt.rubric
+  &gt;
+  = link_to 'Prompts', { :controller => 'prompts', :rubric_id => @prompt.rubric }
+  &gt;
+  = h @prompt.prompt
+  &gt;
+  New Reponse
+
+- form_for @response, :url => prompt_responses_path(@prompt) do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  = submit_tag 'Create Response'

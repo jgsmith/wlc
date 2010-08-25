@@ -7,6 +7,8 @@ class User < ActiveRecord::Base
   has_many :uploads
   has_many :messages
   has_many :scores
+  has_many :assignment_templates
+  has_many :rubrics
 
   # Virtual attribute for the unencrypted password
 #  attr_accessor :password
@@ -69,12 +71,6 @@ class User < ActiveRecord::Base
     save(false)
   end
 
-  def to_liquid
-    d = UserDrop.new
-    d.user = self
-    d
-  end
-
   protected
     # before filter 
     def encrypt_password
@@ -86,12 +82,4 @@ class User < ActiveRecord::Base
     def password_required?
       crypted_password.blank? || !password.blank?
     end
-end
-
-class UserDrop < Liquid::Drop
-  attr_accessor :user
-
-  def id
-    user.id
-  end
 end

@@ -1,0 +1,9 @@
+%h2.title
+  = link_to 'Courses', { :controller => 'courses' }
+  &gt;
+  New Course
+
+- form_for @course, :url => semester_courses_path(@semester) do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  = submit_tag 'Create Course'
+

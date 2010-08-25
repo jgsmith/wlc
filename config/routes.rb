@@ -1,9 +1,14 @@
 ActionController::Routing::Routes.draw do |map|
   # The priority is based upon order of creation: first created -> highest priority.
 
-  map.resources :semester, :shallow => true do |semester|
+  map.resources :semesters, :shallow => true do |semester|
     semester.resources :courses do |course|
       course.resource  :course_participants, :as => 'roster'
+      course.resources :rubrics do |rubric|
+        rubric.resources :prompts do |prompt|
+          prompt.resources :responses
+        end
+      end
       course.resources :assignments do |assignment|
         assignment.resources :messages
         assignment.resources :assignment_modules, :as => 'timeline'
@@ -23,6 +28,7 @@ ActionController::Routing::Routes.draw do |map|
       end
     end
   end
+
 
   map.resources :module_defs, :shallow => true do |module_def|
     module_def.resources :state_defs do |state_def|

@@ -6,6 +6,7 @@
 / and options for more information
 
 %ul
+  %li= link_to 'Edit Assignment', { :action => :edit, :id => @assignment }
   %li= link_to 'Timeline', { :controller => "assignment_modules", :assignment_id => @assignment }
   - if @assignment.is_ended?
     %li= link_to 'Trust', { :controller => 'assignments', :id => @assignment, :action => 'trust' }

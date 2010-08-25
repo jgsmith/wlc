@@ -2,7 +2,8 @@ class CreateModuleDefs < ActiveRecord::Migration
   def self.up
     create_table :module_defs do |t|
       t.string :name
-      t.text :init_fn
+      t.text :definition
+      t.text :compiled_xsm
       t.text :instructions
       t.text :description
       t.text :show_info

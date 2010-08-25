@@ -25,6 +25,14 @@ class ConfiguredModule
     @name
   end
 
+  def context
+    if module_def.nil?
+      Fabulator::Expr::Context.new
+    else
+      module_def.context
+    end
+  end
+
   #
   # The UTC time at which the module ends.
   #
@@ -160,6 +168,7 @@ class ConfiguredModule
       if @assignment_participations.size == 0
         p = AssignmentParticipation.new
         p.configured_module = self
+        p.assignment = @assignment
         p.tag = self.tag
         p.initialize_participation
         @assignment_participations = [ p ]

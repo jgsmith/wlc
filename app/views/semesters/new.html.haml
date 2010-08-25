@@ -1,0 +1,9 @@
+%h2.title
+  = link_to 'Semesters', { :controller => 'semesters' }
+  &gt;
+  New Semester
+
+- form_for @semester do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  = submit_tag 'Create Semester'
+

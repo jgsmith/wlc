@@ -73,10 +73,16 @@ module CASClient
         @extra_attributes.each do |k, v|
           @extra_attributes[k] = YAML.load(v)
         end
-        #@user_uin = @xml.elements["cas:UIN"].text.strip if @xml.elements["cas:UIN"]
-        #@user_uin = @extra_attributes['uin']
 
-        #@extra_attributes['uin'] = @user_uin
+        @user_uin = nil
+        @xml.elements.to_a('//cas:authenticationSuccess//cas:tamuEduPersonUIN').each do |el|
+          @user_uin = el.to_s
+        end
+        @user_uin =~ /^<.*?>(\d+)/
+        @user_uin = $1
+        @extra_attributes['uin'] = @user_uin
+        @extra_attributes['tamuEduPersonUIN'] = @user_uin
+
       elsif is_failure?
         @failure_code = @xml.elements['//cas:authenticationFailure'].attributes['code']
         @failure_message = @xml.elements['//cas:authenticationFailure'].text.strip

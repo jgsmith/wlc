@@ -1,0 +1,22 @@
+%h2.title
+  = link_to 'Rubrics', { :controller => 'rubrics' }
+  &gt;
+  = h @rubric.name
+
+%ul
+  %li
+    %a{ :href => edit_rubric_path(@rubric) } Edit Rubric
+  %li
+    %a{ :href => rubric_prompts_path(@rubric) } Edit Prompts
+
+- if @rubric.assignments.empty?
+  %p This rubric is not used in any assignments.
+- else
+  %p This rubric is used in the following assignments:
+  %ul
+    - @rubric.assignments.each do |assignment|
+      %li
+        %a{ :href => assignment_path(assignment) }
+          = assignment.course.name
+          = '(' + assignment.course.semester.name + ')'
+          = 'Assignment #' + (assignment.position+1).to_s

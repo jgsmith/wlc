@@ -8,6 +8,7 @@
     = javascript_include_tag 'effects'
     = javascript_include_tag 'dragdrop'
     = javascript_include_tag 'controls'
+    = javascript_include_tag '/javascripts/CodeMirror-0.7/js/codemirror.js'
     - if ENV['RAILS_ENV'] == 'development'
       = javascript_include_tag 'ext-prototype-adapter-debug.js'
       = javascript_include_tag 'ext-all-debug.js'
@@ -35,8 +36,10 @@
           #main-navigation-inner
             %ul
               %li{:class => current_page?(:controller => 'main') ? 'on' : ''}= link_to_unless_current('Home', { :controller => 'main' })
+              - if @user && @user.is_admin?
+                %li{:class => current_page?(:controller => 'semesters') ? 'on' : ''}= link_to_unless_current('Semesters', { :controller => 'semesters' })
               %li{:class => current_page?(:controller => 'courses') ? 'on' : ''}= link_to_unless_current('Courses', { :controller => 'courses' })
-              - if @user.is_admin? || @user.is_designer? 
+              - if @user && @user.is_admin? || @user.is_designer? 
                 %li{:class => current_page?(:controller => 'module_defs') ? 'on' : ''}= link_to_unless_current('Modules', { :controller => 'module_defs' })
 
           %div{:style=>'clear: both;'}
