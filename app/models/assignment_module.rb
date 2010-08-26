@@ -62,7 +62,13 @@ class AssignmentModule < ActiveRecord::Base
 
   def params_context
     ctx = Fabulator::Expr::Context.new
-    ctx.root = self.params
+    if self.params.nil?
+      ctx.root = ctx.root.anon_node(nil)
+      ctx.root.axis = 'sys'
+      ctx.root.roots['sys'] = ctx.root
+    else
+      ctx.root = self.params
+    end
     ctx
   end
 
