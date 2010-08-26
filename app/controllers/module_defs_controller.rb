@@ -39,6 +39,13 @@ class ModuleDefsController < ApplicationController
   def update
     @module_def.update_attributes(params[:module_def])
     @module_def.save
+    views = @module_def.state_defs.collect{ |s| s.name }
+    @module_def.state_machine.state_names.each do |nom|
+      next if views.include?(nom)
+      @module_def.state_defs.create({
+        :name => nom
+      })
+    end
     render :action => 'show'
   end
 

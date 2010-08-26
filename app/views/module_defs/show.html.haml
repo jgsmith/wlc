@@ -7,8 +7,8 @@
   %ul
     %li= link_to 'Edit this module', { :action => 'edit', :id => @module_def }
 
-    - @module_def.states.sort.each do |s|
-      %li= link_to "Edit #{s} view", { :action => 'edit', :id => @module_def, :controller => :state_defs, :state => s }
+    - @module_def.state_defs.sort_by(&:name).each do |s|
+      %li= link_to "Edit #{s.name} view", edit_state_def_path(s)
 
 = markdown @module_def.description rescue ''
 
