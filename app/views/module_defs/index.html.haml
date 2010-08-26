@@ -2,5 +2,7 @@
   Modules
 
 %ul
+  - if @user && @user.is_admin?
+    %li= link_to 'Create Module', new_module_def_path
   - ModuleDef.all.sort_by(&:name).each do |m|
     %li= link_to m.name + (m.is_evaluative? ? ' (Evaluative)' : ''), m

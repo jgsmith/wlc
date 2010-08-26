@@ -8,7 +8,7 @@ class CoursesController < ApplicationController
   end
 
   before_filter :find_course, :only => [ :show, :edit, :update ]
-  before_filter :find_semester, :only => [ :new ]
+  before_filter :find_semester, :only => [ :new, :create ]
 
   def index
     @user = current_user
@@ -63,7 +63,7 @@ class CoursesController < ApplicationController
 
   def create
     @course = Course.new
-    params[:course][:semester] = Semester.find(params[:course][:semester].to_i)
+    params[:course][:semester] = @semester # Semester.find(params[:course][:semester].to_i)
     @course.update_attributes(params[:course])
     @course.save!
     redirect_to :action => :show, :id => @course.id
