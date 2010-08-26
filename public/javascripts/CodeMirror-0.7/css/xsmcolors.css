@@ -1,0 +1,59 @@
+html {
+  cursor: text;
+}
+
+.editbox {
+  margin: .4em;
+  padding: 0;
+  font-family: monospace;
+  font-size: 10pt;
+  color: black;
+}
+
+.editbox p {
+  margin: 0;
+}
+
+span.xsm-tagname {
+  color: #A0B;
+}
+
+span.xsm-structure {
+  color: #A0B;
+}
+
+span.xsm-attribute {
+  color: #281;
+}
+
+span.xsm-punctuation {
+  color: black;
+}
+
+span.xsm-attname {
+  color: #00F;
+}
+
+span.xsm-comment {
+  color: #A70;
+}
+
+span.xsm-cdata {
+  color: #48A;
+}
+
+span.xsm-processing {
+  color: #999;
+}
+
+span.xsm-entity {
+  color: #A22;
+}
+
+span.xsm-error {
+ color: #F00 !important;
+}
+
+span.xsm-text {
+  color: black;
+}
