@@ -33,10 +33,10 @@
     = f.text_field :author_name
   .form-field
     = label(:assignment_module, :author_rubric, "Author Rubric")
-    = f.select(:author_rubric_id, @assignment.course.user.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
+    = f.select(:author_rubric_id, @assignment.course.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
   .form-field
     = label(:assignment_module, :participant_rubric, "Participant Rubric")
-    = f.select(:participant_rubric_id, @assignment.course.user.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
+    = f.select(:participant_rubric_id, @assignment.course.rubrics.sort_by(&:name).collect{ |r| [ r.name, r.id ]}, { :include_blank => true })
 
 .form-field
   .caption Score View
