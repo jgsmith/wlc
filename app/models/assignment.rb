@@ -11,16 +11,17 @@ class Assignment < ActiveRecord::Base
 
   acts_as_list :scope => :course_id
 
-  validates_each :utc_starts_at do |record, attr, value|
-    record.errors.add "Assignment must start in the course's semester." if
-      value < record.course.semester.utc_starts_at ||
-      value > record.course.semester.utc_ends_at
-  end
+#  validates_each :utc_starts_at do |record, attr, value|
+#    v = value.is_a?(String) ? DateTime.parse(value) : value
+#    record.errors.add "Assignment must start in the course's semester." if
+#      v < record.course.semester.utc_starts_at ||
+#      v > record.course.semester.utc_ends_at
+#  end
 
   validates_associated :assignment_modules
 
-  serialize :old_participant_eval
-  serialize :old_author_eval
+  #serialize :old_participant_eval
+  #serialize :old_author_eval
 
   #
   # Returns a Hash representing the instructions and prompts for the

@@ -322,11 +322,30 @@ class AssignmentsController < ApplicationController
 
       params[:assignment][:eval_duration] = params[:assignment][:eval_duration].to_i * 60 unless params[:assignment][:eval_duration].blank?;
 
-      if(!params[:assignment][:starts_at].blank?)
-          params[:assignment][:utc_starts_at] = @assignment.course.tz.local_to_utc(DateTime.parse(params[:assignment][:starts_at]))
-          params[:assignment][:starts_at] = DateTime.parse(params[:assignment][:starts_at])
+      if(!params[:assignment]["starts_at(1i)"].blank?)
+          params[:assignment][:starts_at] = DateTime.civil(
+            params[:assignment]["starts_at(1i)"].to_i,
+            params[:assignment]["starts_at(2i)"].to_i,
+            params[:assignment]["starts_at(3i)"].to_i,
+            params[:assignment]["starts_at(4i)"].to_i,
+            params[:assignment]["starts_at(5i)"].to_i
+          )
+Rails.logger.info("starts at: #{YAML::dump(params[:assignment][:starts_at])}")
+          params[:assignment][:utc_starts_at] = @assignment.course.tz.local_to_utc(params[:assignment][:starts_at]) #.to_formatted_s(:db)
+          params[:assignment][:starts_at] = params[:assignment][:starts_at] #.to_formatted_s(:db)
+          params[:assignment].delete("starts_at(1i)")
+          params[:assignment].delete("starts_at(2i)")
+          params[:assignment].delete("starts_at(3i)")
+          params[:assignment].delete("starts_at(4i)")
+          params[:assignment].delete("starts_at(5i)")
       end
 
+      if @assignment.update_attributes(params[:assignment]) && @assignment.save
+        redirect_to :action => :show, :id => @assignment
+      else
+        render :action => :edit, :id => @assignment
+      end
+      return
       respond_to do |format|
         format.ext_json { render :json => @assignment.to_ext_json(:success => @assignment.update_attributes(params[:assignment])) }
       end

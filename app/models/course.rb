@@ -9,7 +9,7 @@ class Course < ActiveRecord::Base
   has_many :rubrics
 
   def tz
-    @tz ||= TZInfo::Timezone.get(self.timezone)
+    @tz ||= (TZInfo::Timezone.get(self.timezone) rescue TZInfo::Timezone.get('America/Chicago'))
     @tz
   end
 
@@ -123,6 +123,7 @@ class Course < ActiveRecord::Base
 
   def has_current_assignment?
     self.assignments.each do |a|
+      next if a.utc_starts_at.nil?
       return true if a.utc_starts_at <= self.now && a.utc_ends_at >= self.now
     end
     return false
