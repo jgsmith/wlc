@@ -10,9 +10,7 @@ class AssignmentModule < ActiveRecord::Base
 
   validates_numericality_of :number_participants, :only_integer => true, :greater_than_or_equal_to => 1, :allow_nil => true, :allow_blank => true
   validates_format_of :tag, :with => /^[a-z][a-z0-9_]+$/, :allow_nil => true, :allow_blank => true
-  validates_presence_of :tag, :if => Proc.new { |m| r = m.is_evaluative?
-    Rails.logger.info("tag required? #{r ? 'true' : 'false' }")
-    r }
+  validates_presence_of :tag, :if => Proc.new { |m| m.is_evaluative? }
   validates_uniqueness_of :tag, :scope => :assignment_id, :allow_nil => true, :allow_blank => true
   validates_presence_of   :assignment_id
 
@@ -48,7 +46,6 @@ class AssignmentModule < ActiveRecord::Base
   end
 
   def module_type=(m)
-    Rails.logger.info("Setting module type to [#{m}]")
     if m == -1
       self.has_messaging = true
       self.module_def = nil
@@ -68,6 +65,7 @@ class AssignmentModule < ActiveRecord::Base
       ctx.root.roots['sys'] = ctx.root
     else
       ctx.root = self.params
+      ctx.root.roots['sys'] = ctx.root
     end
     ctx
   end
@@ -82,11 +80,8 @@ class AssignmentModule < ActiveRecord::Base
   end
 
   def is_evaluative?
-    Rails.logger.info("has messaging: #{self.has_messaging}")
     return false if self.has_messaging
-    Rails.logger.info("module_def: #{self.module_def.nil? ? 'nil' : self.module_def}")
     return false if self.module_def.nil?
-    Rails.logger.info("evaluative: ...?")
     return self.module_def.is_evaluative?
   end
 

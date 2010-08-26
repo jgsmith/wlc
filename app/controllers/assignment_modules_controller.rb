@@ -65,6 +65,7 @@ class AssignmentModulesController < ApplicationController
     names = doc.find('//input/@name').collect{ |n| n.value }
     ctx = @assignment_module.configured_module(nil).context
     ctx.root.roots['sys'] = ctx.root.anon_node(nil)
+    ctx.root.roots['sys'].axis = 'sys'
     c = ctx.with_root(ctx.root.roots['sys'])
     data = { }
     names.each do |n|
@@ -72,7 +73,7 @@ class AssignmentModulesController < ApplicationController
       nom = $1
       data[nom] = params[n]
     end
-    c.merge_data(data)
+    c.merge_data({ 'params' => data })
     @assignment_module.params = c.root
     @assignment_module.save
     redirect_to :action => :edit_params, :id => @assignment_module
