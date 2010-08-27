@@ -209,6 +209,7 @@ class ConfiguredModule
                   raise ActiveRecord::Rollback
                 end
                 @assignment_participations << p
+                raise WLC::ReloadPage
               end 
             end
           end

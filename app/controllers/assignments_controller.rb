@@ -264,6 +264,11 @@ class AssignmentsController < ApplicationController
       render :action => 'show_instructor'
     elsif @assignment.course.is_student?(@user)
       # we show student view of assignment (default)
+      begin
+        @assignment.current_module(@user).assignment_participations
+      rescue WLC::ReloadPage
+        redirect_to :action => 'show', :id => @assignment
+      end
     else
       render :text => 'Forbidden.', :status => 403
     end
