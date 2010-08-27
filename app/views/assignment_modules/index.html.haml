@@ -30,7 +30,8 @@
   - @assignment.assignment_modules.each do |m|
     - last = false
     .item
-      .title= h m.name
+      .title
+        %a{ :href => assignment_module_path(m) }= h m.name
       .description
         %p
           = cur_date.strftime("%a, %b %d at %I:%M %p")

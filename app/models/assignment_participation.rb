@@ -1,5 +1,6 @@
 class AssignmentParticipation < ActiveRecord::Base
   include ActionView::Helpers::DateHelper
+  include ActionController::UrlWriter
 
   belongs_to :assignment_submission
   belongs_to :user
@@ -200,6 +201,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
     c.root.roots['data'] = self.data
     c.root.roots['sys'] = self.assignment_module.params
+    c.root.roots['sys'].axis = 'sys'
     if c.root.roots['sys'].nil?
       c.root.roots['sys'] = c.root.anon_node(nil)
       c.root.roots['sys'].axis = 'sys'
@@ -222,6 +224,74 @@ class AssignmentParticipation < ActiveRecord::Base
     })
     parser.parse(c, template).to_s
   end
+
+  def get_form_info(opts)
+    ctrl = opts[:controller]
+    form = {
+      :content => self.view_form
+    } 
+    # XML - need to add values, captions, etc.
+        
+    args = { }
+    if opts[:user] != opts[:real_user]
+      args[:user_id] = opts[:user]
+      if !params[:module].blank?
+        args[:module] = params[:module]
+      end
+    end
+    if !form[:content].blank?
+
+      xml = %{<view><form>} + form[:content] + %{</form></view>}
+
+      mod_ctx = self.assignment_module.params_context
+
+      tmpl_parser = Fabulator::Template::Parser.new
+      parsed = tmpl_parser.parse(self.expr_context, xml)
+      if !parsed.is_a?(String)
+        parsed.add_captions(mod_ctx.with_root(mod_ctx.eval_expression("sys::/params/field-labels").first))
+      end
+      form[:content] = parsed.is_a?(String) ? parsed : parsed.to_html(:form => false)
+
+      if self.position == 1
+        form[:id] = "participation-s-#{opts[:user].id}"
+      else
+        form[:id] = "participation-#{self.id}"
+      end
+
+      # now we want to convert the form info to something we can use in ExtJS
+      # this is temporary
+
+      # should check for an <asset/> element
+      form[:fileUpload] = true
+    
+      if self.new_record?
+        args[:assignment_id] = self.assignment
+        form[:show_url] = assignment_assignment_participations_path(args)
+        args[:format] = 'ext_json' + (form[:fileUpload] ? '_html' : '')
+        form[:url] = assignment_assignment_participations_path(args)
+        form[:method] = 'POST'
+      else
+        args[:action] = 'show'
+        args[:controller] = 'assignment_participations'
+        args[:id] = self
+        form[:show_url] = url_for(args) # assignment_participation_path(args)
+        args[:format] = 'ext_json' + (form[:fileUpload] ? '_html' : '')
+        form[:url] = url_for(args)
+        form[:method] = 'PUT'
+      end
+      form[:content] += "<input type='hidden' name='authenticity_token' value='#{ctrl.form_authenticity_token}'/>"
+      form[:content] += "<input type='hidden' name='_method' value='#{form[:method]}' />"
+
+      cstate = self.state_def.nil? ?  'start' : self.state_def.name.to_s
+
+      submit_label = mod_ctx.eval_expression("sys::/params/submit-labels/#{cstate}").first
+      if !submit_label.nil? && !submit_label.to_s.blank?
+        form[:submit] = submit_label.to_s
+      end
+    end
+    form
+  end
+
 
 protected
 

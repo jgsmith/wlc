@@ -147,7 +147,17 @@ class ConfiguredModule
   def assignment_participations(override_timing = false)
     # this is where we assign participations if we need to
     # this is from the self.user's pov
-    return [ ] if self.assignment.nil? || self.user.nil?
+    return [ ] if self.assignment.nil?
+
+    if self.user.nil?
+      # build a preview version of the participation
+      p = AssignmentParticipation.new
+      p.configured_module = self
+      p.assignment = @assignment
+      p.tag = self.tag
+      p.initialize_participation
+      return [ p ]
+    end
 
     @assignment_participations ||= AssignmentParticipation.find(:all, 
       :joins => [ :assignment_submission ],

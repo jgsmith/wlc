@@ -32,3 +32,20 @@
   %p The following is a preview of the instructions for this module.
   .preview
     = markdown @assignment_module.instructions
+
+- if !@assignment_module.module_def.nil?
+  .preview
+    / preview the start state of the module
+    - ap = (@assignment_module.assignment.configured_modules(nil))[@assignment_module.position - 1].assignment_participations.first
+    .text
+      = markdown ap.view_text
+      %p
+        %strong Portfolio
+    
+    .info= (ap.show_info(nil) rescue '')
+    
+    - form = ap.get_form_info({:controller => self, :user => @user, :real_user => @user })
+    %form
+      %div{:style => "display: block;"}= form[:content]
+      %div{:style => "display: block; clear: both; text-align: center;"}
+        = submit_tag form[:submit]

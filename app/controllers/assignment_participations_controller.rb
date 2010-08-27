@@ -7,16 +7,18 @@ class AssignmentParticipationsController < ApplicationController
   end
 
   def new
-    @form = get_form_info
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
   end
 
   def show
-    @form = get_form_info
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
+    #@form = get_form_info
   end
 
   def create
     @assignment_participation.process_params({}.update(params))
-    @form = get_form_info
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
+    #@form = get_form_info
     respond_to do |format|
       format.html
       format.ext_json { render :json => { :success => true } }
