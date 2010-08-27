@@ -63,7 +63,7 @@
     - @course.assignments.each do |assignment|
       - counter += 1
       %li
-        %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s
+        %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s + (assignment.name.blank? ? '' : ': ' + h(assignment.name))
         - if assignment.starts_at > @course.now
           Begins in 
           = distance_of_time_in_words(assignment.starts_at, @course.now) + "."
