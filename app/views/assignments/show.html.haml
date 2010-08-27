@@ -1,6 +1,8 @@
 %h2.title
   %a{:href => course_path(@assignment.course)}=h @assignment.course.name 
   = ' &gt; Assignment #'  + @assignment.position.to_s
+  - if !@assignment.name.blank?
+    =h @assignment.name
 
 %ol.timeline
   - @assignment.configured_modules(@user).each do |m|

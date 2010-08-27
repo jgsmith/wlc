@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 23) do
+ActiveRecord::Schema.define(:version => 24) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -132,6 +132,7 @@ ActiveRecord::Schema.define(:version => 23) do
     t.text     "trust_fn"
     t.boolean  "scores_calculated"
     t.text     "xml_definition"
+    t.string   "name"
   end
 
   create_table "course_participants", :force => true do |t|

@@ -9,6 +9,10 @@
 // scores_calculated     | boolean                     |
 
 .form-field
+  = label(:assignment, :name)
+  = f.text_field :name
+
+.form-field
   = label(:assignment, :starts_at, "First module opens at")
   = f.datetime_select :starts_at, { :use_short_month => true, :start_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_starts_at).year, :end_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_ends_at).year, :discard_seconds => true, }
 
