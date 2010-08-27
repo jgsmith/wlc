@@ -38,7 +38,7 @@
     / preview the start state of the module
     - ap = (@assignment_module.assignment.configured_modules(nil))[@assignment_module.position - 1].assignment_participations.first
     .text
-      = markdown ap.view_text
+      = (markdown(ap.view_text) rescue '')
       %p
         %strong Portfolio
     

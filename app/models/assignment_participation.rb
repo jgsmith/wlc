@@ -201,11 +201,10 @@ class AssignmentParticipation < ActiveRecord::Base
 
     c.root.roots['data'] = self.data
     c.root.roots['sys'] = self.assignment_module.params
-    c.root.roots['sys'].axis = 'sys'
     if c.root.roots['sys'].nil?
       c.root.roots['sys'] = c.root.anon_node(nil)
-      c.root.roots['sys'].axis = 'sys'
     end
+    c.root.roots['sys'].axis = 'sys'
     c.with_root(c.root.roots['sys']).merge_data({
       'user' => self.viewing_user.nil? ? 0 : self.viewing_user.id,
       'dates' => {
