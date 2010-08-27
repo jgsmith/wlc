@@ -1,4 +1,4 @@
-- if @course.is_instructor?(@user)
+- if @course.is_instructor?(@user) && !params[:student_view]
   - content_for :user_options do
     %li= 'Download CSV Roster'
     %li= 'Upload CSV Roster'
@@ -7,13 +7,20 @@
 
 %h2=h @course.name  + ' (' + @course.semester.name + ')'
 
-- if @course.is_designer?(@user)
-  %a{ :href => edit_course_path(@course) } Edit Course
+- if @course.is_designer?(@user) 
+  - if !params[:student_view]
+    %ul
+      %li
+        %a{ :href => edit_course_path(@course) } Edit Course
+      %li
+        %a{ :href => '?student_view=1' } Student view of this page
+  - else
+    %a{ :href => course_path(@course) } Designer view of this page
 
 #description= markdown @course.description
 
 %h3 Assignments
-- if @course.is_designer?(@user)
+- if @course.is_designer?(@user) && !params[:student_view]
   %ul
     %li
       %a{ :href => new_course_assignment_path(@course) } Add Assignment
@@ -75,7 +82,7 @@
           = distance_of_time_in_words(assignment.ends_at, @course.now)
           ago.
 
-- if @course.is_assistant?(@user)
+- if @course.is_assistant?(@user) && !params[:student_view]
   %h3 Roster
   %h4 Assistants
   - if @user && (@user == @course.user || @user.is_admin?)
