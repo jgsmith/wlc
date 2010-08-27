@@ -64,7 +64,7 @@ class AssignmentModulesController < ApplicationController
       cm = (@assignment_module.assignment.configured_modules(nil))[@assignment_module.position - 1]
 
       if ends_at > cm.starts_at.to_datetime
-        params[:assignment_module]["duration"] = (ends_at - cm.starts_at.to_datetime).to_i*24*60*60
+        params[:assignment_module]["duration"] = ((ends_at - cm.starts_at.to_datetime)*24*60*60).to_i
       end
       params[:assignment_module].delete("ends_at(1i)")
       params[:assignment_module].delete("ends_at(2i)")
