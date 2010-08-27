@@ -335,7 +335,6 @@ class AssignmentsController < ApplicationController
             params[:assignment]["starts_at(4i)"].to_i,
             params[:assignment]["starts_at(5i)"].to_i
           )
-Rails.logger.info("starts at: #{YAML::dump(params[:assignment][:starts_at])}")
           params[:assignment][:utc_starts_at] = @assignment.course.tz.local_to_utc(params[:assignment][:starts_at]) #.to_formatted_s(:db)
           params[:assignment][:starts_at] = params[:assignment][:starts_at] #.to_formatted_s(:db)
           params[:assignment].delete("starts_at(1i)")

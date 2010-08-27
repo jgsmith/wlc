@@ -85,6 +85,11 @@ class AssignmentModule < ActiveRecord::Base
     return self.module_def.is_evaluative?
   end
 
+  def ends_at
+    cms = self.assignment.configured_modules(nil)
+    cms[self.position - 1].ends_at
+  end
+
   def configured_module(user)
     if self.module_def.nil?
       cm = ConfiguredModule.new

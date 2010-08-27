@@ -53,6 +53,29 @@ class AssignmentModulesController < ApplicationController
   end
 
   def update
+    if(!params[:assignment_module]["ends_at(1i)"].blank?)
+      ends_at = DateTime.civil(
+        params[:assignment_module]["ends_at(1i)"].to_i,
+        params[:assignment_module]["ends_at(2i)"].to_i,
+        params[:assignment_module]["ends_at(3i)"].to_i,
+        params[:assignment_module]["ends_at(4i)"].to_i,
+        params[:assignment_module]["ends_at(5i)"].to_i
+      )
+      cm = (@assignment_module.assignment.configured_modules(nil))[@assignment_module.position - 1]
+
+      if ends_at > cm.starts_at.to_datetime
+        params[:assignment_module]["duration"] = (ends_at - cm.starts_at.to_datetime).to_i*24*60*60
+      end
+      params[:assignment_module].delete("ends_at(1i)")
+      params[:assignment_module].delete("ends_at(2i)")
+      params[:assignment_module].delete("ends_at(3i)")
+      params[:assignment_module].delete("ends_at(4i)")
+      params[:assignment_module].delete("ends_at(5i)")
+    end
+    params[:assignment_module].delete('params')
+    @assignment_module.update_attributes(params[:assignment_module])
+    @assignment_module.save
+    redirect_to :action => 'show', :id => @assignment_module
   end
 
   def edit_params
