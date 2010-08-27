@@ -22,7 +22,7 @@
       - counter += 1
       .item
         .title
-          %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s + assignment.name.blank? ? '' : ': ' + assignment.name
+          %a{:href => assignment_path(assignment)}= 'Assignment #' + counter.to_s + (assignment.name.blank? ? '' : ': ' + h(assignment.name))
         .description
           - if assignment.starts_at > @course.now
             Begins in 
