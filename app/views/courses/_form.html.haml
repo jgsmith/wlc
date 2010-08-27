@@ -1,12 +1,13 @@
 .element
   .caption Name
   = f.text_field :name
-.element
-  .caption Instructor (UIN)
-  = f.text_field :user_uin
-.element
-  .caption Timezone
-  = time_zone_select(:course, :timezone, ::ActiveSupport::TimeZone.us_zones)
+- if @course.new_record?
+  .element
+    .caption Instructor (UIN)
+    = f.text_field :user_uin
+  .element
+    .caption Timezone
+    = time_zone_select(:course, :timezone, ::ActiveSupport::TimeZone.us_zones)
 .element
   .caption Description
   = f.text_area :description, { :class => 'code-editor' }

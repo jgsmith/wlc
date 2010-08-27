@@ -7,6 +7,9 @@
 
 %h2=h @course.name  + ' (' + @course.semester.name + ')'
 
+- if @course.is_designer?(@user)
+  %a{ :href => edit_course_path(@course) } Edit Course
+
 #description= markdown @course.description
 
 %h3 Assignments

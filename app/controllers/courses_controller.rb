@@ -74,6 +74,12 @@ class CoursesController < ApplicationController
   end
 
   def update
+    params[:course].delete('semester')
+    params[:course].delete('user')
+    params[:course].delete('user_id')
+    @course.update_attributes(params[:course])
+    @course.save!
+    redirect_to :action => :show, :id => @course.id
   end
 
 protected
