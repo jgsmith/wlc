@@ -46,14 +46,14 @@ class AssignmentModule < ActiveRecord::Base
   end
 
   def module_type=(m)
-    if m == -1
+    if m.to_i == -1
       self.has_messaging = true
       self.module_def = nil
-    elsif m == 0
+    elsif m.to_i == 0
       self.has_messaging = false
       self.module_def = nil
     else
-      self.module_def = ModuleDef.find(m)
+      self.module_def = ModuleDef.find(m.to_i)
     end
   end
 

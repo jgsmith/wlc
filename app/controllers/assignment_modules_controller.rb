@@ -4,6 +4,7 @@ class AssignmentModulesController < ApplicationController
 
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
+      format.html { render :html => 'Record not found!', :status => :not_found }
       format.json { render :json => { :success => false }, :status => :not_found }
       format.ext_json { render :json => { :success => false }, :status => :not_found }
     end
@@ -53,6 +54,7 @@ class AssignmentModulesController < ApplicationController
   end
 
   def update
+    params[:assignment_module][:module_type] = params[:assignment_module][:module_type].to_i
     if(!params[:assignment_module]["ends_at(1i)"].blank?)
       ends_at = DateTime.civil(
         params[:assignment_module]["ends_at(1i)"].to_i,
