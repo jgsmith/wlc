@@ -9,7 +9,7 @@ class AssignmentModule < ActiveRecord::Base
   has_many :scores
 
   validates_numericality_of :number_participants, :only_integer => true, :greater_than_or_equal_to => 1, :allow_nil => true, :allow_blank => true
-  validates_format_of :tag, :with => /^[a-z][a-z0-9_]+$/, :allow_nil => true, :allow_blank => true
+  validates_format_of :tag, :with => /^[a-z][-a-z0-9_]+$/, :allow_nil => true, :allow_blank => true
   validates_presence_of :tag, :if => Proc.new { |m| m.is_evaluative? }
   validates_uniqueness_of :tag, :scope => :assignment_id, :allow_nil => true, :allow_blank => true
   validates_presence_of   :assignment_id
