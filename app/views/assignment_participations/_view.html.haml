@@ -1,8 +1,9 @@
 .text
   = markdown @assignment_participation.view_text
-  %p
-    %strong Portfolio
-  = (@assignment_participation.assignment_submission.show_info(@assignment_participation.position, @user) rescue '')
+  - portfolio = (@assignment_participation.assignment_submission.show_info(@assignment_participation.position, @user) rescue '')
+  - if !portfolio.blank?
+    %p
+      %strong Portfolio
 
 .info= (@assignment_participation.show_info(@user) rescue '')
 
