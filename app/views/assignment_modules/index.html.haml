@@ -29,7 +29,7 @@
   - counter = 0
   - last  = @assignment.assignment_modules.size
   - @assignment.assignment_modules.each do |m|
-    counter += 1
+    - counter += 1
     .item
       .title
         %a{ :href => assignment_module_path(m) }= h m.name
