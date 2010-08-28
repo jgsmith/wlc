@@ -63,6 +63,29 @@ class Assignment < ActiveRecord::Base
     self.course.tz.utc_to_local(self.utc_ends_at)
   end
 
+  def evaluation_ends_at
+    self.ends_at
+    lastm = self.assignment_modules.last
+    if lastm.nil?
+      self.starts_at.to_datetime + self.eval_duration.to_f / 24 / 60 / 60
+    else
+      (self.configured_modules(nil))[(lastm.position - 1 rescue 0)].ends_at.to_datetime + self.eval_duration.to_f / 24 / 60 / 60
+    end
+  end
+
+  def evaluation_ends_at=(t)
+    lastm = self.assignment_modules.last
+    if lastm.nil?
+      self.eval_duration = ((t.to_datetime - self.starts_at.to_datetime)*24*60*60).to_i
+    else
+      lm = (self.configured_modules(nil))[(lastm.position - 1 rescue 0)]
+      if !lm.nil?
+        self.eval_duration = ((t.to_datetime - lm.ends_at.to_datetime) * 24*60*60).to_i
+      end
+    end
+  end
+
+
   def is_ended?
     self.ends_at < self.course.now
   end

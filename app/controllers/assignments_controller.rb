@@ -325,8 +325,6 @@ class AssignmentsController < ApplicationController
         params[:assignment][:participant_eval] = participant_eval
       end
 
-      params[:assignment][:eval_duration] = params[:assignment][:eval_duration].to_i * 60 unless params[:assignment][:eval_duration].blank?;
-
       if(!params[:assignment]["starts_at(1i)"].blank?)
           params[:assignment][:starts_at] = DateTime.civil(
             params[:assignment]["starts_at(1i)"].to_i,
@@ -343,6 +341,22 @@ class AssignmentsController < ApplicationController
           params[:assignment].delete("starts_at(4i)")
           params[:assignment].delete("starts_at(5i)")
       end
+
+      if(!params[:assignment]["evaluation_ends_at(1i)"].blank?)
+          params[:assignment][:evaluation_ends_at] = DateTime.civil(
+            params[:assignment]["evaluation_ends_at(1i)"].to_i,
+            params[:assignment]["evaluation_ends_at(2i)"].to_i,
+            params[:assignment]["evaluation_ends_at(3i)"].to_i,
+            params[:assignment]["evaluation_ends_at(4i)"].to_i,
+            params[:assignment]["evaluation_ends_at(5i)"].to_i
+          )
+          params[:assignment].delete("evaluation_ends_at(1i)")
+          params[:assignment].delete("evaluation_ends_at(2i)")
+          params[:assignment].delete("evaluation_ends_at(3i)")
+          params[:assignment].delete("evaluation_ends_at(4i)")
+          params[:assignment].delete("evaluation_ends_at(5i)")
+      end
+
 
       if @assignment.update_attributes(params[:assignment]) && @assignment.save
         redirect_to :action => :show, :id => @assignment

@@ -16,14 +16,22 @@
   = label(:assignment, :starts_at, "First module opens at")
   = f.datetime_select :starts_at, { :use_short_month => true, :start_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_starts_at).year, :end_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_ends_at).year, :discard_seconds => true, }
 
+- last = @assignment.assignment_modules.last
+- if !last.nil?
+  - lm = (@assignment.configured_modules(nil))[(last.position - 1 rescue 0)]
+  - if !lm.nil?
+    Last module (before evaluation) ends at
+    = lm.ends_at
+
 %fieldset
   %legend Evaluation
   .form-field
     .caption Evaluation Tag
     = f.text_field :eval_tag
   .form-field
-    .caption Assignment Evaluation Duration
-    = f.text_field :eval_duration
+    = label(:assignment, :starts_at, "Evaluation ends at")
+    = f.datetime_select :evaluation_ends_at, { :use_short_month => true, :start_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_starts_at).year, :end_year => @assignment.course.tz.utc_to_local(@assignment.course.semester.utc_ends_at).year, :discard_seconds => true, }
+
   .form-field
     .caption Number of Assignment Evaluations
     = f.text_field :number_evaluations
