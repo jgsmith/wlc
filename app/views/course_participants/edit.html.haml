@@ -1,0 +1,22 @@
+%h1
+  - case params[:level]
+    - when 0:
+      Student Roster
+    - when 1:
+      Designer Roster
+    - when 2:
+      Assistant Roster
+
+- form_for @course, :url => course_course_participants_path(@course, { :level => params[:level] }), :method => 'POST' do |f|
+  %input{ :type => 'hidden', :name => 'level', :value => params[:level] }
+  / name\tuin\tT\d+\temail\t...
+  %p
+    You can cut and paste the roster from Howdy.tamu.edu.  The WLC system
+    will extract information from three of the first four columns.  Anything
+    else will be ignored.
+  %p
+    We expect name, uin, T... (which is ignored), and email.
+  %textarea{ :name => 'roster', :rows => '50', :cols => '70' }
+    = @roster.collect{ |r| [ r.name, r.uin, 'T000', r.email ].join("\t") }.join("\n")
+  %br
+  = submit_tag 'Update Roster'

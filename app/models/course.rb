@@ -102,7 +102,7 @@ class Course < ActiveRecord::Base
 
   def students
     User.find(:all,
-      :join => [ :course_participants ],
+      :joins => [ :course_participants ],
       :select => 'DISTINCT users.*',
       :conditions => [ %{
         course_participants.course_id = ?
