@@ -7,17 +7,17 @@ class AssignmentParticipationsController < ApplicationController
   end
 
   def new
-    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self, :form_authenticity_token => form_authenticity_token })
   end
 
   def show
-    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self, :form_authenticity_token => form_authenticity_token })
     #@form = get_form_info
   end
 
   def create
     @assignment_participation.process_params({}.update(params))
-    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self})
+    @form = @assignment_participation.get_form_info({:user => @user, :real_user => @real_user, :controller => self, :form_authenticity_token => form_authenticity_token })
     #@form = get_form_info
     respond_to do |format|
       format.html

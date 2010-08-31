@@ -278,12 +278,13 @@ class AssignmentParticipation < ActiveRecord::Base
         form[:url] = url_for(args)
         form[:method] = 'PUT'
       end
-      form[:content] += "<input type='hidden' name='authenticity_token' value='#{ctrl.form_authenticity_token}'/>"
+      form[:content] += "<input type='hidden' name='authenticity_token' value='#{opts[:form_authenticity_token]}'/>"
       form[:content] += "<input type='hidden' name='_method' value='#{form[:method]}' />"
 
       cstate = self.state_def.nil? ?  'start' : self.state_def.name.to_s
 
       submit_label = mod_ctx.eval_expression("sys::/params/submit-labels/#{cstate}").first
+      form[:submit] = 'Submit'
       if !submit_label.nil? && !submit_label.to_s.blank?
         form[:submit] = submit_label.to_s
       end
