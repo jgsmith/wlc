@@ -4,7 +4,6 @@ class AssignmentParticipation < ActiveRecord::Base
 
   belongs_to :assignment_submission
   belongs_to :user
-#  belongs_to :state_def
   has_many :uploads, :as => :holder
 
   serialize :context
@@ -191,7 +190,7 @@ class AssignmentParticipation < ActiveRecord::Base
       ctx[:data].root.roots.delete(k)
     end
     self.context = ctx
-    self.save
+    self.save unless user.nil?
     return true
   end
 
@@ -298,6 +297,7 @@ protected
 
   def ensure_submission
     return unless self.assignment_module && self.assignment_module.position == 1
+    return if user.nil?
 
     if self.assignment_submission.nil?
       as = AssignmentSubmission.create(
