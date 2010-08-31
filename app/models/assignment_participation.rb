@@ -262,6 +262,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
       # should check for an <asset/> element
       form[:fileUpload] = true
+      args[:only_path] = true
     
       if self.new_record?
         args[:assignment_id] = self.assignment
