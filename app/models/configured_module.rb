@@ -33,6 +33,12 @@ class ConfiguredModule
     end
   end
 
+  def is_evaluative?
+    return false if self.has_messaging
+    return false if self.module_def.nil?
+    return self.module_def.is_evaluative?
+  end
+
   #
   # The UTC time at which the module ends.
   #
