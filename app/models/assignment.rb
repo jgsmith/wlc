@@ -156,17 +156,17 @@ class Assignment < ActiveRecord::Base
           m_list[am.position] = am.configured_module(user)
       end
 
-      @configured_modules = m_list.select{ |m| !m.nil? }
+      cms = m_list.select{ |m| !m.nil? }
 
       cur_time = self.utc_starts_at
-      @configured_modules.each do |m|
+      cms.each do |m|
         m.utc_starts_at = cur_time
         cur_time += m.duration.to_i
         m.assignment = self
         m.is_evaluation = false
       end
 
-      if @configured_modules.select{ |cm| cm.has_evaluation? }.size > 0 ||
+      if cms.select{ |cm| cm.has_evaluation? }.size > 0 ||
          !self.participant_eval.nil? && !self.participant_eval.empty?   ||
          !self.author_eval.nil? && !self.author_eval.empty? 
         m = ConfiguredModule.new
@@ -188,7 +188,12 @@ class Assignment < ActiveRecord::Base
         if m.participant_rubric.nil?
           m.number_participants = 0
         end
-        @configured_modules << m
+        cms << m
+      end
+      if !user.nil?
+        @configured_modules = cms
+      else
+        return cms
       end
     end
 
