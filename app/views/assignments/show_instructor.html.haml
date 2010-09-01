@@ -12,6 +12,7 @@
     %li= link_to 'Trust', { :controller => 'assignments', :id => @assignment, :action => 'trust' }
     %li= link_to 'Grades', { :controller => 'grades', :assignment_id => @assignment, :action => 'show' }
   %li= link_to 'Participants', { :controller => 'assignment_submissions', :assignment_id => @assignment }
+  %li= link_to 'Student view of this page', { :controller => 'assignments', :id => @assignment, :action => 'show', :student_view => 1 }
 
 - if @missing_students.empty?
   %p All students are participating in this assignment.

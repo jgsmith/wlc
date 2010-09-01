@@ -49,7 +49,7 @@ class AssignmentsController < ApplicationController
   end
 
   def show
-    if @assignment.course.is_assistant?(@user)
+    if @assignment.course.is_assistant?(@user) && !params[:student_view]
       @missing_students = @assignment.not_participating
       @configured_modules_info = [ ]
       @grade_store_fields = [ 'id', 'name', 'is_participant' ]
@@ -262,7 +262,7 @@ class AssignmentsController < ApplicationController
       @grade_expander_template = @grade_expander_template + %{</table>}
       @gxinfo = grade_expander_info
       render :action => 'show_instructor'
-    elsif @assignment.course.is_student?(@user)
+    elsif @assignment.course.is_student?(@user) || @assignment.course.is_assistant?(@user) && params[:student_view]
       # we show student view of assignment (default)
       begin
         @assignment.current_module(@user).assignment_participations

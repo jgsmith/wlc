@@ -16,6 +16,9 @@
       %li
         %a{:href => assignment_messages_path(@assignment), :target => "_new"} Messages
 
+- if @assignment.course.is_assistant?(@user) && params[:student_view]
+  %a{ :href => assignment_path(@assignment) } Assistant view
+
 - if !@assignment.current_module(@user).nil?
   - if @assignment.current_module(@user).position != 1 && !@assignment.is_participant?(@user)
     %p
