@@ -170,9 +170,9 @@ class Assignment < ActiveRecord::Base
          !self.participant_eval.nil? && !self.participant_eval.empty?   ||
          !self.author_eval.nil? && !self.author_eval.empty? 
         m = ConfiguredModule.new
-        m.utc_starts_at = @configured_modules.last.utc_ends_at
+        m.utc_starts_at = cms.last.utc_ends_at
         m.tag = self.eval_tag
-        m.position = @configured_modules.last.position + 1
+        m.position = cms.last.position + 1
         m.is_evaluation = true
         m.user = user
         m.assignment = self
