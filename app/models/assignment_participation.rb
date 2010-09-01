@@ -114,7 +114,12 @@ class AssignmentParticipation < ActiveRecord::Base
 
   def view_text
     if !self.state_def.nil?
-      self.render self.state_def.view_text
+      begin
+        return self.render self.state_def.view_text
+      rescue => e
+        Rails.logger.info("Uh oh... error rendering view_text: #{e}")
+        return ''
+      end
     else
       ''
     end
