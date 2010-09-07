@@ -4,12 +4,12 @@ module Fabulator
 
   require 'fabulator/wlc/actions/make-asset-available'
 
+  Fabulator::Core::Actions::Lib.structural 'module', Fabulator::Core::StateMachine
+
   module WLC
     module Actions
-      class Lib
-        include Fabulator::ActionLib
-
-        register_namespace WLC_NS
+      class Lib < Fabulator::TagLib
+        namespace WLC_NS
 
         action 'make-asset-available', MakeAssetAvailable
       end
