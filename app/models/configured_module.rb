@@ -227,11 +227,13 @@ class ConfiguredModule
           if defined? c
             p = nil
             AssignmentParticipation.transaction do
-              p = AssignmentParticipation.create(
-                :assignment_submission => c,
-                :user => self.user,
-                :tag => self.tag
-              )
+              p = AssignmentParticipation.new
+              p.assignment_submission = c
+              p.assignment = self.assignment
+              p.user = self.user
+              p.tag = self.tag
+              p.save!
+
               if self.has_messaging? || self.has_evaluation?
                 p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s unless self.author_name.blank?
                 p.participant_name = self.participant_name + ' #' + (c.assignment_participations.select{ |ap| ap.tag == self.tag }.size + 1).to_s unless self.participant_name.blank?
