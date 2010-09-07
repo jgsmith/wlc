@@ -265,7 +265,7 @@ class AssignmentsController < ApplicationController
     elsif @assignment.course.is_student?(@user) || @assignment.course.is_assistant?(@user) && params[:student_view]
       # we show student view of assignment (default)
       begin
-        @assignment.current_module(@user).assignment_participations
+        @assignment.current_module(@user).assignment_participations unless @assignment.current_module(@user).nil? || params[:student_view]
       rescue WLC::ReloadPage
         redirect_to :action => 'assign_participations', :id => @assignment
       end
