@@ -6,7 +6,10 @@ class ModuleDef < ActiveRecord::Base
   serialize :params
 
   def state_machine
-    @state_machine ||= Fabulator::Core::StateMachine.new.compile_xml(LibXML::XML::Document.string self.xml_definition)
+    if @state_machine.nil?
+      @state_machine = Fabulator::Core::StateMachine.new
+      @state_machine.compile_xml(self.xml_definition)
+    end
     @state_machine
   end
 
@@ -19,7 +22,7 @@ class ModuleDef < ActiveRecord::Base
   end
 
   def context
-    state_machine.fabulator_context
+    self.state_machine.fabulator_context
   end
 
   def initialize_participation(participation)

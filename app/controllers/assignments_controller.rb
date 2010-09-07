@@ -9,7 +9,7 @@ class AssignmentsController < ApplicationController
     end
   end
 
-  before_filter :find_assignment, :only => [ :show, :update, :edit, :trust, :move_higher, :move_lower, :destroy ]
+  before_filter :find_assignment, :only => [ :show, :assign_participations, :update, :edit, :trust, :move_higher, :move_lower, :destroy ]
   before_filter :find_course,     :only => [ :index, :new, :create ]
   before_filter :require_assistant, :only => [ :trust, :edit, :update, :move_higher, :move_lower, :destroy ]
   before_filter :require_instructor, :only => [ :new, :create ]
@@ -267,11 +267,18 @@ class AssignmentsController < ApplicationController
       begin
         @assignment.current_module(@user).assignment_participations
       rescue WLC::ReloadPage
-        redirect_to :action => 'show', :id => @assignment
+        redirect_to :action => 'assign_participations', :id => @assignment
       end
     else
       render :text => 'Forbidden.', :status => 403
     end
+  end
+
+  def assign_participations
+    if @assignment.course.is_student?(@user)
+      @assignment.current_module(@user).make_participation_assignments
+    end
+    redirect_to :action => 'show', :id => @assignment
   end
 
   def new

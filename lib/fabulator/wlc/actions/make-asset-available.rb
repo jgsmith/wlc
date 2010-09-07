@@ -10,7 +10,7 @@ module Fabulator
 
         def run(context, autovivify = false)
           @context.with(context) do |ctx|
-            assets = @select.run(ctx, autovivify)
+            assets = self.select(ctx)
             assets.each do |asset|
               next if asset.vtype.nil?
               next unless asset.vtype.join('') == [ ASSETS_NS, 'asset' ].join('')

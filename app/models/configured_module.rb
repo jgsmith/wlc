@@ -190,59 +190,73 @@ class ConfiguredModule
         @assignment_participations = [ p ]
       end
     elsif @assignment_participations.size < self.number_participants
-      s = AssignmentSubmission.first :conditions => [
-        'assignment_id = ? AND user_id = ?',
-        self.assignment.id, self.user.id
-      ]
-      if self.assignment.is_participant?(self.user)
+      raise WLC::ReloadPage
+    end
+    return @assignment_participations
+  end
 
-        if self.module_def.nil? && self.has_messaging? ||
-           !self.module_def.nil? && self.module_def.is_evaluative? ||
-           self.is_evaluation
+  def make_participation_assignments
+    return if self.user.nil?
 
-          submissions = available_participants(self.user)
+    @assignment_participations ||= AssignmentParticipation.find(:all, 
+      :joins => [ :assignment_submission ],
+      :select => 'assignment_participations.*',
+      :conditions => [
+        'assignment_submissions.assignment_id = ? AND 
+         assignment_participations.tag    = ? AND
+         assignment_participations.user_id     = ?',
+        self.assignment.id, self.tag, self.user.id
+      ])
 
-          while submissions.size > 0 && 
-                @assignment_participations.size < self.number_participants
-            
-            c = submissions.shift
-            if defined? c
-              p = nil
-              AssignmentParticipation.transaction do
-                p = AssignmentParticipation.create(
-                  :assignment_submission => c,
-                  :user => self.user,
-                  :tag => self.tag
-                )
-                if self.has_messaging? || self.has_evaluation?
-                  p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s unless self.author_name.blank?
-                  p.participant_name = self.participant_name + ' #' + (c.assignment_participations.select{ |ap| ap.tag == self.tag }.size + 1).to_s unless self.participant_name.blank?
-                end
-                p.initialize_participation
-                p.save
-                # make sure we don't have too many participations for the submission
-                if p.assignment_submission.assignment_participations.select{ |ap| ap.tag == self.tag }.size > self.number_participants
-                  raise ActiveRecord::Rollback
-                end
-                @assignment_participations << p
-                raise WLC::ReloadPage
-              end 
-            end
+    s = AssignmentSubmission.first :conditions => [
+      'assignment_id = ? AND user_id = ?',
+      self.assignment.id, self.user.id
+    ]
+    if self.assignment.is_participant?(self.user)
+
+      if self.module_def.nil? && self.has_messaging? ||
+         !self.module_def.nil? && self.module_def.is_evaluative? ||
+         self.is_evaluation
+
+        submissions = available_participants(self.user)
+
+        while submissions.size > 0 && 
+              @assignment_participations.size < self.number_participants
+          
+          c = submissions.shift
+          if defined? c
+            p = nil
+            AssignmentParticipation.transaction do
+              p = AssignmentParticipation.create(
+                :assignment_submission => c,
+                :user => self.user,
+                :tag => self.tag
+              )
+              if self.has_messaging? || self.has_evaluation?
+                p.author_name = self.author_name + ' #' + (@assignment_participations.size+1).to_s unless self.author_name.blank?
+                p.participant_name = self.participant_name + ' #' + (c.assignment_participations.select{ |ap| ap.tag == self.tag }.size + 1).to_s unless self.participant_name.blank?
+              end
+              p.initialize_participation
+              p.save
+              # make sure we don't have too many participations for the submission
+              if p.assignment_submission.assignment_participations.select{ |ap| ap.tag == self.tag }.size > self.number_participants
+                raise ActiveRecord::Rollback
+              end
+              @assignment_participations << p
+            end 
           end
-        elsif @assignment_participations.empty? 
-          p = AssignmentParticipation.create(
-            :user => self.user,
-            :assignment_submission => s,
-            :tag => self.tag
-          )
-          p.initialize_participation
-          p.save
-          @assignment_participations << p
         end
+      elsif @assignment_participations.empty? 
+        p = AssignmentParticipation.create(
+          :user => self.user,
+          :assignment_submission => s,
+          :tag => self.tag
+        )
+        p.initialize_participation
+        p.save
+        @assignment_participations << p
       end
     end
-
-    return @assignment_participations
   end
 
   #
