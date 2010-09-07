@@ -230,6 +230,7 @@ class AssignmentParticipation < ActiveRecord::Base
 
   def get_form_info(opts)
     ctrl = opts[:controller]
+    params = opts[:params]
     form = {
       :content => self.view_form
     } 
