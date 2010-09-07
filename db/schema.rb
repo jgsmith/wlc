@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 24) do
+ActiveRecord::Schema.define(:version => 25) do
 
   create_table "assignment_modules", :force => true do |t|
     t.integer  "assignment_id"
@@ -62,6 +62,7 @@ ActiveRecord::Schema.define(:version => 24) do
     t.text     "instructor_eval"
     t.float    "instructor_score"
     t.float    "final_trust"
+    t.boolean  "on_hold"
   end
 
   create_table "assignment_template_modules", :force => true do |t|

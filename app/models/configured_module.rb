@@ -280,7 +280,7 @@ class ConfiguredModule
       submissions = submissions + available[k].sort_by { rand }
     end
     submissions.uniq!
-    submissions.select{ |s| s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participants }
+    submissions.select{ |s| !s.on_hold? && s.assignment_participations.select{ |ap| ap.tag == self.tag }.size < self.number_participants }
   end
 
   def save_score(as, t, s)
