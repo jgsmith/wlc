@@ -13,7 +13,7 @@
 - tabs = [ { :title => 'You', :html => (@assignment_submission.show_info(@current_module_position, @user) rescue ''), :itemId => 'own-portfolio', :autoScroll => true } ]
 - @assignment_participations.each do |p|
   - next if p.author_name.blank?
-  - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module_position,@user), :itemId => 'portfolio-' + p.id.to_s }
+  - tabs << { :title => p.author_name, :html => p.assignment_submission.show_info(@current_module_position,@user), :itemId => 'portfolio-' + p.id.to_s, :autoScroll => true }
 
 :javascript
   Ext.onReady(function(){
