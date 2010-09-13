@@ -45,7 +45,7 @@ class Course < ActiveRecord::Base
   end
 
   def is_instructor?(u)
-    self.user == u
+    self.user == u || !u.nil? && u.is_admin?
   end
 
   def is_designer?(u)
