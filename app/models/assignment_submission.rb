@@ -16,8 +16,8 @@ class AssignmentSubmission < ActiveRecord::Base
       ap.position < position && 
       (ap.user == self.user || 
          (ap.assignment_submission.user == self.user && 
-          !ap.configured_module.nil? && 
-          ap.configured_module.is_evaluative?
+          !ap.configured_module.nil? # && 
+          #ap.configured_module.is_evaluative?
          )
       ) }.map { |ap| ap.show_info(u) }.join("")
   end
