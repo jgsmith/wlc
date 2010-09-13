@@ -249,13 +249,13 @@ class ConfiguredModule
           end
         end
       elsif @assignment_participations.empty? 
-        p = AssignmentParticipation.create(
-          :user => self.user,
-          :assignment_submission => s,
-          :tag => self.tag
-        )
+        p = AssignmentParticipation.new
+        p.user = self.user
+        p.assignment = self.assignment
+        p.assignment_submission = s
+        p.tag = self.tag
         p.initialize_participation
-        p.save
+        p.save!
         @assignment_participations << p
       end
     end
