@@ -33,15 +33,10 @@ class AssignmentSubmission < ActiveRecord::Base
 
   def calculate_score(use_trust)
     raw_data = { }
-    self.assignment.configured_modules(self.user).each do |cm|
-      if cm.tag
-        raw_data[cm.tag + '_author'] = false
-        raw_data[cm.tag + '_participant'] = false
-      end
-    end
     self.assignment.scores.find(:all, :conditions => [ 'user_id = ?', self.user.id ]).each do |score|
-      raw_data[score.tag + '_author'] = score.author_score
-      raw_data[score.tag + '_participant'] = score.participant_score
+      raw_data[score.tag] ||= { }
+      raw_data[score.tag]['author'] = score.author_score
+      raw_data[score.tag]['participant'] = score.participant_score
     end
     self.update_attribute(
       :score,

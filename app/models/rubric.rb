@@ -31,18 +31,20 @@ class Rubric < ActiveRecord::Base
 #    Rails.logger.info(">>>>>>> data: #{YAML::dump(data)}")
     return 0 if self.calculate_fn.blank?
     return 0 if data.nil? || data.empty?
-#    Rails.logger.info(">>>>>>> data keys: #{data.keys.join(', ')}")
     tags = self.prompts.collect{|p| p.tag }
 
     ## at least until we convert stuff
     md = { }
     self.prompts.each do |p|
-#      Rails.logger.info(">>>> #{p.tag} == #{p.position-1}")
       md[p.tag] = (data[p.tag] || data[(p.position-1).to_s] || data[p.position-1] || 0).to_i
     end
-#    Rails.logger.info(YAML::dump(md))
-# TODO: change this to a calculation using Fabulator expressions
-    raw = nil # self.lua_call('calculate', self.calculate_fn,tags,md)
+
+    parser = Fabulator::Expr::Parser.new
+    context = Fabulator::Expr::Context.new
+    context.merge_data(md)
+    parsed = parser.parse(self.calculate_score_fn, context)
+    raw = parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).to_f 
+
 #    Rails.logger.info(">>> score >>> #{raw}")
     if !self.minimum.nil?
       if self.inclusive_minimum?

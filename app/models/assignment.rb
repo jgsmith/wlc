@@ -495,13 +495,19 @@ class Assignment < ActiveRecord::Base
     1.0 - (a-b)*(a-b)/10000.0
   end
 
-  def calculate_final_score_fn
-    '(0.15*peer_edit_participant + 0.10*peer_edit_author + 0.25 * eval_author + 0.5 * eval_participant)'
-  end
+#  def calculate_final_score_fn
+#    '(0.15*peer_edit_participant + 0.10*peer_edit_author + 0.25 * eval_author + 0.5 * eval_participant)'
+# this is now: (15 * peer-edit/participant + 10 * peer-edit/author + 25 * eval/author + 50 * eval/participant) div 100
+#  end
         
+  # The data is a hash of keys leading to partial scores.
   def calculate_final_score(data)
-    fvars = data.keys.map{ |t| %{#{t} = (data.#{t} or 100)} }.join("\n")
-#    self.lua_call('calculate_final_score', "#{fvars}\nresult = #{self.calculate_final_score_fn}\nreturn result", 'data', data)
+    parser = Fabulator::Expr::Parser.new
+    context = Fabulator::Expr::Context.new
+    context.merge_data(data)
+    # need to load namespaces - or have a way to specify them in the expression
+    parsed = parser.parse(self.calculate_score_fn, context)
+    parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).to_f
   end
 
 end
