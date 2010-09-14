@@ -10,7 +10,7 @@
 
 .item-set
   - first = true
-  - @prompts.each do |prompt|
+  - @prompts.sort_by(&:position).each do |prompt|
     - last = false
     .item
       .title= h prompt.prompt
@@ -32,7 +32,7 @@
               %th &nbsp;
               %th Score
               %th Response
-            - prompt.responses.each do |r|
+            - prompt.responses.sort_by(&:position).each do |r|
               %tr
                 %td
                   = link_to 'Up', { :controller => 'responses', :action => "move_higher", :id => r }
