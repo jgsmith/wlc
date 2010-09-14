@@ -28,9 +28,10 @@ ound }
   end
 
   def update
-    @reponse.update_attributes(params[:reponse])
-    @reponse.save
-    redirect_to :controller => 'prompts', :action => :show, :id => @response.prompt
+    params[:response].delete('prompt_id')
+    @response.update_attributes(params[:response])
+    @response.save
+    redirect_to :controller => 'prompts', :action => :index, :rubric_id => @response.prompt.rubric
   end
 
   def move_higher
