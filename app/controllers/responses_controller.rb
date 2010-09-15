@@ -50,7 +50,7 @@ ound }
     # don't remove if used by an assignment module and we have already
     # had responses recorded
     @response.destroy
-    redirect_to :action => :show, :id => @response.prompt, :controller => 'prompts'
+    redirect_to :action => :index, :id => @response.prompt, :controller => 'prompts'
   end
 
 protected
