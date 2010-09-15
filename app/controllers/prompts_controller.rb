@@ -36,9 +36,10 @@ ound }
   end
 
   def update
-    @rubric.update_attributes(params[:rubric])
-    @rubric.save
-    redirect_to :action => :show, :id => @rubric
+    params[:prompt].delete('rubric_id')
+    @prompt.update_attributes(params[:prompt])
+    @prompt.save
+    redirect_to :action => :index, :rubric_id => @prompt.rubric
   end
 
   def move_higher
