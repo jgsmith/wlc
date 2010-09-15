@@ -190,7 +190,8 @@ class ConfiguredModule
         @assignment_participations = [ p ]
       end
     elsif @assignment_participations.size < self.number_participants
-      raise WLC::ReloadPage
+      own_sub = @assignment.assignment_submission(self.user)
+      raise WLC::ReloadPage unless own_sub.nil? || own_sub.on_hold?
     end
     return @assignment_participations
   end
