@@ -179,7 +179,7 @@ class Assignment < ActiveRecord::Base
         m.instructions = ''
         m.name = self.eval_name || 'Evaluation'
         m.duration = self.eval_duration  || 0
-        m.author_name = self.author_name unless self.author_name.blank?
+        m.author_name = self.author_name || 'Self' unless self.author_name.blank? && self.author_rubric.nil?
         m.participant_eval = self.participant_eval unless self.participant_eval.nil?
         m.author_eval = self.author_eval unless self.author_eval.nil?
         m.participant_rubric = self.participant_rubric unless self.participant_rubric.nil?
