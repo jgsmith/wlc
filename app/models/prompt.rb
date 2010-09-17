@@ -8,7 +8,7 @@ class Prompt < ActiveRecord::Base
     { :tag => self.tag,  
       :prompt => self.prompt,
       :position => self.position, 
-      :responses => self.responses.map { |rr| rr.to_h }
+      :responses => self.responses.sort_by(&:position).map { |rr| rr.to_h }
     }   
   end
 

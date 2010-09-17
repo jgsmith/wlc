@@ -70,7 +70,7 @@ class Rubric < ActiveRecord::Base
   #
   def to_h
     { :instructions => self.instructions,
-      :prompts => self.prompts.map { |p| p.to_h }
+      :prompts => self.prompts.sort_by(&:position).map { |p| p.to_h }
     }
   end
 
