@@ -43,7 +43,7 @@ class Rubric < ActiveRecord::Base
     context = Fabulator::Expr::Context.new
     context.merge_data(md)
     parsed = parser.parse(self.calculate_fn, context)
-    raw = parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).to_f 
+    raw = parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).value.to_f 
 
 #    Rails.logger.info(">>> score >>> #{raw}")
     if !self.minimum.nil?
