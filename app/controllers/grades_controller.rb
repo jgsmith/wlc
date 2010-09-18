@@ -86,7 +86,7 @@ protected
         m.number_participants.times do |i|
           case rtype
             when :responses:
-              m.participant_rubric.prompts.each do |p|
+              m.participant_rubric.prompts.sort_by(&:position).each do |p|
                 @csv_columns << nm + i.to_s + '_' + p.tag
                 @csv_column_names << nm + (i+1).to_s + '_' + p.tag
               end
@@ -106,7 +106,7 @@ protected
         m.number_participants.times do |i|
           case rtype
             when :responses:
-              m.author_rubric.prompts.each do |p|
+              m.author_rubric.prompts.sort_by(&:position).each do |p|
                 @csv_columns << nm + i.to_s + '_' + p.tag
                 @csv_column_names << nm + (i+1).to_s + '_' + p.tag
               end
@@ -126,7 +126,7 @@ protected
       nm = 'self_eval'
       case rtype
         when :responses:
-          @assignment.author_rubric.prompts.each do |p|
+          @assignment.author_rubric.prompts.sort_by(&:position).each do |p|
             @csv_columns << nm + '_' + p.tag
             @csv_column_names << nm + '_' + p.tag
           end
@@ -197,7 +197,7 @@ protected
                 if !e.nil? && !e.empty?
                   case rtype
                     when :responses:
-                      m.participant_rubric.prompts.each do |p|
+                      m.participant_rubric.prompts.sort_by(&:position).each do |p|
                         grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
                                                            e[p.position-1] ||
                                                            e[(p.position-1).to_s]
@@ -225,7 +225,7 @@ protected
                 if !e.nil? && !e.empty?
                   case rtype
                     when :responses:
-                      m.author_rubric.prompts.each do |p|
+                      m.author_rubric.prompts.sort_by(&:position).each do |p|
                         grade[nm + i.to_s + '_' + p.tag] = e[p.tag] ||
                                                            e[p.position-1] ||
                                                            e[(p.position-1).to_s]
@@ -252,7 +252,7 @@ protected
           if !e.nil? && !e.empty?
             case rtype
               when :responses:
-                @assignment.author_rubric.prompts.each do |p|
+                @assignment.author_rubric.prompts.sort_by(&:position).each do |p|
                   grade[nm + '_' + p.tag] = e[p.tag] || e[p.position-1] || e[(p.position-1).to_s]
                 end
               when :grades:
