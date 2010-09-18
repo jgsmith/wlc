@@ -42,7 +42,7 @@ class Rubric < ActiveRecord::Base
     parser = Fabulator::Expr::Parser.new
     context = Fabulator::Expr::Context.new
     context.merge_data(md)
-    parsed = parser.parse(self.calculate_score_fn, context)
+    parsed = parser.parse(self.calculate_fn, context)
     raw = parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).to_f 
 
 #    Rails.logger.info(">>> score >>> #{raw}")
