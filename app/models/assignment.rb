@@ -504,10 +504,15 @@ class Assignment < ActiveRecord::Base
   def calculate_final_score(data)
     parser = Fabulator::Expr::Parser.new
     context = Fabulator::Expr::Context.new
+Rails.logger.info("Calculating final score with #{YAML::dump(data)}")
     context.merge_data(data)
     # need to load namespaces - or have a way to specify them in the expression
     parsed = parser.parse(self.calculate_score_fn, context)
-    parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).value.to_f
+    res = parsed.run(context).first
+    return nil if res.nil?
+    r = res.to([Fabulator::FAB_NS, 'numeric']).value.to_f
+Rails.logger.info("Final score: #{r}")
+    r
   end
 
 end
