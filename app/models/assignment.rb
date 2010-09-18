@@ -507,7 +507,7 @@ class Assignment < ActiveRecord::Base
     context.merge_data(data)
     # need to load namespaces - or have a way to specify them in the expression
     parsed = parser.parse(self.calculate_score_fn, context)
-    parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).to_f
+    parsed.run(context).first.to([Fabulator::FAB_NS, 'numeric']).value.to_f
   end
 
 end
