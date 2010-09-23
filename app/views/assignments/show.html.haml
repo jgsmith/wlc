@@ -20,7 +20,7 @@
   %a{ :href => assignment_path(@assignment) } Assistant view
 
 - if !@assignment.current_module(@user).nil?
-  - if @assignment.current_module(@user).position != 1 && !@assignment.is_participant?(@user)
+  - if @assignment.current_module(@user).position != 1 && !@assignment.is_participant?(@user) && !@assignment.course.is_assistant?(@user)
     %p
       You missed the initial module that establishes your participation
       in this assignment.  Please contact your professor.
