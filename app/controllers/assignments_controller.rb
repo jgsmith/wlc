@@ -393,6 +393,7 @@ protected
 
   def find_assignment
     @assignment = Assignment.find(params[:id])
+    find_student unless @assignment.nil?
   end
 
   def find_course
@@ -413,5 +414,21 @@ protected
     else
       @assignment.course.is_instructor?(@user)
     end
+  end
+
+  def find_student
+    @real_user = @user
+    if !params[:user_id].blank?
+      find_assignment if @assignment.nil?
+      @user = User.find(params[:user_id])
+      if !@assignment.course.is_student?(@user) ||
+         !@assignment.course.is_assistant?(@real_user)
+        return false
+      end   
+    end
+    if @real_user != @user
+      params[:student_view] = 1
+    end
+    true
   end
 end
