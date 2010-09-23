@@ -8,6 +8,7 @@
   - if !portfolio.blank?
     %p
       %strong Portfolio
+    = portfolio
 
 .info= (@assignment_participation.show_info(@user) rescue '')
 
