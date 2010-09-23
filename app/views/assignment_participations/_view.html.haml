@@ -1,6 +1,10 @@
 .text
   = markdown @assignment_participation.view_text
-  - portfolio = (@assignment_participation.assignment_submission.show_info(@assignment_participation.position, @user) rescue '')
+  - portfolio = ''
+  - begin
+    - portfolio = (@assignment_participation.assignment_submission.show_info(@assignment_participation.position, @user))
+  - rescue => e
+    - portfolio = "error rendering portfolio: #{e}"
   - if !portfolio.blank?
     %p
       %strong Portfolio
