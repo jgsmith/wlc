@@ -11,15 +11,15 @@ class AssignmentSubmission < ActiveRecord::Base
   def show_info(position, u = nil)
     # we want to show all of the information up to the specified position
 
-    assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info(u) }.join("")
-    #assignment_participations.select{ |ap| 
-    #  ap.position < position && 
-    #  (ap.user == self.user || 
-    #     (ap.assignment_submission.user == self.user && 
-    #      !ap.configured_module.nil? # && 
-    #      #ap.configured_module.is_evaluative?
-    #     )
-    #  ) }.map { |ap| ap.show_info(u) }.join("")
+    #assignment_participations.select{ |ap| ap.position < position && ap.user == self.user }.map { |ap| ap.show_info(u) }.join("")
+    assignment_participations.select{ |ap| 
+      ap.position < position && 
+      (ap.user == self.user || 
+         (ap.assignment_submission.user == self.user && 
+          !ap.configured_module.nil? && 
+          ap.configured_module.is_evaluative?
+         )
+      ) }.map { |ap| ap.show_info(u) }.join("")
   end
 
   def view_scores
