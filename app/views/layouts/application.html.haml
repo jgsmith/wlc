@@ -70,7 +70,7 @@
                           - course.current_assignments.each do |assignment|
                             %li
                               = link_to 'Assignment #' + assignment.position.to_s, assignment
-                              = '(' + assignment.current_module(@user).name + ')'
+                              = ('(' + assignment.current_module(@user).name + ')' rescue '' )
                     .ft
 
                 = yield :sidebar
