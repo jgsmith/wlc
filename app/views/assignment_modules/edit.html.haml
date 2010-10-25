@@ -22,6 +22,10 @@
     = f.text_field :tag, :size => 15
 
   .form-field
+    = label(:assignment_module, :download_filename_prefix, 'Download filename prefix (should be lowercase letters, digits, or hyphen)')
+    = f.text_field :download_filename_prefix, :size => 15
+
+  .form-field
     = label(:assignment_module, :ends_at, 'Ends at')
     = f.datetime_select :ends_at, { :use_short_month => true, :start_year => @assignment_module.assignment.course.tz.utc_to_local(@assignment_module.assignment.course.semester.utc_starts_at).year, :end_year => @assignment_module.assignment.course.tz.utc_to_local(@assignment_module.assignment.course.semester.utc_ends_at).year, :discard_seconds => true, }
 

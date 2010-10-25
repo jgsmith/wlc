@@ -38,6 +38,7 @@ class AssignmentModulesController < ApplicationController
     @assignment_module.assignment = @assignment
     @assignment_module.module_type = params[:assignment_module][:module_type].to_i
     @assignment_module.tag = params[:assignment_module][:tag]
+    @assignment_module.download_filename_prefix = params[:assignment_module][:tag]
     @assignment_module.duration = 0
     @assignment_module.number_participants = 1
     case @assignment_module.module_type
@@ -75,6 +76,7 @@ class AssignmentModulesController < ApplicationController
       params[:assignment_module].delete("ends_at(5i)")
     end
     params[:assignment_module].delete('params')
+    params[:assignment_module].delete('assignment_id')
     @assignment_module.update_attributes(params[:assignment_module])
     @assignment_module.save
     redirect_to :action => 'show', :id => @assignment_module
