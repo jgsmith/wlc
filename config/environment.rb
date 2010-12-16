@@ -27,7 +27,7 @@ Rails::Initializer.run do |config|
 
   config.gem "bluecloth", :version => ">=2.0"
   if RAILS_ENV == 'production'
-    config.gem 'fabulator', :version => '>=0.0.5'
+    config.gem 'fabulator', :version => '>=0.0.15'
   end
 
   # Only load the plugins named here, in the order given (default is alphabetical).

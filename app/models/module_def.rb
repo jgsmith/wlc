@@ -7,7 +7,7 @@ class ModuleDef < ActiveRecord::Base
 
   def state_machine
     if @state_machine.nil?
-      @state_machine = Fabulator::Core::StateMachine.new
+      @state_machine = Fabulator::Core::Structurals::StateMachine.new
       @state_machine.compile_xml(self.xml_definition)
     end
     @state_machine

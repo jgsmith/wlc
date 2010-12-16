@@ -4,7 +4,7 @@ module Fabulator
 
   require 'fabulator/wlc/actions/make-asset-available'
 
-  Fabulator::Core::Actions::Lib.structural 'module', Fabulator::Core::StateMachine
+  Fabulator::Core::Lib.structural 'module', Fabulator::Core::Structurals::StateMachine
 
   module WLC
     module Actions
